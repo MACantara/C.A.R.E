@@ -37,3 +37,9 @@ flask-hcaptcha
 
 # Password strength checking
 zxcvbn
+
+# Date and time utilities (for appointment scheduling)
+python-dateutil
+
+# Timezone support
+pytz
