@@ -4,9 +4,9 @@ These define what the system **must do**:
 
 ### 1. **User Management**
 
--   [ ] FR1.1: The system shall allow **patients** to register and manage their profiles.
--   [ ] FR1.2: The system shall allow **doctors** and **staff** to log in using secure credentials.
--   [ ] FR1.3: The system shall provide **role-based access** (e.g., patient, doctor, admin).
+-   [x] FR1.1: The system shall allow **patients** to register and manage their profiles.
+-   [x] FR1.2: The system shall allow **doctors** and **staff** to log in using secure credentials.
+-   [x] FR1.3: The system shall provide **role-based access** (e.g., patient, doctor, admin).
 
 ### 2. **Appointment Scheduling**
 
