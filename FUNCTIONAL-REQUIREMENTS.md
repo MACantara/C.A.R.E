@@ -38,8 +38,8 @@ These define what the system **must do**:
 
 ### 7. **Reporting & Analytics**
 
--   [ ] FR7.1: The system shall generate **daily, weekly, and monthly reports** of appointments, missed visits, and patient volume.
--   [ ] FR7.2: The system shall provide analytics on **common illnesses, prescription trends, and doctor performance**.
+-   [x] FR7.1: The system shall generate **daily, weekly, and monthly reports** of appointments, missed visits, and patient volume.
+-   [x] FR7.2: The system shall provide analytics on **common illnesses, prescription trends, and doctor performance**.
 
 ### 8. **Data Management**
 
