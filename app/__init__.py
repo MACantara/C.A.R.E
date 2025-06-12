@@ -57,6 +57,9 @@ def create_app(config_name=None):
     # Import models to ensure they are registered with SQLAlchemy
     if not app.config.get("DISABLE_DATABASE", False):
         from app.models import Contact, User, PasswordResetToken
+        from app.models.appointment import Appointment, AppointmentReminder
+        from app.models.email_verification import EmailVerification
+        from app.models.login_attempt import LoginAttempt
 
     # Register blueprints
     from app.routes import register_blueprints
