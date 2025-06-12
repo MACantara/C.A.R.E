@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Profile - Flask Website{% endblock %}
+{% block title %}Profile - C.A.R.E. System{% endblock %}
 
 {% block content %}
 <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -9,19 +9,36 @@
             <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-8 opacity-0 animate-fade-in-up">
                 <div class="flex items-center space-x-4 mb-4 lg:mb-0">
                     <div
-                        class="h-12 w-12 flex items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30 animate-pulse-slow">
-                        <i class="bi bi-person-circle text-blue-600 dark:text-blue-400 text-2xl"></i>
+                        class="h-12 w-12 flex items-center justify-center rounded-full {{ 'bg-blue-100 dark:bg-blue-900/30' if user.role == 'patient' else 'bg-green-100 dark:bg-green-900/30' if user.role == 'doctor' else 'bg-purple-100 dark:bg-purple-900/30' if user.role == 'staff' else 'bg-orange-100 dark:bg-orange-900/30' }} animate-pulse-slow">
+                        <i
+                            class="bi {{ 'bi-person' if user.role == 'patient' else 'bi-person-badge' if user.role == 'doctor' else 'bi-people' if user.role == 'staff' else 'bi-gear' }} {{ 'text-blue-600 dark:text-blue-400' if user.role == 'patient' else 'text-green-600 dark:text-green-400' if user.role == 'doctor' else 'text-purple-600 dark:text-purple-400' if user.role == 'staff' else 'text-orange-600 dark:text-orange-400' }} text-2xl"></i>
                     </div>
-                    <h1 class="text-3xl font-bold text-gray-900 dark:text-white">
-                        User Profile
-                    </h1>
+                    <div>
+                        <h1 class="text-3xl font-bold text-gray-900 dark:text-white">
+                            {{ user.display_name }}
+                        </h1>
+                        <p class="text-gray-600 dark:text-gray-400 capitalize">{{ user.role }}</p>
+                    </div>
                 </div>
 
                 <!-- Status Badges -->
                 <div class="flex flex-col md:flex-row gap-3">
-                    <!-- Account Status Badge -->
+                    <!-- Role Badge -->
                     <div class="opacity-0 animate-fade-in-up" style="animation-delay: 0.1s;">
-                        {% if user.active %} <!-- Changed from is_active -->
+                        <span
+                            class="inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold {{ 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' if user.role == 'patient' else 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' if user.role == 'doctor' else 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200' if user.role == 'staff' else 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200' }} transition-all duration-200 hover:scale-105 shadow-md">
+                            <i
+                                class="bi {{ 'bi-person' if user.role == 'patient' else 'bi-person-badge' if user.role == 'doctor' else 'bi-people' if user.role == 'staff' else 'bi-gear' }} mr-2"></i>
+                            {{ user.role.title() }}
+                            {% if user.role == 'doctor' and user.specialization %}
+                            - {{ user.specialization }}
+                            {% endif %}
+                        </span>
+                    </div>
+
+                    <!-- Account Status Badge -->
+                    <div class="opacity-0 animate-fade-in-up" style="animation-delay: 0.2s;">
+                        {% if user.active %}
                         <span
                             class="inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 transition-all duration-200 hover:scale-105 shadow-md">
                             <i class="bi bi-check-circle mr-2"></i>
@@ -37,9 +54,9 @@
                     </div>
 
                     <!-- Member Since Badge -->
-                    <div class="opacity-0 animate-fade-in-up" style="animation-delay: 0.2s;">
+                    <div class="opacity-0 animate-fade-in-up" style="animation-delay: 0.3s;">
                         <span
-                            class="inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 transition-all duration-200 hover:scale-105 shadow-md">
+                            class="inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200 transition-all duration-200 hover:scale-105 shadow-md">
                             <i class="bi bi-calendar-event mr-2"></i>
                             Member since {{ user.created_at.strftime('%B %Y') }}
                         </span>
@@ -48,13 +65,13 @@
             </div>
 
             <!-- Profile Information -->
-            <div class="max-w-4xl mx-auto opacity-0 animate-fade-in-left" style="animation-delay: 0.1s;">
+            <div class="max-w-4xl mx-auto opacity-0 animate-fade-in-left" style="animation-delay: 0.4s;">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 opacity-0 animate-fade-in-up min-w-0"
-                    style="animation-delay: 0.2s;">
+                    style="animation-delay: 0.5s;">
+                    <!-- Basic Information -->
                     <div class="min-w-0">
-                        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                            Username
-                        </label>
+                        <label
+                            class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Username</label>
                         <div
                             class="px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-xl text-gray-900 dark:text-white transition-all duration-300 hover:bg-gray-100 dark:hover:bg-gray-600 hover:shadow-md overflow-hidden">
                             <div class="flex items-center min-w-0">
@@ -65,9 +82,8 @@
                     </div>
 
                     <div class="min-w-0">
-                        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                            Email Address
-                        </label>
+                        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Email
+                            Address</label>
                         <div
                             class="px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-xl text-gray-900 dark:text-white transition-all duration-300 hover:bg-gray-100 dark:hover:bg-gray-600 hover:shadow-md overflow-hidden">
                             <div class="flex items-center min-w-0">
@@ -76,6 +92,97 @@
                             </div>
                         </div>
                     </div>
+
+                    {% if user.phone_number %}
+                    <div class="min-w-0">
+                        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Phone
+                            Number</label>
+                        <div
+                            class="px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-xl text-gray-900 dark:text-white transition-all duration-300 hover:bg-gray-100 dark:hover:bg-gray-600 hover:shadow-md overflow-hidden">
+                            <div class="flex items-center min-w-0">
+                                <i class="bi bi-telephone mr-2 text-gray-500 dark:text-gray-400 flex-shrink-0"></i>
+                                <span class="truncate">{{ user.phone_number }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Role-specific information -->
+                    {% if user.role == 'patient' %}
+                    {% if user.date_of_birth %}
+                    <div class="min-w-0">
+                        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Date of
+                            Birth</label>
+                        <div
+                            class="px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-xl text-gray-900 dark:text-white transition-all duration-300 hover:bg-gray-100 dark:hover:bg-gray-600 hover:shadow-md overflow-hidden">
+                            <div class="flex items-center min-w-0">
+                                <i class="bi bi-calendar-event mr-2 text-gray-500 dark:text-gray-400 flex-shrink-0"></i>
+                                <span class="truncate">{{ user.date_of_birth.strftime('%B %d, %Y') }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if user.emergency_contact %}
+                    <div class="min-w-0">
+                        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Emergency
+                            Contact</label>
+                        <div
+                            class="px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-xl text-gray-900 dark:text-white transition-all duration-300 hover:bg-gray-100 dark:hover:bg-gray-600 hover:shadow-md overflow-hidden">
+                            <div class="flex items-center min-w-0">
+                                <i
+                                    class="bi bi-person-exclamation mr-2 text-gray-500 dark:text-gray-400 flex-shrink-0"></i>
+                                <span class="truncate">{{ user.emergency_contact }}</span>
+                                {% if user.emergency_phone %}
+                                <span class="text-gray-500 dark:text-gray-400 ml-2">{{ user.emergency_phone }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% elif user.role in ['doctor', 'staff'] %}
+                    {% if user.license_number %}
+                    <div class="min-w-0">
+                        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">License
+                            Number</label>
+                        <div
+                            class="px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-xl text-gray-900 dark:text-white transition-all duration-300 hover:bg-gray-100 dark:hover:bg-gray-600 hover:shadow-md overflow-hidden">
+                            <div class="flex items-center min-w-0">
+                                <i class="bi bi-award mr-2 text-gray-500 dark:text-gray-400 flex-shrink-0"></i>
+                                <span class="truncate">{{ user.license_number }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if user.facility_name %}
+                    <div class="min-w-0">
+                        <label
+                            class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Facility</label>
+                        <div
+                            class="px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-xl text-gray-900 dark:text-white transition-all duration-300 hover:bg-gray-100 dark:hover:bg-gray-600 hover:shadow-md overflow-hidden">
+                            <div class="flex items-center min-w-0">
+                                <i class="bi bi-building mr-2 text-gray-500 dark:text-gray-400 flex-shrink-0"></i>
+                                <span class="truncate">{{ user.facility_name }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% endif %}
+
+                    {% if user.address %}
+                    <div class="min-w-0 md:col-span-2">
+                        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Address</label>
+                        <div
+                            class="px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-xl text-gray-900 dark:text-white transition-all duration-300 hover:bg-gray-100 dark:hover:bg-gray-600 hover:shadow-md overflow-hidden">
+                            <div class="flex items-center min-w-0">
+                                <i class="bi bi-geo-alt mr-2 text-gray-500 dark:text-gray-400 flex-shrink-0"></i>
+                                <span class="truncate">{{ user.address }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -99,6 +206,13 @@
                         <i class="bi bi-pencil mr-1"></i>
                         Edit Profile
                     </a>
+                    {% if user.has_permission('view_own_records') %}
+                    <a href="#"
+                        class="group inline-flex items-center px-4 py-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white text-sm font-medium rounded-lg hover:from-green-700 hover:to-emerald-700 transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-green-500/25 shadow-md hover:shadow-lg cursor-pointer hover:scale-105 transform">
+                        <i class="bi bi-file-medical mr-1"></i>
+                        My Records
+                    </a>
+                    {% endif %}
                 </div>
             </div>
         </div>

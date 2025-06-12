@@ -48,11 +48,73 @@ def edit_profile():
         return redirect(url_for("main.home"))
 
     if request.method == "POST":
+        # Basic fields that all users can edit
         username = request.form.get("username", "").strip().lower()
         email = request.form.get("email", "").strip().lower()
         current_password = request.form.get("current_password", "").strip()
         new_password = request.form.get("new_password", "").strip()
         confirm_password = request.form.get("confirm_password", "").strip()
+
+        # Personal information fields
+        first_name = request.form.get("first_name", "").strip()
+        last_name = request.form.get("last_name", "").strip()
+        phone_number = request.form.get("phone_number", "").strip()
+
+        # Role-specific fields
+        profile_updates = {}
+
+        if current_user.role == "patient":
+            date_of_birth = request.form.get("date_of_birth")
+            address = request.form.get("address", "").strip()
+            emergency_contact = request.form.get("emergency_contact", "").strip()
+            emergency_phone = request.form.get("emergency_phone", "").strip()
+
+            if date_of_birth:
+                try:
+                    from datetime import datetime
+
+                    profile_updates["date_of_birth"] = datetime.strptime(
+                        date_of_birth, "%Y-%m-%d"
+                    ).date()
+                except ValueError:
+                    flash("Invalid date of birth format.", "error")
+                    return render_template(
+                        "profile/edit-profile.html", user=current_user
+                    )
+
+            profile_updates.update(
+                {
+                    "address": address or None,
+                    "emergency_contact": emergency_contact or None,
+                    "emergency_phone": emergency_phone or None,
+                }
+            )
+
+        elif current_user.role in ["doctor", "staff"]:
+            license_number = request.form.get("license_number", "").strip()
+            specialization = request.form.get("specialization", "").strip()
+            facility_name = request.form.get("facility_name", "").strip()
+
+            # Check if license number is being changed and if it's already taken
+            if license_number and license_number != current_user.license_number:
+                existing_license = User.query.filter_by(
+                    license_number=license_number
+                ).first()
+                if existing_license and existing_license.id != current_user.id:
+                    flash(
+                        "License number is already registered to another user.", "error"
+                    )
+                    return render_template(
+                        "profile/edit-profile.html", user=current_user
+                    )
+
+            profile_updates.update(
+                {
+                    "license_number": license_number or None,
+                    "specialization": specialization or None,
+                    "facility_name": facility_name or None,
+                }
+            )
 
         # Validate current password for any changes
         if not current_user.check_password(current_password):
@@ -99,9 +161,17 @@ def edit_profile():
                 return render_template("profile/edit-profile.html", user=current_user)
 
         try:
-            # Update user information
+            # Update basic user information
             current_user.username = username
             current_user.email = email
+            current_user.first_name = first_name or None
+            current_user.last_name = last_name or None
+            current_user.phone_number = phone_number or None
+
+            # Update role-specific profile information
+            for field, value in profile_updates.items():
+                if hasattr(current_user, field):
+                    setattr(current_user, field, value)
 
             # Update password if provided
             if new_password:
