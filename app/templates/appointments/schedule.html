@@ -1,0 +1,284 @@
+{% extends "base.html" %}
+
+{% block title %}Schedule - C.A.R.E. System{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <!-- Header -->
+    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-8 opacity-0 animate-fade-in-up">
+        <div class="flex items-center mb-4 lg:mb-0">
+            <div class="h-12 w-12 flex items-center justify-center rounded-full bg-green-100 dark:bg-green-900/30 mr-4">
+                <i class="bi bi-calendar-week text-green-600 dark:text-green-400 text-xl"></i>
+            </div>
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900 dark:text-white">
+                    {% if doctor %}Dr. {{ doctor.display_name }}'s Schedule{% else %}Daily Schedule{% endif %}
+                </h1>
+                <p class="text-gray-600 dark:text-gray-400">{{ view_date.strftime('%A, %B %d, %Y') }}</p>
+            </div>
+        </div>
+
+        <!-- Date Navigation -->
+        <div class="flex items-center space-x-4">
+            <a href="{{ url_for('appointments.doctor_schedule', date=(view_date - timedelta(days=1)).strftime('%Y-%m-%d'), doctor_id=doctor.id if doctor else '') }}"
+                class="p-2 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors duration-200">
+                <i class="bi bi-chevron-left text-xl"></i>
+            </a>
+
+            <div class="px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg">
+                <input type="date" id="dateSelector" value="{{ view_date.strftime('%Y-%m-%d') }}"
+                    class="bg-transparent text-gray-900 dark:text-white focus:outline-none">
+            </div>
+
+            <a href="{{ url_for('appointments.doctor_schedule', date=(view_date + timedelta(days=1)).strftime('%Y-%m-%d'), doctor_id=doctor.id if doctor else '') }}"
+                class="p-2 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors duration-200">
+                <i class="bi bi-chevron-right text-xl"></i>
+            </a>
+        </div>
+    </div>
+
+    <!-- Doctor Filter for Staff -->
+    {% if current_user.role == 'staff' and doctors|length > 1 %}
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-8 opacity-0 animate-fade-in-left"
+        style="animation-delay: 0.2s;">
+        <div class="flex items-center space-x-4">
+            <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Filter by Doctor:</label>
+            <select id="doctorFilter" onchange="filterByDoctor()"
+                class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                <option value="">All Doctors</option>
+                {% for doc in doctors %}
+                <option value="{{ doc.id }}" {{ 'selected' if doctor and doc.id==doctor.id }}>
+                    Dr. {{ doc.display_name }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Schedule Grid -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden opacity-0 animate-fade-in-up"
+        style="animation-delay: 0.4s;">
+        <!-- Time Header -->
+        <div class="bg-gray-50 dark:bg-gray-700 px-6 py-4 border-b border-gray-200 dark:border-gray-600">
+            <div class="flex items-center justify-between">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+                    {{ appointments|length }} appointment{{ 's' if appointments|length != 1 }} scheduled
+                </h3>
+                <div class="flex items-center space-x-2">
+                    <span
+                        class="px-2 py-1 bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 rounded-full text-xs">
+                        <i class="bi bi-circle-fill mr-1"></i>Available
+                    </span>
+                    <span
+                        class="px-2 py-1 bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400 rounded-full text-xs">
+                        <i class="bi bi-circle-fill mr-1"></i>Scheduled
+                    </span>
+                    <span
+                        class="px-2 py-1 bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400 rounded-full text-xs">
+                        <i class="bi bi-circle-fill mr-1"></i>In Progress
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Appointments List -->
+        <div class="divide-y divide-gray-200 dark:divide-gray-700">
+            {% if appointments %}
+            {% for appointment in appointments %}
+            <div class="p-6 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200">
+                <div class="flex items-center justify-between">
+                    <div class="flex-1">
+                        <div class="flex items-center space-x-4 mb-3">
+                            <!-- Status Badge -->
+                            <span
+                                class="px-3 py-1 text-sm font-medium rounded-full
+                                    {% if appointment.status.value == 'scheduled' %}bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400
+                                    {% elif appointment.status.value == 'confirmed' %}bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400
+                                    {% elif appointment.status.value == 'in_progress' %}bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400
+                                    {% elif appointment.status.value == 'completed' %}bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400
+                                    {% elif appointment.status.value == 'cancelled' %}bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400
+                                    {% else %}bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400{% endif %}">
+                                {{ appointment.status.value.replace('_', ' ').title() }}
+                            </span>
+
+                            <!-- Time -->
+                            <span class="text-lg font-semibold text-gray-900 dark:text-white">
+                                {{ appointment.appointment_date.strftime('%I:%M %p') }}
+                            </span>
+
+                            <!-- Duration -->
+                            <span class="text-sm text-gray-500 dark:text-gray-400">
+                                ({{ appointment.duration_minutes }} min)
+                            </span>
+                        </div>
+
+                        <!-- Patient Info -->
+                        <div class="mb-2">
+                            <h4 class="text-lg font-medium text-gray-900 dark:text-white">
+                                {{ appointment.patient.display_name }}
+                            </h4>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">
+                                {{ appointment.appointment_type.value.replace('_', ' ').title() }}
+                            </p>
+                        </div>
+
+                        <!-- Chief Complaint -->
+                        {% if appointment.chief_complaint %}
+                        <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-3 mb-3">
+                            <p class="text-sm text-gray-700 dark:text-gray-300">
+                                <span class="font-medium">Chief Complaint:</span> {{ appointment.chief_complaint }}
+                            </p>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="ml-6 flex flex-col space-y-2">
+                        {% if appointment.status.value == 'scheduled' %}
+                        <form method="POST"
+                            action="{{ url_for('appointments.confirm_appointment', appointment_id=appointment.id) }}"
+                            class="inline">
+                            <button type="submit"
+                                class="px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors duration-200">
+                                <i class="bi bi-check-circle mr-1"></i>
+                                Confirm
+                            </button>
+                        </form>
+                        {% endif %}
+
+                        {% if appointment.status.value in ['confirmed', 'scheduled'] and not appointment.is_past %}
+                        <form method="POST"
+                            action="{{ url_for('appointments.update_appointment_status', appointment_id=appointment.id) }}"
+                            class="inline">
+                            <input type="hidden" name="status" value="in_progress">
+                            <button type="submit"
+                                class="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors duration-200">
+                                <i class="bi bi-play-circle mr-1"></i>
+                                Start
+                            </button>
+                        </form>
+                        {% endif %}
+
+                        {% if appointment.status.value == 'in_progress' %}
+                        <form method="POST"
+                            action="{{ url_for('appointments.update_appointment_status', appointment_id=appointment.id) }}"
+                            class="inline">
+                            <input type="hidden" name="status" value="completed">
+                            <button type="submit"
+                                class="px-4 py-2 bg-purple-600 text-white text-sm font-medium rounded-lg hover:bg-purple-700 transition-colors duration-200">
+                                <i class="bi bi-check-square mr-1"></i>
+                                Complete
+                            </button>
+                        </form>
+                        {% endif %}
+
+                        {% if appointment.can_be_cancelled %}
+                        <button onclick="showCancelModal({{ appointment.id }})"
+                            class="px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 transition-colors duration-200">
+                            <i class="bi bi-x-circle mr-1"></i>
+                            Cancel
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+            {% else %}
+            <!-- Empty State -->
+            <div class="text-center py-12">
+                <div
+                    class="w-24 h-24 mx-auto mb-6 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center">
+                    <i class="bi bi-calendar-x text-gray-400 dark:text-gray-500 text-3xl"></i>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">No appointments scheduled</h3>
+                <p class="text-gray-600 dark:text-gray-400">
+                    {% if doctor %}
+                    Dr. {{ doctor.display_name }} has no appointments for {{ view_date.strftime('%B %d, %Y') }}.
+                    {% else %}
+                    No appointments scheduled for {{ view_date.strftime('%B %d, %Y') }}.
+                    {% endif %}
+                </p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Cancel Appointment Modal -->
+<div id="cancelModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-md w-full">
+        <div class="p-6">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Cancel Appointment</h3>
+            <p class="text-gray-600 dark:text-gray-400 mb-4">
+                Are you sure you want to cancel this appointment? This action cannot be undone.
+            </p>
+
+            <form id="cancelForm" method="POST">
+                <div class="mb-4">
+                    <label for="cancellation_reason"
+                        class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Reason for cancellation (optional)
+                    </label>
+                    <textarea id="cancellation_reason" name="cancellation_reason" rows="3"
+                        placeholder="Please provide a reason for cancellation..."
+                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"></textarea>
+                </div>
+
+                <div class="flex justify-end space-x-3">
+                    <button type="button" onclick="hideCancelModal()"
+                        class="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200">
+                        Keep Appointment
+                    </button>
+                    <button type="submit"
+                        class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors duration-200">
+                        Cancel Appointment
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    function showCancelModal(appointmentId) {
+        const modal = document.getElementById('cancelModal');
+        const form = document.getElementById('cancelForm');
+        form.action = `{{ url_for('appointments.cancel_appointment', appointment_id=0) }}`.replace('0', appointmentId);
+        modal.classList.remove('hidden');
+    }
+
+    function hideCancelModal() {
+        const modal = document.getElementById('cancelModal');
+        modal.classList.add('hidden');
+    }
+
+    function filterByDoctor() {
+        const doctorId = document.getElementById('doctorFilter').value;
+        const currentDate = '{{ view_date.strftime("%Y-%m-%d") }}';
+        const url = new URL(window.location.href);
+        url.searchParams.set('date', currentDate);
+        if (doctorId) {
+            url.searchParams.set('doctor_id', doctorId);
+        } else {
+            url.searchParams.delete('doctor_id');
+        }
+        window.location.href = url.toString();
+    }
+
+    // Date selector functionality
+    document.getElementById('dateSelector').addEventListener('change', function (e) {
+        const selectedDate = e.target.value;
+        const url = new URL(window.location.href);
+        url.searchParams.set('date', selectedDate);
+        window.location.href = url.toString();
+    });
+
+    // Close modal when clicking outside
+    document.getElementById('cancelModal').addEventListener('click', function (e) {
+        if (e.target === this) {
+            hideCancelModal();
+        }
+    });
+</script>
+{% endblock %}
