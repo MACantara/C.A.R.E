@@ -40,6 +40,13 @@
                     <span
                         class="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-purple-600 to-indigo-600 group-hover:w-full transition-all duration-300"></span>
                 </a>
+                <!-- Reports Navigation for Healthcare Professionals -->
+                <a href="{{ url_for('reports.dashboard') }}"
+                    class="text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all duration-300 font-medium relative group">
+                    Reports
+                    <span
+                        class="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-indigo-600 to-purple-600 group-hover:w-full transition-all duration-300"></span>
+                </a>
                 {% endif %}
                 {% endif %}
 
@@ -109,9 +116,13 @@
                                 class="flex items-center px-4 py-2 text-sm text-purple-700 dark:text-purple-300 hover:bg-purple-50 dark:hover:bg-purple-900/20">
                                 <i class="bi bi-file-medical mr-2"></i>Medical Records
                             </a>
+                            <a href="{{ url_for('reports.dashboard') }}"
+                                class="flex items-center px-4 py-2 text-sm text-indigo-700 dark:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/20">
+                                <i class="bi bi-graph-up mr-2"></i>Reports & Analytics
+                            </a>
                             {% if current_user.role == 'doctor' %}
                             <a href="{{ url_for('medical_records.new_consultation') }}"
-                                class="flex items-center px-4 py-2 text-sm text-indigo-700 dark:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-900/20">
+                                class="flex items-center px-4 py-2 text-sm text-teal-700 dark:text-teal-300 hover:bg-teal-50 dark:hover:bg-teal-900/20">
                                 <i class="bi bi-plus-circle mr-2"></i>New Consultation
                             </a>
                             {% endif %}
@@ -244,6 +255,10 @@
             <a href="{{ url_for('medical_records.index') }}"
                 class="block px-3 py-2 text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 hover:bg-purple-50/50 dark:hover:bg-purple-900/20 transition-all duration-300 rounded-lg font-medium">
                 <i class="bi bi-file-medical mr-2"></i>Medical Records
+            </a>
+            <a href="{{ url_for('reports.dashboard') }}"
+                class="block px-3 py-2 text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 hover:bg-indigo-50/50 dark:hover:bg-indigo-900/20 transition-all duration-300 rounded-lg font-medium">
+                <i class="bi bi-graph-up mr-2"></i>Reports
             </a>
             {% endif %}
             {% endif %}
