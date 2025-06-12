@@ -220,12 +220,18 @@ def create_app(config_name=None):
         # Add current year and date to template context
         @app.context_processor
         def inject_current_date():
-            from datetime import datetime
+            from datetime import datetime, timedelta, date
 
             current_date = datetime.now()
 
             # Remove current_user injection since Flask-Login handles it
-            return {"current_year": current_date.year, "current_date": current_date}
+            return {
+                "current_year": current_date.year,
+                "current_date": current_date,
+                "datetime": datetime,
+                "timedelta": timedelta,
+                "date": date,
+            }
 
     # Make hCaptcha available in templates
     from app.utils.hcaptcha_utils import hcaptcha, is_hcaptcha_enabled
