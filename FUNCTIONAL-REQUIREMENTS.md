@@ -10,9 +10,9 @@ These define what the system **must do**:
 
 ### 2. **Appointment Scheduling**
 
--   [ ] FR2.1: The system shall allow patients to **book appointments online** based on doctor availability.
--   [ ] FR2.2: The system shall display **available time slots** in real-time.
--   [ ] FR2.3: The system shall send **appointment confirmation and reminders** via email.
+-   [x] FR2.1: The system shall allow patients to **book appointments online** based on doctor availability.
+-   [x] FR2.2: The system shall display **available time slots** in real-time.
+-   [x] FR2.3: The system shall send **appointment confirmation and reminders** via email.
 
 ### 3. **Electronic Medical Records (EMR)**
 
@@ -27,13 +27,13 @@ These define what the system **must do**:
 
 ### 5. **Calendar and Queue Management**
 
--   [ ] FR5.1: The system shall show a **real-time calendar view** of appointments for each doctor.
+-   [x] FR5.1: The system shall show a **real-time calendar view** of appointments for each doctor.
 -   [ ] FR5.2: The system shall display and update the **live patient queue**.
 -   [ ] FR5.3: The system shall notify staff and patients of **delays or changes** in queue order.
 
 ### 6. **Notifications & Communication**
 
--   [ ] FR6.1: The system shall send **email/SMS alerts** for appointment booking, reminders, or cancellations.
+-   [x] FR6.1: The system shall send **email/SMS alerts** for appointment booking, reminders, or cancellations.
 -   [ ] FR6.2: The system shall allow internal **messages between doctors and staff**.
 
 ### 7. **Reporting & Analytics**
