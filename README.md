@@ -43,7 +43,12 @@ pip install -r requirements.txt
 
 ### 2. Configuration
 ```bash
+# On Windows
+copy .env.template .env
+
+# On macOS/Linux
 cp .env.template .env
+
 # Edit .env with your settings
 ```
 
