@@ -1,33 +1,37 @@
-# Flask Website Template
+# C.A.R.E. - Clinical Appointment & Record Entry
 
-A modern, production-ready Flask website template featuring comprehensive authentication, admin panel, and responsive design.
+A modern healthcare management system featuring comprehensive role-based authentication, patient records management, and appointment scheduling.
 
 ## ✨ Key Features
 
-- **🏗️ Modern Architecture**: Flask factory pattern with blueprints
-- **🎨 Responsive Design**: Tailwind CSS with Bootstrap Icons
-- **🔐 Complete Authentication**: Registration, login, password reset, email verification
-- **👥 Admin Panel**: User management, system monitoring, security logs
-- **🛡️ Advanced Security**: Account lockout, rate limiting, hCaptcha integration
-- **🌓 Theme System**: Light/Dark/System modes with persistent preferences
-- **📧 Email Integration**: Contact forms, password reset, verification emails
-- **📋 Legal Compliance**: Privacy policy, terms of service, cookie policy
-- **🚀 Deployment Ready**: Vercel serverless and traditional hosting support
+-   **🏥 Healthcare-Focused**: Designed specifically for clinical environments
+-   **👥 Role-Based Access**: Patient, Doctor, Staff, and Admin user types
+-   **🔐 Complete Authentication**: Registration, login, password reset, email verification
+-   **📋 Electronic Medical Records**: Digital patient records and consultation notes
+-   **📅 Appointment Management**: Online booking and scheduling system
+-   **🛡️ Advanced Security**: Account lockout, rate limiting, hCaptcha integration
+-   **🌓 Theme System**: Light/Dark/System modes with persistent preferences
+-   **📧 Email Integration**: Contact forms, password reset, verification emails
+-   **📋 Legal Compliance**: Privacy policy, terms of service, cookie policy (RA 10173 compliant)
+-   **🚀 Deployment Ready**: Vercel serverless and traditional hosting support
 
 ## 🚀 Quick Start
 
 ### 1. Clone Repository
+
 ```bash
 git clone <repository-url>
-cd flask-website-template
+cd C.A.R.E
 ```
 
 ### 2. Create Virtual Environment
+
 ```bash
 python -m venv venv
 ```
 
 ### 3. Activate Virtual Environment
+
 ```bash
 # On Windows
 venv\Scripts\activate
@@ -37,11 +41,13 @@ source venv/bin/activate
 ```
 
 ### 4. Install Dependencies
+
 ```bash
 pip install -r requirements.txt
 ```
 
-### 2. Configuration
+### 5. Configuration
+
 ```bash
 # On Windows
 copy .env.template .env
@@ -52,19 +58,21 @@ cp .env.template .env
 # Edit .env with your settings
 ```
 
-### 3. Initialize Database
+### 6. Initialize Database
+
 ```bash
 flask db init
 flask db migrate -m "Initial migration"
 flask db upgrade
 ```
 
-### 4. Run Application
+### 7. Run Application
+
 ```bash
 python run.py
 ```
 
-Visit `http://localhost:5000` to view the website.
+Visit `http://localhost:5000` to view the C.A.R.E. system.
 
 ## 📚 Documentation
 
@@ -113,9 +121,59 @@ Visit `http://localhost:5000` to view the website.
 - **Persistent Settings**: Saved in localStorage
 - **Smooth Transitions**: Elegant theme switching
 
+## 👤 Default User Accounts
+
+The system automatically creates sample accounts for testing all user roles:
+
+### 🔧 Administrator Account
+
+-   **Username**: `admin`
+-   **Password**: `admin123`
+-   **Email**: `admin@care-system.com`
+-   **Role**: Admin (Full system access)
+-   **Status**: ✅ Email Verified
+
+### 👩‍⚕️ Healthcare Professional Accounts
+
+#### Doctor Account
+
+-   **Username**: `doctor_sample`
+-   **Password**: `doctor123`
+-   **Email**: `doctor@care-system.com`
+-   **Role**: Doctor
+-   **License**: `MD-2024-001`
+-   **Specialization**: Internal Medicine
+-   **Facility**: C.A.R.E. Medical Center
+-   **Status**: ✅ Email Verified
+
+#### Staff Account
+
+-   **Username**: `staff_sample`
+-   **Password**: `staff123`
+-   **Email**: `staff@care-system.com`
+-   **Role**: Staff
+-   **License**: `RN-2024-001`
+-   **Facility**: C.A.R.E. Medical Center
+-   **Status**: ✅ Email Verified
+
+### 👤 Patient Account
+
+-   **Username**: `patient_sample`
+-   **Password**: `patient123`
+-   **Email**: `patient@care-system.com`
+-   **Role**: Patient
+-   **Name**: Ana Reyes
+-   **DOB**: May 15, 1990
+-   **Address**: 123 Health Street, Wellness City, Metro Manila
+-   **Emergency Contact**: Pedro Reyes (+63 555 EMER-123)
+-   **Status**: ✅ Email Verified
+
+> ⚠️ **Important**: Change these default credentials in production environments!
+
 ## 🔧 Environment Configuration
 
 ### Required Variables
+
 ```bash
 # Core Settings
 FLASK_ENV=development
@@ -142,10 +200,62 @@ HCAPTCHA_SITE_KEY=your-site-key
 HCAPTCHA_SECRET_KEY=your-secret-key
 ```
 
+## 📚 User Roles & Permissions
+
+### 👤 Patient
+
+-   ✅ Register and manage personal profile
+-   ✅ Book appointments online
+-   ✅ View own medical records
+-   ✅ Update personal information
+-   ✅ Manage emergency contacts
+
+### 👩‍⚕️ Doctor
+
+-   ✅ All patient permissions
+-   ✅ View patient records
+-   ✅ Manage appointments
+-   ✅ Write prescriptions
+-   ✅ Add consultation notes
+-   ✅ Manage medical specialization
+
+### 👥 Staff
+
+-   ✅ View patient records
+-   ✅ Manage appointments
+-   ✅ Manage patient queue
+-   ✅ Update facility information
+-   ✅ Assist with administrative tasks
+
+### 🔧 Admin
+
+-   ✅ All system permissions
+-   ✅ User management (activate/deactivate, role changes)
+-   ✅ Real-time dashboard with statistics
+-   ✅ Security logs and monitoring
+-   ✅ System maintenance tools
+
+## 🔐 Security Features
+
+### 🛡️ Authentication & Access Control
+
+-   **Email Verification**: Mandatory for all accounts
+-   **Role-Based Access**: Granular permissions per user type
+-   **Account Lockout**: 5 failed attempts = 15-minute lockout
+-   **Password Security**: Argon2 hashing with strength validation
+-   **Session Management**: Secure sessions with "Remember Me" option
+
+### 🔒 Healthcare Data Protection
+
+-   **RA 10173 Compliance**: Follows Philippine Data Privacy Act
+-   **Secure File Handling**: Encrypted data storage
+-   **Audit Trails**: Complete logging of data access and modifications
+-   **Professional Verification**: License number validation for healthcare staff
+
 ## 📁 Project Structure
 
 ```
-flask-website-template/
+C.A.R.E/
 ├── app/                          # Main application package
 │   ├── models/                   # Database models
 │   ├── routes/                   # Application routes
@@ -196,47 +306,52 @@ flask-website-template/
 ## 🚀 Deployment Options
 
 ### Vercel (Serverless)
-- **One-click Deploy**: Automatic detection and deployment
-- **Environment Adaptation**: Auto-disables database features
-- **Contact Form**: Logs submissions instead of database storage
-- **Zero Configuration**: Works out of the box
+
+-   **One-click Deploy**: Automatic detection and deployment
+-   **Environment Adaptation**: Auto-disables database features for demo
+-   **Contact Form**: Logs submissions for demonstration
 
 ### Traditional Hosting
-- **Full Features**: Complete database and authentication
-- **VPS/Dedicated**: Full control and customization
-- **Shared Hosting**: Basic hosting compatibility
 
-See the [Deployment Guide](docs/DEPLOYMENT.md) for detailed instructions.
+-   **Full Features**: Complete database and authentication
+-   **VPS/Dedicated**: Full control and customization
+-   **Healthcare Compliance**: Full HIPAA/RA 10173 compliance features
 
 ## 🛡️ Security in Production
 
 ### Essential Steps
-1. **Change Default Credentials**: Update admin username/password
-2. **Configure HTTPS**: Essential for secure cookies and authentication
-3. **Set Strong Secret Key**: Use a cryptographically secure secret
+
+1. **Change Default Credentials**: Update all sample account passwords
+2. **Configure HTTPS**: Essential for healthcare data protection
+3. **Set Strong Secret Key**: Use cryptographically secure secret
 4. **Enable hCaptcha**: Protect forms from bot submissions
 5. **Configure Email**: Set up production email service
 6. **Monitor Logs**: Regular review of security and access logs
 
-### Production Checklist
-- [ ] HTTPS configured with valid SSL certificate
-- [ ] Environment variables secured
-- [ ] Default admin credentials changed
-- [ ] Database credentials secured
-- [ ] Email service configured
-- [ ] hCaptcha enabled and configured
-- [ ] Security headers configured
-- [ ] Backup strategy implemented
-- [ ] Monitoring and alerting set up
+### Healthcare Compliance Checklist
+
+-   [ ] HTTPS configured with valid SSL certificate
+-   [ ] All default credentials changed
+-   [ ] Professional license verification implemented
+-   [ ] Patient data encryption enabled
+-   [ ] Audit logging configured
+-   [ ] Backup and recovery procedures established
+-   [ ] Staff training on data privacy completed
 
 ## 🔨 Technologies
 
-- **Backend**: Python Flask, SQLAlchemy, Flask-Migrate
-- **Frontend**: Tailwind CSS, Bootstrap Icons, Vanilla JavaScript
-- **Database**: SQLite (dev), PostgreSQL/MySQL (production)
-- **Security**: Argon2, Flask-WTF, hCaptcha
-- **Email**: Flask-Mail with SMTP support
-- **Deployment**: Vercel, traditional hosting
+-   **Backend**: Python Flask, SQLAlchemy, Flask-Migrate
+-   **Frontend**: Tailwind CSS, Bootstrap Icons, Vanilla JavaScript
+-   **Database**: SQLite (dev), PostgreSQL/MySQL (production)
+-   **Security**: Argon2, Flask-WTF, hCaptcha
+-   **Email**: Flask-Mail with SMTP support
+-   **Deployment**: Vercel, traditional hosting
+-   **Compliance**: RA 10173 (Data Privacy Act of 2012) compliant
+
+## 📋 Requirements Tracking
+
+-   **[Functional Requirements](FUNCTIONAL-REQUIREMENTS.md)**: ✅ Feature checklist
+-   **[Non-Functional Requirements](NON-FUNCTIONAL-REQUIREMENTS.md)**: 🚀 Performance & security checklist
 
 ## 📝 License
 
@@ -248,10 +363,12 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## 📞 Support
 
-- **Documentation**: Check the [docs/](docs/) directory for detailed guides
-- **Issues**: Open an issue on GitHub for bug reports or feature requests
-- **Email**: Contact form available in the application
+-   **Documentation**: Check the [docs/](docs/) directory for detailed guides
+-   **Issues**: Open an issue on GitHub for bug reports or feature requests
+-   **Email**: Contact form available in the application
 
 ---
 
-**⚡ Quick Deploy**: [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/MACantara/flask-website-template)
+**⚡ Quick Deploy**: [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/your-username/C.A.R.E)
+
+**🏥 C.A.R.E.** - Transforming healthcare management from manual processes to modern digital solutions.
