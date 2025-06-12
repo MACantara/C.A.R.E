@@ -4,7 +4,7 @@
 
 {% block content %}
 <div class="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
-    <div class="max-w-md w-full space-y-8">
+    <div class="max-w-2xl w-full space-y-8">
         <div class="opacity-0 animate-fade-in-up">
             <div class="text-center mb-6">
                 <div
@@ -17,35 +17,185 @@
             </h2>
             <p class="mt-2 text-center text-sm text-gray-600 dark:text-gray-400 opacity-0 animate-fade-in-up"
                 style="animation-delay: 0.1s;">
-                Register for healthcare professional access - Or
+                Register as a patient or healthcare professional - Or
                 <a href="{{ url_for('auth.login') }}"
                     class="font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300 transition-colors duration-200 hover:underline">
                     sign in to existing account
                 </a>
             </p>
         </div>
-        <form class="mt-8 space-y-6 opacity-0 animate-fade-in-left" style="animation-delay: 0.2s;" method="POST">
-            <div class="space-y-4">
-                <div class="opacity-0 animate-fade-in-up" style="animation-delay: 0.3s;">
+
+        <form class="mt-8 space-y-6 opacity-0 animate-fade-in-left" style="animation-delay: 0.2s;" method="POST"
+            id="signupForm">
+            <!-- Role Selection -->
+            <div class="space-y-4 opacity-0 animate-fade-in-up" style="animation-delay: 0.3s;">
+                <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300">Account Type</label>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <label class="relative cursor-pointer">
+                        <input type="radio" name="role" value="patient" checked class="sr-only role-radio">
+                        <div
+                            class="role-card p-4 border-2 border-gray-300 dark:border-gray-600 rounded-xl transition-all duration-300 hover:border-blue-500 dark:hover:border-blue-400">
+                            <div class="text-center">
+                                <i class="bi bi-person text-2xl text-blue-600 dark:text-blue-400 mb-2"></i>
+                                <h3 class="font-semibold text-gray-900 dark:text-white">Patient</h3>
+                                <p class="text-xs text-gray-600 dark:text-gray-400">Book appointments & manage health
+                                    records</p>
+                            </div>
+                        </div>
+                    </label>
+                    <label class="relative cursor-pointer">
+                        <input type="radio" name="role" value="doctor" class="sr-only role-radio">
+                        <div
+                            class="role-card p-4 border-2 border-gray-300 dark:border-gray-600 rounded-xl transition-all duration-300 hover:border-blue-500 dark:hover:border-blue-400">
+                            <div class="text-center">
+                                <i class="bi bi-person-badge text-2xl text-green-600 dark:text-green-400 mb-2"></i>
+                                <h3 class="font-semibold text-gray-900 dark:text-white">Doctor</h3>
+                                <p class="text-xs text-gray-600 dark:text-gray-400">Manage patients & write
+                                    prescriptions</p>
+                            </div>
+                        </div>
+                    </label>
+                    <label class="relative cursor-pointer">
+                        <input type="radio" name="role" value="staff" class="sr-only role-radio">
+                        <div
+                            class="role-card p-4 border-2 border-gray-300 dark:border-gray-600 rounded-xl transition-all duration-300 hover:border-blue-500 dark:hover:border-blue-400">
+                            <div class="text-center">
+                                <i class="bi bi-people text-2xl text-purple-600 dark:text-purple-400 mb-2"></i>
+                                <h3 class="font-semibold text-gray-900 dark:text-white">Staff</h3>
+                                <p class="text-xs text-gray-600 dark:text-gray-400">Manage appointments & patient queue
+                                </p>
+                            </div>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Basic Information -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 opacity-0 animate-fade-in-up"
+                style="animation-delay: 0.4s;">
+                <div>
                     <label for="username"
-                        class="block text-sm font-semibold text-gray-700 dark:text-gray-300">Healthcare Professional
-                        ID</label>
+                        class="block text-sm font-semibold text-gray-700 dark:text-gray-300">Username</label>
                     <input id="username" name="username" type="text" required
                         class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 hover:shadow-md"
-                        placeholder="Choose your professional ID" value="{{ request.form.username }}">
-                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400 transition-colors duration-200">3-30
-                        characters, letters, numbers and underscores only</p>
+                        placeholder="Choose username" value="{{ request.form.username }}">
+                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">3-30 characters, letters, numbers and
+                        underscores only</p>
                 </div>
 
-                <div class="opacity-0 animate-fade-in-up" style="animation-delay: 0.4s;">
-                    <label for="email" class="block text-sm font-semibold text-gray-700 dark:text-gray-300">Professional
-                        Email Address</label>
+                <div>
+                    <label for="email" class="block text-sm font-semibold text-gray-700 dark:text-gray-300">Email
+                        Address</label>
                     <input id="email" name="email" type="email" required
                         class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 hover:shadow-md"
-                        placeholder="Enter your email" value="{{ request.form.email }}">
+                        placeholder="Enter email address" value="{{ request.form.email }}">
+                </div>
+            </div>
+
+            <!-- Personal Information -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 opacity-0 animate-fade-in-up"
+                style="animation-delay: 0.5s;">
+                <div>
+                    <label for="first_name" class="block text-sm font-semibold text-gray-700 dark:text-gray-300">First
+                        Name</label>
+                    <input id="first_name" name="first_name" type="text" required
+                        class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 hover:shadow-md"
+                        placeholder="Enter first name" value="{{ request.form.first_name }}">
                 </div>
 
-                <div class="opacity-0 animate-fade-in-up" style="animation-delay: 0.5s;">
+                <div>
+                    <label for="last_name" class="block text-sm font-semibold text-gray-700 dark:text-gray-300">Last
+                        Name</label>
+                    <input id="last_name" name="last_name" type="text" required
+                        class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 hover:shadow-md"
+                        placeholder="Enter last name" value="{{ request.form.last_name }}">
+                </div>
+            </div>
+
+            <!-- Phone Number -->
+            <div class="opacity-0 animate-fade-in-up" style="animation-delay: 0.55s;">
+                <label for="phone_number" class="block text-sm font-semibold text-gray-700 dark:text-gray-300">Phone
+                    Number</label>
+                <input id="phone_number" name="phone_number" type="tel"
+                    class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 hover:shadow-md"
+                    placeholder="Enter phone number" value="{{ request.form.phone_number }}">
+            </div>
+
+            <!-- Role-specific fields -->
+            <!-- Patient-specific fields -->
+            <div id="patient-fields" class="space-y-4 opacity-0 animate-fade-in-up" style="animation-delay: 0.6s;">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="date_of_birth"
+                            class="block text-sm font-semibold text-gray-700 dark:text-gray-300">Date of Birth</label>
+                        <input id="date_of_birth" name="date_of_birth" type="date"
+                            class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:shadow-md"
+                            value="{{ request.form.date_of_birth }}">
+                    </div>
+                    <div>
+                        <label for="emergency_contact"
+                            class="block text-sm font-semibold text-gray-700 dark:text-gray-300">Emergency
+                            Contact</label>
+                        <input id="emergency_contact" name="emergency_contact" type="text"
+                            class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 hover:shadow-md"
+                            placeholder="Emergency contact name" value="{{ request.form.emergency_contact }}">
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="emergency_phone"
+                            class="block text-sm font-semibold text-gray-700 dark:text-gray-300">Emergency Phone</label>
+                        <input id="emergency_phone" name="emergency_phone" type="tel"
+                            class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 hover:shadow-md"
+                            placeholder="Emergency contact phone" value="{{ request.form.emergency_phone }}">
+                    </div>
+                    <div>
+                        <label for="address"
+                            class="block text-sm font-semibold text-gray-700 dark:text-gray-300">Address</label>
+                        <input id="address" name="address" type="text"
+                            class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 hover:shadow-md"
+                            placeholder="Home address" value="{{ request.form.address }}">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Healthcare professional fields -->
+            <div id="healthcare-fields" class="space-y-4 opacity-0 animate-fade-in-up hidden"
+                style="animation-delay: 0.6s;">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="license_number"
+                            class="block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                            <span id="license-label">License Number</span>
+                            <span class="text-red-500" id="license-required">*</span>
+                        </label>
+                        <input id="license_number" name="license_number" type="text"
+                            class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 hover:shadow-md"
+                            placeholder="Professional license number" value="{{ request.form.license_number }}">
+                    </div>
+                    <div>
+                        <label for="facility_name"
+                            class="block text-sm font-semibold text-gray-700 dark:text-gray-300">Facility/Clinic
+                            Name</label>
+                        <input id="facility_name" name="facility_name" type="text"
+                            class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 hover:shadow-md"
+                            placeholder="Healthcare facility name" value="{{ request.form.facility_name }}">
+                    </div>
+                </div>
+                <div id="doctor-specialization" class="hidden">
+                    <label for="specialization"
+                        class="block text-sm font-semibold text-gray-700 dark:text-gray-300">Medical
+                        Specialization</label>
+                    <input id="specialization" name="specialization" type="text"
+                        class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 hover:shadow-md"
+                        placeholder="e.g., Internal Medicine, Pediatrics" value="{{ request.form.specialization }}">
+                </div>
+            </div>
+
+            <!-- Password fields -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 opacity-0 animate-fade-in-up"
+                style="animation-delay: 0.7s;">
+                <div>
                     <label for="password"
                         class="block text-sm font-semibold text-gray-700 dark:text-gray-300">Password</label>
                     <input id="password" name="password" type="password" required
@@ -53,7 +203,7 @@
                         placeholder="Create a password">
                 </div>
 
-                <div class="opacity-0 animate-fade-in-up" style="animation-delay: 0.6s;">
+                <div>
                     <label for="confirm_password"
                         class="block text-sm font-semibold text-gray-700 dark:text-gray-300">Confirm Password</label>
                     <input id="confirm_password" name="confirm_password" type="password" required
@@ -64,40 +214,95 @@
 
             <!-- hCaptcha -->
             {% if hcaptcha_enabled() %}
-            <div class="opacity-0 animate-fade-in-up" style="animation-delay: 0.65s;">
+            <div class="opacity-0 animate-fade-in-up" style="animation-delay: 0.75s;">
                 {{ hcaptcha }}
             </div>
             {% endif %}
 
-            <div class="opacity-0 animate-fade-in-up" style="animation-delay: 0.7s;">
+            <div class="opacity-0 animate-fade-in-up" style="animation-delay: 0.8s;">
                 <button type="submit" id="signup-btn"
                     class="group w-full inline-flex items-center justify-center px-8 py-4 bg-gradient-to-r from-green-600 to-teal-600 text-white font-semibold text-lg rounded-xl hover:from-green-700 hover:to-teal-700 transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-green-500/25 shadow-xl hover:shadow-2xl cursor-pointer hover:scale-105 transform">
                     <i class="bi bi-shield-plus mr-3 submit-icon"></i>
                     <div class="hidden animate-spin submit-spinner">
                         <i class="bi bi-arrow-clockwise"></i>
                     </div>
-                    <span class="submit-text">Register Professional Account</span>
+                    <span class="submit-text">Create Account</span>
                     <span class="hidden submit-loading-text">Creating Account...</span>
                 </button>
             </div>
         </form>
 
         <!-- Healthcare Notice -->
-        <div class="text-center opacity-0 animate-fade-in-up" style="animation-delay: 0.8s;">
+        <div class="text-center opacity-0 animate-fade-in-up" style="animation-delay: 0.9s;">
             <p class="text-xs text-gray-500 dark:text-gray-400">
                 <i class="bi bi-shield-lock mr-1"></i>
-                Account registration is verified for healthcare professionals only
+                All accounts are verified and comply with healthcare data protection standards
             </p>
         </div>
     </div>
 </div>
 
-<!-- Include hCaptcha handler script -->
+<!-- Include scripts -->
 {% if hcaptcha_enabled() %}
 <script src="{{ url_for('static', filename='js/hcaptcha-handler.js') }}"></script>
 {% endif %}
 
-<!-- Include password strength checker -->
-<script type="module" src="{{ url_for('static', filename='js/sign-up.js') }}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const roleRadios = document.querySelectorAll('.role-radio');
+        const patientFields = document.getElementById('patient-fields');
+        const healthcareFields = document.getElementById('healthcare-fields');
+        const doctorSpecialization = document.getElementById('doctor-specialization');
+        const licenseRequired = document.getElementById('license-required');
+        const licenseNumber = document.getElementById('license_number');
+
+        function updateFormFields() {
+            const selectedRole = document.querySelector('.role-radio:checked').value;
+
+            // Reset all fields
+            patientFields.classList.add('hidden');
+            healthcareFields.classList.add('hidden');
+            doctorSpecialization.classList.add('hidden');
+            licenseRequired.classList.add('hidden');
+            licenseNumber.removeAttribute('required');
+
+            // Show appropriate fields
+            if (selectedRole === 'patient') {
+                patientFields.classList.remove('hidden');
+            } else if (selectedRole === 'doctor') {
+                healthcareFields.classList.remove('hidden');
+                doctorSpecialization.classList.remove('hidden');
+                licenseRequired.classList.remove('hidden');
+                licenseNumber.setAttribute('required', 'required');
+            } else if (selectedRole === 'staff') {
+                healthcareFields.classList.remove('hidden');
+            }
+        }
+
+        // Update role card styling
+        function updateRoleCards() {
+            const selectedRole = document.querySelector('.role-radio:checked').value;
+            document.querySelectorAll('.role-card').forEach(card => {
+                card.classList.remove('border-blue-500', 'bg-blue-50', 'dark:bg-blue-900/20');
+                card.classList.add('border-gray-300', 'dark:border-gray-600');
+            });
+
+            const selectedCard = document.querySelector(`.role-radio[value="${selectedRole}"]`).nextElementSibling;
+            selectedCard.classList.remove('border-gray-300', 'dark:border-gray-600');
+            selectedCard.classList.add('border-blue-500', 'bg-blue-50', 'dark:bg-blue-900/20');
+        }
+
+        roleRadios.forEach(radio => {
+            radio.addEventListener('change', () => {
+                updateFormFields();
+                updateRoleCards();
+            });
+        });
+
+        // Initialize form
+        updateFormFields();
+        updateRoleCards();
+    });
+</script>
 
 {% endblock %}

@@ -146,10 +146,46 @@ def login():
 @auth_bp.route("/signup", methods=["GET", "POST"])
 def signup():
     if request.method == "POST":
+        # Basic form data
         username = request.form.get("username", "").strip().lower()
         email = request.form.get("email", "").strip().lower()
         password = request.form.get("password")
         confirm_password = request.form.get("confirm_password")
+
+        # Role and profile data
+        role = request.form.get("role", "patient").strip()
+        first_name = request.form.get("first_name", "").strip()
+        last_name = request.form.get("last_name", "").strip()
+        phone_number = request.form.get("phone_number", "").strip()
+
+        # Healthcare professional specific fields
+        license_number = (
+            request.form.get("license_number", "").strip()
+            if role in ["doctor", "staff"]
+            else None
+        )
+        specialization = (
+            request.form.get("specialization", "").strip() if role == "doctor" else None
+        )
+        facility_name = (
+            request.form.get("facility_name", "").strip()
+            if role in ["doctor", "staff"]
+            else None
+        )
+
+        # Patient specific fields
+        date_of_birth = request.form.get("date_of_birth") if role == "patient" else None
+        address = request.form.get("address", "").strip() if role == "patient" else None
+        emergency_contact = (
+            request.form.get("emergency_contact", "").strip()
+            if role == "patient"
+            else None
+        )
+        emergency_phone = (
+            request.form.get("emergency_phone", "").strip()
+            if role == "patient"
+            else None
+        )
 
         # Check if database is disabled (Vercel environment)
         if current_app.config.get("DISABLE_DATABASE", False):
@@ -167,6 +203,7 @@ def signup():
         # Validation
         errors = []
 
+        # Basic validation
         if not username:
             errors.append("Username is required.")
         elif not is_valid_username(username):
@@ -188,6 +225,11 @@ def signup():
         else:
             # Use zxcvbn validation with user inputs
             user_inputs = [username, email.split("@")[0]] if email else [username]
+            if first_name:
+                user_inputs.append(first_name)
+            if last_name:
+                user_inputs.append(last_name)
+
             is_valid, password_errors, _ = PasswordValidator.validate_password(
                 password, user_inputs
             )
@@ -197,6 +239,35 @@ def signup():
         if password != confirm_password:
             errors.append("Passwords do not match.")
 
+        # Role validation
+        if role not in ["patient", "doctor", "staff"]:
+            errors.append("Invalid role selected.")
+
+        # Role-specific validation
+        if role == "patient":
+            if not first_name or not last_name:
+                errors.append("First name and last name are required for patients.")
+            if date_of_birth:
+                try:
+                    from datetime import datetime
+
+                    datetime.strptime(date_of_birth, "%Y-%m-%d")
+                except ValueError:
+                    errors.append("Invalid date of birth format.")
+
+        elif role in ["doctor", "staff"]:
+            if not first_name or not last_name:
+                errors.append(
+                    "First name and last name are required for healthcare professionals."
+                )
+            if role == "doctor" and not license_number:
+                errors.append("License number is required for doctors.")
+            if (
+                license_number
+                and User.query.filter_by(license_number=license_number).first()
+            ):
+                errors.append("License number already registered.")
+
         if errors:
             for error in errors:
                 flash(error, "error")
@@ -204,7 +275,30 @@ def signup():
 
         try:
             # Create new user
-            user = User(username=username, email=email)
+            user = User(
+                username=username,
+                email=email,
+                role=role,
+                first_name=first_name or None,
+                last_name=last_name or None,
+                phone_number=phone_number or None,
+                license_number=license_number,
+                specialization=specialization,
+                facility_name=facility_name,
+            )
+
+            # Set patient-specific fields
+            if role == "patient":
+                if date_of_birth:
+                    from datetime import datetime
+
+                    user.date_of_birth = datetime.strptime(
+                        date_of_birth, "%Y-%m-%d"
+                    ).date()
+                user.address = address
+                user.emergency_contact = emergency_contact
+                user.emergency_phone = emergency_phone
+
             user.set_password(password)
             db.session.add(user)
             db.session.commit()
