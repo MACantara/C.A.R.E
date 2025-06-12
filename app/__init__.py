@@ -58,6 +58,13 @@ def create_app(config_name=None):
     if not app.config.get("DISABLE_DATABASE", False):
         from app.models import Contact, User, PasswordResetToken
         from app.models.appointment import Appointment, AppointmentReminder
+        from app.models.medical_record import (
+            MedicalRecord,
+            Consultation,
+            Prescription,
+            Allergy,
+            VitalSigns,
+        )
         from app.models.email_verification import EmailVerification
         from app.models.login_attempt import LoginAttempt
 
