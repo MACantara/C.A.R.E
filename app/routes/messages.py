@@ -227,3 +227,55 @@ def reply_to_message(message_id):
         return redirect(url_for("messages.inbox"))
 
     return redirect(url_for("messages.compose", reply_to=message_id))
+
+
+@messages_bp.route("/api/latest_messages")
+@login_required
+def api_latest_messages():
+    """Get latest messages for inbox refresh."""
+    if current_user.role not in ["doctor", "staff"]:
+        return jsonify({"error": "Unauthorized"}), 403
+
+    # Get received messages
+    received_messages = (
+        InternalMessage.query.filter(
+            and_(
+                InternalMessage.recipient_id == current_user.id,
+                InternalMessage.is_deleted_by_recipient == False,
+            )
+        )
+        .order_by(InternalMessage.created_at.desc())
+        .limit(20)  # Limit to recent messages for performance
+        .all()
+    )
+
+    # Get sent messages
+    sent_messages = (
+        InternalMessage.query.filter(
+            and_(
+                InternalMessage.sender_id == current_user.id,
+                InternalMessage.is_deleted_by_sender == False,
+            )
+        )
+        .order_by(InternalMessage.created_at.desc())
+        .limit(20)
+        .all()
+    )
+
+    # Count unread messages
+    unread_count = InternalMessage.query.filter(
+        and_(
+            InternalMessage.recipient_id == current_user.id,
+            InternalMessage.is_read == False,
+            InternalMessage.is_deleted_by_recipient == False,
+        )
+    ).count()
+
+    return jsonify(
+        {
+            "received_messages": [msg.to_dict() for msg in received_messages],
+            "sent_messages": [msg.to_dict() for msg in sent_messages],
+            "unread_count": unread_count,
+            "last_updated": datetime.utcnow().isoformat(),
+        }
+    )
