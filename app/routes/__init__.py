@@ -10,6 +10,7 @@ from .admin import admin_bp
 from .logs import logs_bp
 from .appointments import appointments_bp
 from .medical_records import medical_records_bp
+from .reports import reports_bp
 
 
 def register_blueprints(app):
@@ -25,3 +26,4 @@ def register_blueprints(app):
     app.register_blueprint(logs_bp)
     app.register_blueprint(appointments_bp)
     app.register_blueprint(medical_records_bp)
+    app.register_blueprint(reports_bp)
