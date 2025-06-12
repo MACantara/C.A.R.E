@@ -79,7 +79,45 @@ def compose():
         .all()
     )
 
-    return render_template("messages/compose.html", recipients=recipients)
+    # Handle reply functionality
+    reply_to_id = request.args.get("reply_to")
+    reply_data = None
+
+    if reply_to_id:
+        try:
+            original_message = InternalMessage.query.get(int(reply_to_id))
+            if original_message and (
+                original_message.recipient_id == current_user.id
+                or original_message.sender_id == current_user.id
+            ):
+                # Determine who to reply to (sender if we're the recipient, recipient if we're the sender)
+                reply_to_user = (
+                    original_message.sender
+                    if original_message.recipient_id == current_user.id
+                    else original_message.recipient
+                )
+
+                reply_data = {
+                    "recipient_id": reply_to_user.id,
+                    "subject": (
+                        f"Re: {original_message.subject}"
+                        if not original_message.subject.startswith("Re:")
+                        else original_message.subject
+                    ),
+                    "priority": original_message.priority.value,
+                    "message_type": original_message.message_type.value,
+                    "original_content": original_message.content,
+                    "original_sender": f"{original_message.sender.first_name} {original_message.sender.last_name}",
+                    "original_date": original_message.created_at.strftime(
+                        "%B %d, %Y at %I:%M %p"
+                    ),
+                }
+        except (ValueError, AttributeError):
+            pass  # Invalid reply_to_id, ignore
+
+    return render_template(
+        "messages/compose.html", recipients=recipients, reply_data=reply_data
+    )
 
 
 @messages_bp.route("/send", methods=["POST"])
@@ -175,3 +213,17 @@ def delete_message(message_id):
     db.session.commit()
     flash("Message deleted successfully.", "success")
     return redirect(url_for("messages.inbox"))
+
+
+@messages_bp.route("/reply/<int:message_id>")
+@login_required
+def reply_to_message(message_id):
+    """Redirect to compose with reply parameters."""
+    message = InternalMessage.query.get_or_404(message_id)
+
+    # Check if user has permission to reply to this message
+    if message.recipient_id != current_user.id and message.sender_id != current_user.id:
+        flash("Access denied.", "error")
+        return redirect(url_for("messages.inbox"))
+
+    return redirect(url_for("messages.compose", reply_to=message_id))
