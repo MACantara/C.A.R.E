@@ -16,14 +16,14 @@ These define what the system **must do**:
 
 ### 3. **Electronic Medical Records (EMR)**
 
--   [ ] FR3.1: The system shall store **patient medical history**, including past consultations, prescriptions, and diagnoses.
--   [ ] FR3.2: The system shall allow doctors to **add consultation notes and e-prescriptions**.
--   [ ] FR3.3: The system shall allow searching of patient records using filters (name, date, ID, condition).
+-   [x] FR3.1: The system shall store **patient medical history**, including past consultations, prescriptions, and diagnoses.
+-   [x] FR3.2: The system shall allow doctors to **add consultation notes and e-prescriptions**.
+-   [x] FR3.3: The system shall allow searching of patient records using filters (name, date, ID, condition).
 
 ### 4. **Consultation Module**
 
--   [ ] FR4.1: The system shall allow doctors to **write, edit, and view** consultation notes.
--   [ ] FR4.2: The system shall provide **diagnosis templates** and **common prescription lists** for quick entry.
+-   [x] FR4.1: The system shall allow doctors to **write, edit, and view** consultation notes.
+-   [x] FR4.2: The system shall provide **diagnosis templates** and **common prescription lists** for quick entry.
 
 ### 5. **Calendar and Queue Management**
 
@@ -43,5 +43,5 @@ These define what the system **must do**:
 
 ### 8. **Data Management**
 
--   [ ] FR8.1: The system shall allow authorized users to **add, edit, or delete** patient data.
--   [ ] FR8.2: The system shall maintain a **history log** of changes to patient records for traceability.
+-   [x] FR8.1: The system shall allow authorized users to **add, edit, or delete** patient data.
+-   [x] FR8.2: The system shall maintain a **history log** of changes to patient records for traceability.
