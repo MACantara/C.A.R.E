@@ -358,9 +358,9 @@
         {% endif %}
     }
 
-    // Update message count on page load and every 30 seconds
+    // Update message count on page load and every 15 seconds
     document.addEventListener('DOMContentLoaded', function () {
         updateMessageCount();
-        setInterval(updateMessageCount, 30000);
+        setInterval(updateMessageCount, 15000); // Reduced from 30 seconds
     });
 </script>
