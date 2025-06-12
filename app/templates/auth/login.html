@@ -83,12 +83,12 @@
             <div class="space-y-4">
                 <div class="opacity-0 animate-fade-in-up" style="animation-delay: 0.3s;">
                     <label for="username_or_email"
-                        class="block text-sm font-semibold text-gray-700 dark:text-gray-300">Healthcare ID or
+                        class="block text-sm font-semibold text-gray-700 dark:text-gray-300">Username or
                         Email</label>
                     <input id="username_or_email" name="username_or_email" type="text" required
                         class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 hover:shadow-md"
-                        placeholder="Enter your healthcare ID or email" value="{{ request.form.username_or_email }}" {%
-                        if locked_out %}disabled{% endif %}>
+                        placeholder="Enter your Username or email" value="{{ request.form.username_or_email }}" {% if
+                        locked_out %}disabled{% endif %}>
                 </div>
                 <div class="opacity-0 animate-fade-in-up" style="animation-delay: 0.4s;">
                     <label for="password"
