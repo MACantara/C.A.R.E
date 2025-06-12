@@ -1,0 +1,268 @@
+{% extends "base.html" %}
+
+{% block title %}Search Medical Records - C.A.R.E. System{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <!-- Header -->
+    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-8 opacity-0 animate-fade-in-up">
+        <div class="flex items-center mb-4 lg:mb-0">
+            <div
+                class="h-12 w-12 flex items-center justify-center rounded-full bg-purple-100 dark:bg-purple-900/30 mr-4">
+                <i class="bi bi-search text-purple-600 dark:text-purple-400 text-xl"></i>
+            </div>
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Search Medical Records</h1>
+                <p class="text-gray-600 dark:text-gray-400">Find patient records, consultations, and prescriptions</p>
+            </div>
+        </div>
+
+        <a href="{{ url_for('medical_records.index') }}"
+            class="inline-flex items-center px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors duration-200">
+            <i class="bi bi-arrow-left mr-2"></i>
+            Back to Dashboard
+        </a>
+    </div>
+
+    <!-- Search Form -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-8 opacity-0 animate-fade-in-left"
+        style="animation-delay: 0.2s;">
+        <form method="GET" class="space-y-6">
+            <!-- Main Search -->
+            <div>
+                <label for="q" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Search
+                    Terms</label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <i class="bi bi-search text-gray-400"></i>
+                    </div>
+                    <input type="text" id="q" name="q" value="{{ query }}"
+                        placeholder="Search by diagnosis, symptoms, medication, or notes..."
+                        class="block w-full pl-10 pr-3 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400">
+                </div>
+            </div>
+
+            <!-- Advanced Filters -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <label for="patient" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Patient
+                        Name</label>
+                    <input type="text" id="patient" name="patient" value="{{ patient_name }}"
+                        placeholder="Search by patient name..."
+                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400">
+                </div>
+
+                <div>
+                    <label for="type" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Record
+                        Type</label>
+                    <select name="type" id="type"
+                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                        <option value="">All Types</option>
+                        <option value="consultation" {{ 'selected' if record_type=='consultation' }}>Consultation
+                        </option>
+                        <option value="prescription" {{ 'selected' if record_type=='prescription' }}>Prescription
+                        </option>
+                        <option value="diagnosis" {{ 'selected' if record_type=='diagnosis' }}>Diagnosis</option>
+                        <option value="lab_result" {{ 'selected' if record_type=='lab_result' }}>Lab Result</option>
+                        <option value="vaccination" {{ 'selected' if record_type=='vaccination' }}>Vaccination</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Date Range</label>
+                    <div class="flex space-x-2">
+                        <input type="date" name="date_from" value="{{ date_from }}"
+                            class="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                        <span class="text-gray-500 self-center">to</span>
+                        <input type="date" name="date_to" value="{{ date_to }}"
+                            class="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Search Button -->
+            <div class="flex justify-end">
+                <button type="submit"
+                    class="inline-flex items-center px-6 py-3 bg-purple-600 text-white font-medium rounded-lg hover:bg-purple-700 transition-colors duration-200">
+                    <i class="bi bi-search mr-2"></i>
+                    Search Records
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Search Results -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden opacity-0 animate-fade-in-up"
+        style="animation-delay: 0.4s;">
+        {% if query or patient_name or date_from or date_to %}
+        <div class="px-6 py-4 bg-purple-50 dark:bg-purple-900/20 border-b border-purple-200 dark:border-purple-800">
+            <div class="flex items-center justify-between">
+                <h2 class="text-lg font-semibold text-purple-800 dark:text-purple-200">
+                    Search Results
+                    {% if results %}({{ results|length }} found){% endif %}
+                </h2>
+                {% if query or patient_name or date_from or date_to %}
+                <a href="{{ url_for('medical_records.search_records') }}"
+                    class="text-sm text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300">
+                    Clear Filters
+                </a>
+                {% endif %}
+            </div>
+        </div>
+
+        {% if results %}
+        <div class="divide-y divide-gray-200 dark:divide-gray-700">
+            {% for record in results %}
+            <div class="p-6 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200">
+                <div class="flex items-center justify-between mb-3">
+                    <div class="flex items-center space-x-3">
+                        <div
+                            class="w-10 h-10 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
+                            <i class="bi bi-file-medical text-purple-600 dark:text-purple-400"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">{{ record.title }}</h3>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">
+                                {{ record.patient.display_name }} • {{ record.record_date.strftime('%B %d, %Y') }}
+                            </p>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        <span class="px-3 py-1 text-sm font-medium rounded-full
+                            {% if record.record_type.value == 'consultation' %}bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400
+                            {% elif record.record_type.value == 'prescription' %}bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400
+                            {% elif record.record_type.value == 'diagnosis' %}bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400
+                            {% else %}bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400{% endif %}">
+                            {{ record.record_type.value.replace('_', ' ').title() }}
+                        </span>
+                        <a href="{{ url_for('medical_records.patient_records', patient_id=record.patient_id) }}"
+                            class="inline-flex items-center px-3 py-2 bg-purple-600 text-white text-sm rounded-lg hover:bg-purple-700 transition-colors duration-200">
+                            <i class="bi bi-eye mr-1"></i>
+                            View Patient
+                        </a>
+                    </div>
+                </div>
+
+                {% if record.description %}
+                <div class="ml-13">
+                    <p class="text-gray-700 dark:text-gray-300 text-sm">
+                        {{ record.description[:200] }}{% if record.description|length > 200 %}...{% endif %}
+                    </p>
+                </div>
+                {% endif %}
+
+                {% if record.diagnosis %}
+                <div class="ml-13 mt-2">
+                    <span class="text-xs font-medium text-gray-600 dark:text-gray-400">Diagnosis:</span>
+                    <p class="text-gray-700 dark:text-gray-300 text-sm">
+                        {{ record.diagnosis[:150] }}{% if record.diagnosis|length > 150 %}...{% endif %}
+                    </p>
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <!-- No Results -->
+        <div class="text-center py-12">
+            <div
+                class="w-24 h-24 mx-auto mb-6 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center">
+                <i class="bi bi-search text-gray-400 dark:text-gray-500 text-3xl"></i>
+            </div>
+            <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">No records found</h3>
+            <p class="text-gray-600 dark:text-gray-400">
+                No medical records match your search criteria. Try adjusting your search terms or filters.
+            </p>
+        </div>
+        {% endif %}
+
+        {% else %}
+        <!-- Initial State -->
+        <div class="text-center py-12">
+            <div
+                class="w-24 h-24 mx-auto mb-6 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center">
+                <i class="bi bi-search text-purple-600 dark:text-purple-400 text-3xl"></i>
+            </div>
+            <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">Search Medical Records</h3>
+            <p class="text-gray-600 dark:text-gray-400">
+                Enter search terms above to find patient records, consultations, prescriptions, and more.
+            </p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+    // Auto-complete functionality for patient search
+    document.addEventListener('DOMContentLoaded', function () {
+        const patientInput = document.getElementById('patient');
+        let debounceTimer;
+
+        patientInput.addEventListener('input', function () {
+            clearTimeout(debounceTimer);
+            const query = this.value.trim();
+
+            if (query.length < 2) {
+                hideAutocomplete();
+                return;
+            }
+
+            debounceTimer = setTimeout(() => {
+                searchPatients(query);
+            }, 300);
+        });
+
+        function searchPatients(query) {
+            fetch(`{{ url_for('medical_records.api_patient_search') }}?q=${encodeURIComponent(query)}`)
+                .then(response => response.json())
+                .then(patients => {
+                    showAutocomplete(patients);
+                })
+                .catch(error => {
+                    console.error('Patient search error:', error);
+                });
+        }
+
+        function showAutocomplete(patients) {
+            hideAutocomplete();
+
+            if (patients.length === 0) return;
+
+            const autocomplete = document.createElement('div');
+            autocomplete.id = 'patient-autocomplete';
+            autocomplete.className = 'absolute z-10 w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg mt-1 max-h-60 overflow-y-auto';
+
+            patients.forEach(patient => {
+                const item = document.createElement('div');
+                item.className = 'px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer';
+                item.innerHTML = `
+                <div class="font-medium text-gray-900 dark:text-white">${patient.name}</div>
+                <div class="text-sm text-gray-600 dark:text-gray-400">${patient.email}</div>
+            `;
+                item.addEventListener('click', () => {
+                    patientInput.value = patient.name;
+                    hideAutocomplete();
+                });
+                autocomplete.appendChild(item);
+            });
+
+            patientInput.parentNode.style.position = 'relative';
+            patientInput.parentNode.appendChild(autocomplete);
+        }
+
+        function hideAutocomplete() {
+            const existing = document.getElementById('patient-autocomplete');
+            if (existing) {
+                existing.remove();
+            }
+        }
+
+        // Hide autocomplete when clicking outside
+        document.addEventListener('click', function (e) {
+            if (!patientInput.contains(e.target)) {
+                hideAutocomplete();
+            }
+        });
+    });
+</script>
+{% endblock %}

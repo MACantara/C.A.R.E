@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+
+{% block title %}Patients - C.A.R.E. System{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <!-- Header -->
+    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-8 opacity-0 animate-fade-in-up">
+        <div class="flex items-center mb-4 lg:mb-0">
+            <div class="h-12 w-12 flex items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30 mr-4">
+                <i class="bi bi-people text-blue-600 dark:text-blue-400 text-xl"></i>
+            </div>
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Patient Directory</h1>
+                <p class="text-gray-600 dark:text-gray-400">Search and access patient medical records</p>
+            </div>
+        </div>
+
+        <a href="{{ url_for('medical_records.index') }}"
+            class="inline-flex items-center px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors duration-200">
+            <i class="bi bi-arrow-left mr-2"></i>
+            Back to Dashboard
+        </a>
+    </div>
+
+    <!-- Search Bar -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-8 opacity-0 animate-fade-in-left"
+        style="animation-delay: 0.2s;">
+        <form method="GET" class="flex flex-col md:flex-row gap-4">
+            <div class="flex-1">
+                <label for="search" class="sr-only">Search patients</label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <i class="bi bi-search text-gray-400"></i>
+                    </div>
+                    <input type="text" id="search" name="search" value="{{ search }}"
+                        placeholder="Search by name, username, or email..."
+                        class="block w-full pl-10 pr-3 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400">
+                </div>
+            </div>
+            <button type="submit"
+                class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 flex items-center justify-center">
+                <i class="bi bi-search mr-2"></i>
+                Search Patients
+            </button>
+        </form>
+    </div>
+
+    <!-- Patients Grid -->
+    <div class="opacity-0 animate-fade-in-up" style="animation-delay: 0.4s;">
+        {% if patients.items %}
+        <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-8">
+            {% for patient in patients.items %}
+            <div
+                class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 hover:shadow-xl transition-all duration-300 border border-gray-100 dark:border-gray-700 hover:border-blue-200 dark:hover:border-blue-600">
+                <div class="flex items-center space-x-4 mb-4">
+                    <div
+                        class="w-12 h-12 rounded-full bg-gradient-to-r from-blue-500 to-teal-600 flex items-center justify-center text-white font-bold text-lg">
+                        {{ patient.first_name[0] if patient.first_name else patient.username[0] }}{{
+                        patient.last_name[0] if patient.last_name else '' }}
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white truncate">
+                            {{ patient.display_name }}
+                        </h3>
+                        <p class="text-sm text-gray-600 dark:text-gray-400 truncate">
+                            {{ patient.email }}
+                        </p>
+                    </div>
+                </div>
+
+                <div class="space-y-2 mb-4">
+                    {% if patient.phone_number %}
+                    <div class="flex items-center text-sm text-gray-600 dark:text-gray-400">
+                        <i class="bi bi-telephone mr-2"></i>
+                        {{ patient.phone_number }}
+                    </div>
+                    {% endif %}
+
+                    {% if patient.date_of_birth %}
+                    <div class="flex items-center text-sm text-gray-600 dark:text-gray-400">
+                        <i class="bi bi-calendar-event mr-2"></i>
+                        {{ patient.date_of_birth.strftime('%B %d, %Y') }}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="flex space-x-2">
+                    <a href="{{ url_for('medical_records.patient_records', patient_id=patient.id) }}"
+                        class="flex-1 text-center px-3 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors duration-200">
+                        <i class="bi bi-file-medical mr-1"></i>
+                        View Records
+                    </a>
+                    {% if current_user.role == 'doctor' %}
+                    <a href="{{ url_for('medical_records.new_consultation', patient_id=patient.id) }}"
+                        class="flex-1 text-center px-3 py-2 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 transition-colors duration-200">
+                        <i class="bi bi-plus-circle mr-1"></i>
+                        New Visit
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Pagination -->
+        {% if patients.pages > 1 %}
+        <div class="flex justify-center">
+            <nav class="flex items-center space-x-1">
+                {% if patients.has_prev %}
+                <a href="{{ url_for('medical_records.patients', page=patients.prev_num, search=search) }}"
+                    class="px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700">
+                    Previous
+                </a>
+                {% endif %}
+
+                {% for page in patients.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
+                {% if page %}
+                {% if page != patients.page %}
+                <a href="{{ url_for('medical_records.patients', page=page, search=search) }}"
+                    class="px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700">
+                    {{ page }}
+                </a>
+                {% else %}
+                <span class="px-3 py-2 text-sm font-medium text-white bg-blue-600 border border-blue-600 rounded-lg">
+                    {{ page }}
+                </span>
+                {% endif %}
+                {% else %}
+                <span class="px-3 py-2 text-sm font-medium text-gray-500">...</span>
+                {% endif %}
+                {% endfor %}
+
+                {% if patients.has_next %}
+                <a href="{{ url_for('medical_records.patients', page=patients.next_num, search=search) }}"
+                    class="px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700">
+                    Next
+                </a>
+                {% endif %}
+            </nav>
+        </div>
+        {% endif %}
+
+        {% else %}
+        <!-- Empty State -->
+        <div class="text-center py-12">
+            <div
+                class="w-24 h-24 mx-auto mb-6 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center">
+                <i class="bi bi-people text-gray-400 dark:text-gray-500 text-3xl"></i>
+            </div>
+            <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">No patients found</h3>
+            <p class="text-gray-600 dark:text-gray-400">
+                {% if search %}
+                No patients match your search criteria for "{{ search }}".
+                {% else %}
+                No patients are registered in the system yet.
+                {% endif %}
+            </p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

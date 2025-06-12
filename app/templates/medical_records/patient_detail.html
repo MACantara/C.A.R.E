@@ -1,0 +1,397 @@
+{% extends "base.html" %}
+
+{% block title %}{{ patient.display_name }} - Medical Records{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <!-- Header -->
+    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-8 opacity-0 animate-fade-in-up">
+        <div class="flex items-center mb-4 lg:mb-0">
+            <div
+                class="w-16 h-16 rounded-full bg-gradient-to-r from-blue-500 to-teal-600 flex items-center justify-center text-white font-bold text-xl mr-4">
+                {{ patient.first_name[0] if patient.first_name else patient.username[0] }}{{ patient.last_name[0] if
+                patient.last_name else '' }}
+            </div>
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900 dark:text-white">{{ patient.display_name }}</h1>
+                <p class="text-gray-600 dark:text-gray-400">Patient ID: {{ patient.id }} • {{ patient.email }}</p>
+            </div>
+        </div>
+
+        <div class="flex space-x-3">
+            {% if current_user.role == 'doctor' %}
+            <a href="{{ url_for('medical_records.new_consultation', patient_id=patient.id) }}"
+                class="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200">
+                <i class="bi bi-plus-circle mr-2"></i>New Consultation
+            </a>
+            <a href="{{ url_for('medical_records.new_prescription', patient_id=patient.id) }}"
+                class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200">
+                <i class="bi bi-prescription2 mr-2"></i>New Prescription
+            </a>
+            {% endif %}
+            <a href="{{ url_for('medical_records.patients') }}"
+                class="inline-flex items-center px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors duration-200">
+                <i class="bi bi-arrow-left mr-2"></i>Back to Patients
+            </a>
+        </div>
+    </div>
+
+    <!-- Patient Info Card -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-8 opacity-0 animate-fade-in-left"
+        style="animation-delay: 0.2s;">
+        <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4">Patient Information</h2>
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% if patient.phone_number %}
+            <div>
+                <label class="text-sm font-medium text-gray-600 dark:text-gray-400">Phone Number</label>
+                <p class="text-gray-900 dark:text-white font-medium">{{ patient.phone_number }}</p>
+            </div>
+            {% endif %}
+
+            {% if patient.date_of_birth %}
+            <div>
+                <label class="text-sm font-medium text-gray-600 dark:text-gray-400">Date of Birth</label>
+                <p class="text-gray-900 dark:text-white font-medium">{{ patient.date_of_birth.strftime('%B %d, %Y') }}
+                </p>
+            </div>
+            {% endif %}
+
+            {% if patient.emergency_contact %}
+            <div>
+                <label class="text-sm font-medium text-gray-600 dark:text-gray-400">Emergency Contact</label>
+                <p class="text-gray-900 dark:text-white font-medium">{{ patient.emergency_contact }}</p>
+                {% if patient.emergency_phone %}
+                <p class="text-sm text-gray-600 dark:text-gray-400">{{ patient.emergency_phone }}</p>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            {% if patient.address %}
+            <div class="md:col-span-2 lg:col-span-3">
+                <label class="text-sm font-medium text-gray-600 dark:text-gray-400">Address</label>
+                <p class="text-gray-900 dark:text-white font-medium">{{ patient.address }}</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8 opacity-0 animate-fade-in-up" style="animation-delay: 0.4s;">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-100 dark:border-gray-700">
+            <div class="flex items-center">
+                <div
+                    class="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center mr-4">
+                    <i class="bi bi-stethoscope text-green-600 dark:text-green-400 text-xl"></i>
+                </div>
+                <div>
+                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Consultations</p>
+                    <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ consultations|length }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-100 dark:border-gray-700">
+            <div class="flex items-center">
+                <div class="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center mr-4">
+                    <i class="bi bi-prescription2 text-blue-600 dark:text-blue-400 text-xl"></i>
+                </div>
+                <div>
+                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Prescriptions</p>
+                    <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ prescriptions|length }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-100 dark:border-gray-700">
+            <div class="flex items-center">
+                <div class="w-12 h-12 bg-red-100 dark:bg-red-900/30 rounded-lg flex items-center justify-center mr-4">
+                    <i class="bi bi-exclamation-triangle text-red-600 dark:text-red-400 text-xl"></i>
+                </div>
+                <div>
+                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Allergies</p>
+                    <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ allergies|length }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-100 dark:border-gray-700">
+            <div class="flex items-center">
+                <div
+                    class="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center mr-4">
+                    <i class="bi bi-activity text-purple-600 dark:text-purple-400 text-xl"></i>
+                </div>
+                <div>
+                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Vital Records</p>
+                    <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ vital_signs|length }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabs Navigation -->
+    <div class="mb-8 opacity-0 animate-fade-in-up" style="animation-delay: 0.6s;">
+        <div class="border-b border-gray-200 dark:border-gray-700">
+            <nav class="-mb-px flex space-x-8" aria-label="Tabs">
+                <button class="tab-button active py-2 px-1 border-b-2 font-medium text-sm" data-tab="consultations">
+                    <i class="bi bi-stethoscope mr-2"></i>Consultations
+                </button>
+                <button class="tab-button py-2 px-1 border-b-2 font-medium text-sm" data-tab="prescriptions">
+                    <i class="bi bi-prescription2 mr-2"></i>Prescriptions
+                </button>
+                <button class="tab-button py-2 px-1 border-b-2 font-medium text-sm" data-tab="allergies">
+                    <i class="bi bi-exclamation-triangle mr-2"></i>Allergies
+                </button>
+                <button class="tab-button py-2 px-1 border-b-2 font-medium text-sm" data-tab="vitals">
+                    <i class="bi bi-activity mr-2"></i>Vital Signs
+                </button>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Tab Content -->
+    <div class="opacity-0 animate-fade-in-up" style="animation-delay: 0.8s;">
+        <!-- Consultations Tab -->
+        <div id="consultations-tab" class="tab-content">
+            {% if consultations %}
+            <div class="space-y-6">
+                {% for consultation in consultations %}
+                <div
+                    class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-100 dark:border-gray-700">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+                                {{ consultation.consultation_date.strftime('%B %d, %Y at %I:%M %p') }}
+                            </h3>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">
+                                Dr. {{ consultation.doctor.display_name }}
+                            </p>
+                        </div>
+                        <span class="px-3 py-1 text-sm font-medium rounded-full
+                            {% if consultation.status.value == 'completed' %}bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400
+                            {% elif consultation.status.value == 'draft' %}bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400
+                            {% else %}bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400{% endif %}">
+                            {{ consultation.status.value.replace('_', ' ').title() }}
+                        </span>
+                    </div>
+
+                    <div class="grid md:grid-cols-2 gap-4">
+                        <div>
+                            <h4 class="font-medium text-gray-900 dark:text-white mb-2">Chief Complaint</h4>
+                            <p class="text-gray-700 dark:text-gray-300">{{ consultation.chief_complaint or 'Not
+                                recorded' }}</p>
+                        </div>
+
+                        {% if consultation.assessment %}
+                        <div>
+                            <h4 class="font-medium text-gray-900 dark:text-white mb-2">Assessment</h4>
+                            <p class="text-gray-700 dark:text-gray-300">{{ consultation.assessment }}</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-12">
+                <i class="bi bi-stethoscope text-gray-400 dark:text-gray-500 text-4xl mb-4"></i>
+                <p class="text-gray-600 dark:text-gray-400">No consultations recorded yet</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Prescriptions Tab -->
+        <div id="prescriptions-tab" class="tab-content hidden">
+            {% if prescriptions %}
+            <div class="space-y-4">
+                {% for prescription in prescriptions %}
+                <div
+                    class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-100 dark:border-gray-700">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">{{
+                                prescription.medication_name }}</h3>
+                            {% if prescription.generic_name %}
+                            <p class="text-sm text-gray-600 dark:text-gray-400">Generic: {{ prescription.generic_name }}
+                            </p>
+                            {% endif %}
+                        </div>
+                        <div class="text-right">
+                            <span class="px-3 py-1 text-sm font-medium rounded-full
+                                {% if prescription.status.value == 'active' %}bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400
+                                {% elif prescription.status.value == 'discontinued' %}bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400
+                                {% else %}bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400{% endif %}">
+                                {{ prescription.status.value.replace('_', ' ').title() }}
+                            </span>
+                            <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                                {{ prescription.prescribed_date.strftime('%B %d, %Y') }}
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="grid md:grid-cols-3 gap-4">
+                        <div>
+                            <h4 class="font-medium text-gray-900 dark:text-white mb-1">Dosage</h4>
+                            <p class="text-gray-700 dark:text-gray-300">{{ prescription.dosage }}</p>
+                        </div>
+                        <div>
+                            <h4 class="font-medium text-gray-900 dark:text-white mb-1">Frequency</h4>
+                            <p class="text-gray-700 dark:text-gray-300">{{ prescription.frequency }}</p>
+                        </div>
+                        <div>
+                            <h4 class="font-medium text-gray-900 dark:text-white mb-1">Duration</h4>
+                            <p class="text-gray-700 dark:text-gray-300">{{ prescription.duration }}</p>
+                        </div>
+                    </div>
+
+                    {% if prescription.instructions %}
+                    <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-600">
+                        <h4 class="font-medium text-gray-900 dark:text-white mb-2">Instructions</h4>
+                        <p class="text-gray-700 dark:text-gray-300">{{ prescription.instructions }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-12">
+                <i class="bi bi-prescription2 text-gray-400 dark:text-gray-500 text-4xl mb-4"></i>
+                <p class="text-gray-600 dark:text-gray-400">No prescriptions recorded yet</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Allergies Tab -->
+        <div id="allergies-tab" class="tab-content hidden">
+            {% if allergies %}
+            <div class="grid gap-4 md:grid-cols-2">
+                {% for allergy in allergies %}
+                <div
+                    class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-red-200 dark:border-red-800">
+                    <div class="flex items-center mb-3">
+                        <i class="bi bi-exclamation-triangle text-red-600 dark:text-red-400 text-xl mr-3"></i>
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">{{ allergy.allergen }}</h3>
+                    </div>
+
+                    {% if allergy.severity %}
+                    <div class="mb-2">
+                        <span class="px-2 py-1 text-sm font-medium rounded-full
+                            {% if allergy.severity == 'life-threatening' %}bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400
+                            {% elif allergy.severity == 'severe' %}bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400
+                            {% elif allergy.severity == 'moderate' %}bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400
+                            {% else %}bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400{% endif %}">
+                            {{ allergy.severity.title() }}
+                        </span>
+                    </div>
+                    {% endif %}
+
+                    {% if allergy.reaction %}
+                    <p class="text-gray-700 dark:text-gray-300 text-sm">{{ allergy.reaction }}</p>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-12">
+                <i class="bi bi-shield-check text-gray-400 dark:text-gray-500 text-4xl mb-4"></i>
+                <p class="text-gray-600 dark:text-gray-400">No known allergies recorded</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Vital Signs Tab -->
+        <div id="vitals-tab" class="tab-content hidden">
+            {% if vital_signs %}
+            <div class="space-y-4">
+                {% for vitals in vital_signs %}
+                <div
+                    class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-100 dark:border-gray-700">
+                    <div class="flex justify-between items-start mb-4">
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+                            {{ vitals.recorded_date.strftime('%B %d, %Y at %I:%M %p') }}
+                        </h3>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">
+                            Recorded by {{ vitals.recorder.display_name }}
+                        </p>
+                    </div>
+
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        {% if vitals.temperature %}
+                        <div class="text-center p-3 bg-red-50 dark:bg-red-900/20 rounded-lg">
+                            <i class="bi bi-thermometer text-red-600 dark:text-red-400 text-xl mb-1"></i>
+                            <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Temperature</p>
+                            <p class="text-lg font-bold text-gray-900 dark:text-white">{{ vitals.temperature }}°C</p>
+                        </div>
+                        {% endif %}
+
+                        {% if vitals.blood_pressure %}
+                        <div class="text-center p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                            <i class="bi bi-heart text-blue-600 dark:text-blue-400 text-xl mb-1"></i>
+                            <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Blood Pressure</p>
+                            <p class="text-lg font-bold text-gray-900 dark:text-white">{{ vitals.blood_pressure }}</p>
+                        </div>
+                        {% endif %}
+
+                        {% if vitals.heart_rate %}
+                        <div class="text-center p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                            <i class="bi bi-activity text-green-600 dark:text-green-400 text-xl mb-1"></i>
+                            <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Heart Rate</p>
+                            <p class="text-lg font-bold text-gray-900 dark:text-white">{{ vitals.heart_rate }} BPM</p>
+                        </div>
+                        {% endif %}
+
+                        {% if vitals.weight and vitals.bmi %}
+                        <div class="text-center p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
+                            <i class="bi bi-person text-purple-600 dark:text-purple-400 text-xl mb-1"></i>
+                            <p class="text-sm font-medium text-gray-600 dark:text-gray-400">BMI</p>
+                            <p class="text-lg font-bold text-gray-900 dark:text-white">{{ vitals.bmi }}</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-12">
+                <i class="bi bi-activity text-gray-400 dark:text-gray-500 text-4xl mb-4"></i>
+                <p class="text-gray-600 dark:text-gray-400">No vital signs recorded yet</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+    // Tab functionality
+    document.addEventListener('DOMContentLoaded', function () {
+        const tabButtons = document.querySelectorAll('.tab-button');
+        const tabContents = document.querySelectorAll('.tab-content');
+
+        tabButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const targetTab = button.getAttribute('data-tab');
+
+                // Update button states
+                tabButtons.forEach(btn => {
+                    btn.classList.remove('active', 'border-blue-500', 'text-blue-600', 'dark:text-blue-400');
+                    btn.classList.add('border-transparent', 'text-gray-500', 'dark:text-gray-400', 'hover:text-gray-700', 'dark:hover:text-gray-300', 'hover:border-gray-300', 'dark:hover:border-gray-600');
+                });
+
+                button.classList.remove('border-transparent', 'text-gray-500', 'dark:text-gray-400', 'hover:text-gray-700', 'dark:hover:text-gray-300', 'hover:border-gray-300', 'dark:hover:border-gray-600');
+                button.classList.add('active', 'border-blue-500', 'text-blue-600', 'dark:text-blue-400');
+
+                // Update content visibility
+                tabContents.forEach(content => {
+                    content.classList.add('hidden');
+                });
+
+                document.getElementById(targetTab + '-tab').classList.remove('hidden');
+            });
+        });
+
+        // Set initial state
+        const firstButton = tabButtons[0];
+        firstButton.classList.add('border-blue-500', 'text-blue-600', 'dark:text-blue-400');
+        firstButton.classList.remove('border-transparent', 'text-gray-500', 'dark:text-gray-400');
+    });
+</script>
+{% endblock %}
