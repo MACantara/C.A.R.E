@@ -1,6 +1,8 @@
 <!-- Actions -->
 <div class="mt-6 sm:mt-8 space-y-3">
     {% if user.id != session.user_id %}
+
+    <!-- Account Status Toggle -->
     <form method="POST" action="{{ url_for('admin.toggle_user_status', user_id=user.id) }}" class="w-full">
         <button type="submit"
             class="w-full {{ 'bg-red-600 hover:bg-red-700' if user.active else 'bg-green-600 hover:bg-green-700' }} text-white px-4 py-3 rounded-lg transition-colors duration-200 cursor-pointer text-sm sm:text-base flex items-center justify-center">
@@ -9,6 +11,25 @@
         </button>
     </form>
 
+    <!-- Role Management -->
+    <form method="POST" action="{{ url_for('admin.change_user_role', user_id=user.id) }}" class="w-full">
+        <div class="space-y-2">
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Change Role</label>
+            <select name="new_role"
+                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm">
+                <option value="patient" {{ 'selected' if user.role=='patient' }}>Patient</option>
+                <option value="staff" {{ 'selected' if user.role=='staff' }}>Staff</option>
+                <option value="doctor" {{ 'selected' if user.role=='doctor' }}>Doctor</option>
+            </select>
+            <button type="submit"
+                class="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors duration-200 cursor-pointer text-sm flex items-center justify-center">
+                <i class="bi bi-arrow-repeat mr-2"></i>
+                <span>Update Role</span>
+            </button>
+        </div>
+    </form>
+
+    <!-- Admin Status Toggle -->
     <form method="POST" action="{{ url_for('admin.toggle_admin_status', user_id=user.id) }}" class="w-full">
         <button type="submit"
             class="w-full {{ 'bg-orange-600 hover:bg-orange-700' if user.is_admin else 'bg-purple-600 hover:bg-purple-700' }} text-white px-4 py-3 rounded-lg transition-colors duration-200 cursor-pointer text-sm sm:text-base flex items-center justify-center">
@@ -16,6 +37,20 @@
             <span class="truncate">{{ 'Revoke Admin' if user.is_admin else 'Grant Admin' }}</span>
         </button>
     </form>
+
+    <!-- Professional Verification for Healthcare Roles -->
+    {% if user.role in ['doctor', 'staff'] %}
+    <div class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-3">
+        <div class="flex items-start space-x-2">
+            <i class="bi bi-info-circle text-yellow-600 dark:text-yellow-400 mt-0.5"></i>
+            <div class="text-xs text-yellow-800 dark:text-yellow-200">
+                <p class="font-medium">Professional Verification</p>
+                <p>Verify professional credentials before granting full access to patient data.</p>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
     {% else %}
     <div class="text-sm text-gray-500 dark:text-gray-400 text-center py-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
         <i class="bi bi-info-circle mr-2"></i>

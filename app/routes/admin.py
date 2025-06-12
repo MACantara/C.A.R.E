@@ -227,6 +227,50 @@ def toggle_admin_status(user_id):
     return redirect(url_for("admin.user_detail", user_id=user_id))
 
 
+@admin_bp.route("/user/<int:user_id>/change-role", methods=["POST"])
+@admin_required
+def change_user_role(user_id):
+    """Change user role."""
+    user = User.query.get_or_404(user_id)
+    new_role = request.form.get("new_role")
+
+    # Prevent admin from changing their own role
+    if user.id == session["user_id"]:
+        flash("You cannot change your own role.", "error")
+        return redirect(url_for("admin.user_detail", user_id=user_id))
+
+    # Validate role
+    if new_role not in ["patient", "doctor", "staff"]:
+        flash("Invalid role selected.", "error")
+        return redirect(url_for("admin.user_detail", user_id=user_id))
+
+    old_role = user.role
+    user.role = new_role
+
+    # If changing to/from doctor role, handle license number requirements
+    if new_role == "doctor" and not user.license_number:
+        flash(
+            f"Warning: User role changed from {old_role} to {new_role}, but no license number is set. Please ensure the user updates their profile with a valid license number.",
+            "warning",
+        )
+    elif old_role == "doctor" and new_role != "doctor":
+        # Optionally clear doctor-specific fields or leave them for reference
+        pass
+
+    # Clear admin status if role is changed to patient (optional business rule)
+    if new_role == "patient" and user.is_admin:
+        user.is_admin = False
+        flash(
+            f"User role changed from {old_role} to {new_role}. Admin privileges have been revoked.",
+            "success",
+        )
+    else:
+        flash(f"User role changed from {old_role} to {new_role}.", "success")
+
+    db.session.commit()
+    return redirect(url_for("admin.user_detail", user_id=user_id))
+
+
 @admin_bp.route("/api/stats")
 @admin_required
 def api_stats():
