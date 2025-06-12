@@ -12,7 +12,7 @@ These define what the system **must do**:
 
 -   [ ] FR2.1: The system shall allow patients to **book appointments online** based on doctor availability.
 -   [ ] FR2.2: The system shall display **available time slots** in real-time.
--   [ ] FR2.3: The system shall send **appointment confirmation and reminders** via email/SMS.
+-   [ ] FR2.3: The system shall send **appointment confirmation and reminders** via email.
 
 ### 3. **Electronic Medical Records (EMR)**
 
