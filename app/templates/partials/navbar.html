@@ -16,6 +16,26 @@
                     <span
                         class="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-blue-600 to-teal-600 group-hover:w-full transition-all duration-300"></span>
                 </a>
+
+                <!-- Appointments Navigation - Role-based -->
+                {% if current_user.is_authenticated %}
+                {% if current_user.role == 'patient' %}
+                <a href="{{ url_for('appointments.patient_appointments') }}"
+                    class="text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-300 font-medium relative group">
+                    My Appointments
+                    <span
+                        class="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-blue-600 to-teal-600 group-hover:w-full transition-all duration-300"></span>
+                </a>
+                {% elif current_user.role in ['doctor', 'staff'] %}
+                <a href="{{ url_for('appointments.doctor_schedule') }}"
+                    class="text-gray-600 dark:text-gray-300 hover:text-green-600 dark:hover:text-green-400 transition-all duration-300 font-medium relative group">
+                    Schedule
+                    <span
+                        class="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-green-600 to-teal-600 group-hover:w-full transition-all duration-300"></span>
+                </a>
+                {% endif %}
+                {% endif %}
+
                 <a href="{{ url_for('main.about') }}"
                     class="text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-300 font-medium relative group">
                     About
@@ -62,6 +82,24 @@
                                 class="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
                                 <i class="bi bi-person mr-2"></i>Profile
                             </a>
+
+                            <!-- Role-specific dropdown items -->
+                            {% if current_user.role == 'patient' %}
+                            <a href="{{ url_for('appointments.book_appointment') }}"
+                                class="flex items-center px-4 py-2 text-sm text-blue-700 dark:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/20">
+                                <i class="bi bi-calendar-plus mr-2"></i>Book Appointment
+                            </a>
+                            <a href="{{ url_for('appointments.patient_appointments') }}"
+                                class="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
+                                <i class="bi bi-calendar-event mr-2"></i>My Appointments
+                            </a>
+                            {% elif current_user.role in ['doctor', 'staff'] %}
+                            <a href="{{ url_for('appointments.doctor_schedule') }}"
+                                class="flex items-center px-4 py-2 text-sm text-green-700 dark:text-green-300 hover:bg-green-50 dark:hover:bg-green-900/20">
+                                <i class="bi bi-calendar-week mr-2"></i>Schedule
+                            </a>
+                            {% endif %}
+
                             {% if not config.get('DISABLE_DATABASE', False) and current_user and current_user.is_admin
                             %}
                             <a href="{{ url_for('admin.dashboard') }}"
@@ -169,6 +207,26 @@
         <div class="px-2 pt-2 pb-3 space-y-1">
             <a href="{{ url_for('main.home') }}"
                 class="block px-3 py-2 text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50/50 dark:hover:bg-gray-800/50 transition-all duration-300 rounded-lg font-medium">Home</a>
+
+            <!-- Mobile Appointments Navigation -->
+            {% if current_user.is_authenticated %}
+            {% if current_user.role == 'patient' %}
+            <a href="{{ url_for('appointments.book_appointment') }}"
+                class="block px-3 py-2 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:bg-blue-50/50 dark:hover:bg-blue-900/20 transition-all duration-300 rounded-lg font-medium">
+                <i class="bi bi-calendar-plus mr-2"></i>Book Appointment
+            </a>
+            <a href="{{ url_for('appointments.patient_appointments') }}"
+                class="block px-3 py-2 text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50/50 dark:hover:bg-gray-800/50 transition-all duration-300 rounded-lg font-medium">
+                <i class="bi bi-calendar-event mr-2"></i>My Appointments
+            </a>
+            {% elif current_user.role in ['doctor', 'staff'] %}
+            <a href="{{ url_for('appointments.doctor_schedule') }}"
+                class="block px-3 py-2 text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300 hover:bg-green-50/50 dark:hover:bg-green-900/20 transition-all duration-300 rounded-lg font-medium">
+                <i class="bi bi-calendar-week mr-2"></i>Schedule
+            </a>
+            {% endif %}
+            {% endif %}
+
             <a href="{{ url_for('main.about') }}"
                 class="block px-3 py-2 text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50/50 dark:hover:bg-gray-800/50 transition-all duration-300 rounded-lg font-medium">About</a>
             <a href="{{ url_for('contact.contact_page') }}"
