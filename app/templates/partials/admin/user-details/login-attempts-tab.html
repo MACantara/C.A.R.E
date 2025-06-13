@@ -1,25 +1,38 @@
 <!-- Login Attempts Tab -->
 <div id="content-login-attempts" class="tab-content">
-    <h2 class="text-lg sm:text-xl font-bold text-gray-900 dark:text-white mb-4 sm:mb-6">Recent Login Attempts</h2>
-    
+    <div class="flex items-center justify-between mb-4 sm:mb-6">
+        <h2 class="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">Recent Login Attempts</h2>
+        <div class="flex items-center text-xs text-gray-500 dark:text-gray-400">
+            <i class="bi bi-clock mr-1"></i>
+            <span>{{ user_timezone }}</span>
+        </div>
+    </div>
+
     {% if login_attempts %}
     <div class="space-y-3 sm:space-y-4">
         {% for attempt in login_attempts %}
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 sm:p-4 rounded-lg bg-gray-50 dark:bg-gray-700 space-y-2 sm:space-y-0">
+        <div
+            class="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 sm:p-4 rounded-lg bg-gray-50 dark:bg-gray-700 space-y-2 sm:space-y-0">
             <div class="flex items-center min-w-0 flex-1">
-                <div class="w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center flex-shrink-0 {{ 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400' if attempt.success else 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400' }}">
-                    <i class="bi {{ 'bi-check-circle' if attempt.success else 'bi-x-circle' }} text-xs sm:text-sm"></i>
+                <div
+                    class="w-8 h-8 flex-shrink-0 rounded-full flex items-center justify-center {{ 'bg-green-100 dark:bg-green-900/30' if attempt.success else 'bg-red-100 dark:bg-red-900/30' }}">
+                    <i
+                        class="bi {{ 'bi-check-circle text-green-600 dark:text-green-400' if attempt.success else 'bi-x-circle text-red-600 dark:text-red-400' }}"></i>
                 </div>
                 <div class="ml-3 min-w-0 flex-1">
-                    <p class="font-medium text-gray-900 dark:text-white text-sm sm:text-base">{{ attempt.ip_address }}</p>
-                    {% if attempt.user_agent %}
-                    <p class="text-xs sm:text-sm text-gray-500 dark:text-gray-400 truncate">{{ attempt.user_agent[:50] }}...</p>
-                    {% endif %}
+                    <p class="text-sm font-medium text-gray-900 dark:text-white truncate">{{ attempt.username_or_email
+                        or 'Unknown' }}</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">{{ attempt.ip_address }}</p>
                 </div>
             </div>
-            <div class="flex flex-row sm:flex-col items-center sm:items-end justify-between sm:justify-start sm:text-right ml-9 sm:ml-0 flex-shrink-0">
-                <p class="text-xs sm:text-sm text-gray-500 dark:text-gray-400">{{ attempt.attempted_at.strftime('%m/%d/%Y %H:%M') }}</p>
-                <span class="px-2 py-1 text-xs rounded-full {{ 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' if attempt.success else 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' }} sm:mt-1 whitespace-nowrap">
+            <div
+                class="flex flex-row sm:flex-col items-center sm:items-end justify-between sm:justify-start sm:text-right ml-11 sm:ml-0 flex-shrink-0">
+                <p class="text-xs text-gray-500 dark:text-gray-400" data-time="{{ attempt.attempted_at.isoformat() }}"
+                    title="{{ localize_datetime(attempt.attempted_at, user_timezone).strftime('%A, %B %d, %Y at %I:%M:%S %p %Z') }}">
+                    {{ localize_datetime(attempt.attempted_at, user_timezone).strftime('%m/%d/%Y %H:%M') }}
+                </p>
+                <span
+                    class="px-2 py-1 text-xs rounded-full {{ 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' if attempt.success else 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' }} sm:mt-1 whitespace-nowrap">
                     {{ 'Success' if attempt.success else 'Failed' }}
                 </span>
             </div>
@@ -30,7 +43,8 @@
     <div class="text-center py-6 sm:py-8">
         <i class="bi bi-shield-check text-3xl sm:text-4xl text-gray-400 dark:text-gray-500 mb-3 sm:mb-4"></i>
         <p class="text-gray-500 dark:text-gray-400 text-sm sm:text-base">No login attempts found for this user.</p>
-        <p class="text-xs sm:text-sm text-gray-400 dark:text-gray-500 mt-2">Login attempts will appear here when the user tries to log in.</p>
+        <p class="text-xs sm:text-sm text-gray-400 dark:text-gray-500 mt-2">Login attempts will appear here when the
+            user tries to log in.</p>
     </div>
     {% endif %}
 </div>
