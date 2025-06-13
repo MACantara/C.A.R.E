@@ -2,6 +2,10 @@
 
 {% block title %}Medical Dashboard - C.A.R.E. System{% endblock %}
 
+{% block include_navbar %}
+<!-- Navbar excluded for full-screen medical dashboard interface -->
+{% endblock %}
+
 {% block content %}
 <div class="min-h-screen bg-gray-50 dark:bg-gray-900 flex" data-user-timezone="{{ user_timezone }}"
     data-current-time="{{ current_time_local.isoformat() }}">
