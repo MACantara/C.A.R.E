@@ -2,243 +2,256 @@
 
 {% block title %}Reports & Analytics - C.A.R.E. System{% endblock %}
 
+{% block include_navbar %}
+<!-- Navbar excluded for full-screen reports interface -->
+{% endblock %}
+
 {% block content %}
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-    <!-- Header -->
-    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-8 opacity-0 animate-fade-in-up">
-        <div class="flex items-center mb-4 lg:mb-0">
-            <div
-                class="h-12 w-12 flex items-center justify-center rounded-full bg-indigo-100 dark:bg-indigo-900/30 mr-4">
-                <i class="bi bi-graph-up text-indigo-600 dark:text-indigo-400 text-xl"></i>
-            </div>
-            <div>
-                <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Reports & Analytics</h1>
-                <p class="text-gray-600 dark:text-gray-400">Healthcare insights and performance metrics</p>
-            </div>
-        </div>
+<div class="min-h-screen bg-gray-50 dark:bg-gray-900 flex" 
+     data-user-timezone="{{ user_timezone }}"
+     data-current-time="{{ current_time_local.isoformat() }}">
+    
+    <!-- Include Sidebar -->
+    {% include 'medical_dashboard/components/sidebar.html' %}
 
-        <div class="flex flex-col sm:flex-row gap-3">
-            <a href="{{ url_for('reports.appointment_report') }}"
-                class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200">
-                <i class="bi bi-calendar-event mr-2"></i>Appointment Report
-            </a>
-            <a href="{{ url_for('reports.prescription_report') }}"
-                class="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200">
-                <i class="bi bi-prescription2 mr-2"></i>Prescription Report
-            </a>
-            <a href="{{ url_for('reports.performance_report') }}"
-                class="inline-flex items-center px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors duration-200">
-                <i class="bi bi-trophy mr-2"></i>Performance Report
-            </a>
-        </div>
-    </div>
-
-    <!-- Date Range Filter -->
-    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-8 opacity-0 animate-fade-in-left"
-        style="animation-delay: 0.2s;">
-        <form method="GET" class="flex flex-col md:flex-row gap-4 items-end">
-            <div class="flex-1">
-                <label for="date_from" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">From
-                    Date</label>
-                <input type="date" id="date_from" name="date_from" value="{{ start_date }}"
-                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
-            </div>
-            <div class="flex-1">
-                <label for="date_to" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">To
-                    Date</label>
-                <input type="date" id="date_to" name="date_to" value="{{ end_date }}"
-                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
-            </div>
-            {% if current_user.role == 'admin' %}
-            <div class="flex-1">
-                <label for="doctor_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Doctor
-                    Filter</label>
-                <select name="doctor_id" id="doctor_id"
-                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
-                    <option value="">All Doctors</option>
-                    {% for doctor in doctors %}
-                    <option value="{{ doctor.id }}" {{ 'selected' if doctor.id==doctor_filter }}>{{ doctor.display_name
-                        }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            {% endif %}
-            <button type="submit"
-                class="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors duration-200 flex items-center">
-                <i class="bi bi-funnel mr-2"></i>Apply Filters
-            </button>
-        </form>
-    </div>
-
-    <!-- Summary Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 opacity-0 animate-fade-in-up"
-        style="animation-delay: 0.4s;">
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-100 dark:border-gray-700">
-            <div class="flex items-center">
-                <div class="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center mr-4">
-                    <i class="bi bi-calendar-event text-blue-600 dark:text-blue-400 text-xl"></i>
-                </div>
+    <!-- Main Content Area -->
+    <div class="flex-1 flex flex-col min-h-screen">
+        <!-- Header -->
+        <div class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4">
+            <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Total Appointments</p>
-                    <p class="text-2xl font-bold text-gray-900 dark:text-white">{{
-                        appointment_metrics.get('total_appointments', 0) }}</p>
-                    <p class="text-sm text-green-600 dark:text-green-400">{{ appointment_metrics.get('completion_rate',
-                        0) }}% completion rate</p>
+                    <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Reports & Analytics</h1>
+                    <p class="text-gray-600 dark:text-gray-400">Healthcare insights and performance metrics</p>
+                </div>
+
+                <!-- Header Actions -->
+                <div class="flex items-center space-x-3">
+                    <a href="{{ url_for('reports.appointment_report') }}"
+                        class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200">
+                        <i class="bi bi-calendar-event mr-2"></i>Appointment Report
+                    </a>
+                    <a href="{{ url_for('reports.prescription_report') }}"
+                        class="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200">
+                        <i class="bi bi-prescription2 mr-2"></i>Prescription Report
+                    </a>
+                    <a href="{{ url_for('reports.performance_report') }}"
+                        class="inline-flex items-center px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors duration-200">
+                        <i class="bi bi-trophy mr-2"></i>Performance Report
+                    </a>
                 </div>
             </div>
         </div>
 
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-100 dark:border-gray-700">
-            <div class="flex items-center">
-                <div
-                    class="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center mr-4">
-                    <i class="bi bi-people text-green-600 dark:text-green-400 text-xl"></i>
-                </div>
-                <div>
-                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Unique Patients</p>
-                    <p class="text-2xl font-bold text-gray-900 dark:text-white">{{
-                        appointment_metrics.get('unique_patients', 0) }}</p>
-                    <p class="text-sm text-blue-600 dark:text-blue-400">Patient visits</p>
-                </div>
-            </div>
-        </div>
-
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-100 dark:border-gray-700">
-            <div class="flex items-center">
-                <div
-                    class="w-12 h-12 bg-orange-100 dark:bg-orange-900/30 rounded-lg flex items-center justify-center mr-4">
-                    <i class="bi bi-calendar-check text-orange-600 dark:text-orange-400 text-xl"></i>
-                </div>
-                <div>
-                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Today's Summary</p>
-                    <p class="text-2xl font-bold text-gray-900 dark:text-white">{{
-                        today_summary.get('total_appointments', 0) }}</p>
-                    <p class="text-sm text-purple-600 dark:text-purple-400">{{
-                        today_summary.get('completed_appointments', 0) }} completed</p>
-                </div>
-            </div>
-        </div>
-
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-100 dark:border-gray-700">
-            <div class="flex items-center">
-                <div class="w-12 h-12 bg-red-100 dark:bg-red-900/30 rounded-lg flex items-center justify-center mr-4">
-                    <i class="bi bi-x-circle text-red-600 dark:text-red-400 text-xl"></i>
-                </div>
-                <div>
-                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Cancellation Rate</p>
-                    <p class="text-2xl font-bold text-gray-900 dark:text-white">{{
-                        appointment_metrics.get('cancellation_rate', 0) }}%</p>
-                    <p class="text-sm text-gray-600 dark:text-gray-400">Of total appointments</p>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Charts Row -->
-    <div class="grid lg:grid-cols-2 gap-6 mb-8 opacity-0 animate-fade-in-up" style="animation-delay: 0.6s;">
-        <!-- Appointment Timeline Chart -->
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-100 dark:border-gray-700">
-            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Appointment Timeline</h3>
-            <div class="h-64">
-                <canvas id="appointmentTimelineChart"></canvas>
-            </div>
-        </div>
-
-        <!-- Appointment Status Chart -->
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-100 dark:border-gray-700">
-            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Appointment Status Distribution</h3>
-            <div class="h-64">
-                <canvas id="appointmentStatusChart"></canvas>
-            </div>
-        </div>
-    </div>
-
-    <!-- Data Tables Row -->
-    <div class="grid lg:grid-cols-2 gap-6 opacity-0 animate-fade-in-up" style="animation-delay: 0.8s;">
-        <!-- Top Prescriptions -->
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-100 dark:border-gray-700">
-            <div class="flex items-center justify-between mb-4">
-                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Top Prescribed Medications</h3>
-                <a href="{{ url_for('reports.prescription_report') }}"
-                    class="text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 text-sm font-medium">
-                    View All
-                </a>
-            </div>
-
-            {% if prescription_trends %}
-            <div class="space-y-3">
-                {% for med in prescription_trends %}
-                <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                    <div>
-                        <p class="font-medium text-gray-900 dark:text-white">{{ med.medication }}</p>
-                        <p class="text-sm text-gray-600 dark:text-gray-400">{{ med.unique_patients }} patients</p>
+        <!-- Content -->
+        <div class="flex-1 p-6 overflow-y-auto">
+            <!-- Date Range Filter -->
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-8 opacity-0 animate-fade-in-left"
+                style="animation-delay: 0.2s;">
+                <form method="GET" class="flex flex-col md:flex-row gap-4 items-end">
+                    <div class="flex-1">
+                        <label for="date_from" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">From
+                            Date</label>
+                        <input type="date" id="date_from" name="date_from" value="{{ start_date }}"
+                            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
                     </div>
-                    <span
-                        class="px-3 py-1 bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 rounded-full text-sm font-medium">
-                        {{ med.total_prescriptions }}
-                    </span>
-                </div>
-                {% endfor %}
-            </div>
-            {% else %}
-            <div class="text-center py-8">
-                <i class="bi bi-prescription2 text-gray-400 dark:text-gray-500 text-3xl mb-4"></i>
-                <p class="text-gray-600 dark:text-gray-400">No prescription data available</p>
-            </div>
-            {% endif %}
-        </div>
-
-        <!-- Doctor Performance -->
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-100 dark:border-gray-700">
-            <div class="flex items-center justify-between mb-4">
-                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Doctor Performance</h3>
-                <a href="{{ url_for('reports.performance_report') }}"
-                    class="text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 text-sm font-medium">
-                    View All
-                </a>
-            </div>
-
-            {% if doctor_performance %}
-            <div class="space-y-3">
-                {% for doc in doctor_performance[:5] %}
-                <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                    <div>
-                        <p class="font-medium text-gray-900 dark:text-white">{{ doc.doctor_name }}</p>
-                        <p class="text-sm text-gray-600 dark:text-gray-400">{{ doc.unique_patients }} patients</p>
+                    <div class="flex-1">
+                        <label for="date_to" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">To
+                            Date</label>
+                        <input type="date" id="date_to" name="date_to" value="{{ end_date }}"
+                            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
                     </div>
-                    <div class="text-right">
-                        <p class="text-sm font-medium text-gray-900 dark:text-white">{{ doc.completion_rate }}%</p>
-                        <p class="text-xs text-gray-600 dark:text-gray-400">completion</p>
+                    {% if current_user.role == 'admin' %}
+                    <div class="flex-1">
+                        <label for="doctor_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Doctor
+                            Filter</label>
+                        <select name="doctor_id" id="doctor_id"
+                            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                            <option value="">All Doctors</option>
+                            {% for doctor in doctors %}
+                            <option value="{{ doctor.id }}" {{ 'selected' if doctor.id==doctor_filter }}>{{ doctor.display_name
+                                }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    {% endif %}
+                    <button type="submit"
+                        class="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors duration-200 flex items-center">
+                        <i class="bi bi-funnel mr-2"></i>Apply Filters
+                    </button>
+                </form>
+            </div>
+
+            <!-- Summary Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 opacity-0 animate-fade-in-up"
+                style="animation-delay: 0.4s;">
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-100 dark:border-gray-700">
+                    <div class="flex items-center">
+                        <div class="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center mr-4">
+                            <i class="bi bi-calendar-event text-blue-600 dark:text-blue-400 text-xl"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Total Appointments</p>
+                            <p class="text-2xl font-bold text-gray-900 dark:text-white">{{
+                                appointment_metrics.get('total_appointments', 0) }}</p>
+                            <p class="text-sm text-green-600 dark:text-green-400">{{ appointment_metrics.get('completion_rate',
+                                0) }}% completion rate</p>
+                        </div>
                     </div>
                 </div>
-                {% endfor %}
-            </div>
-            {% else %}
-            <div class="text-center py-8">
-                <i class="bi bi-person-badge text-gray-400 dark:text-gray-500 text-3xl mb-4"></i>
-                <p class="text-gray-600 dark:text-gray-400">No performance data available</p>
-            </div>
-            {% endif %}
-        </div>
-    </div>
 
-    <!-- Export Options -->
-    <div class="mt-8 bg-gray-50 dark:bg-gray-700 rounded-xl p-6 opacity-0 animate-fade-in-up"
-        style="animation-delay: 1.0s;">
-        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Export Reports</h3>
-        <div class="flex flex-wrap gap-3">
-            <a href="{{ url_for('reports.export_report', report_type='appointments', format='json', start_date=start_date, end_date=end_date) }}"
-                class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200">
-                <i class="bi bi-download mr-2"></i>Export Appointments (JSON)
-            </a>
-            <a href="{{ url_for('reports.export_report', report_type='appointments', format='csv', start_date=start_date, end_date=end_date) }}"
-                class="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200">
-                <i class="bi bi-file-earmark-spreadsheet mr-2"></i>Export Appointments (CSV)
-            </a>
-            <a href="{{ url_for('reports.export_report', report_type='prescriptions', format='json', start_date=start_date, end_date=end_date) }}"
-                class="inline-flex items-center px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors duration-200">
-                <i class="bi bi-download mr-2"></i>Export Prescriptions (JSON)
-            </a>
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-100 dark:border-gray-700">
+                    <div class="flex items-center">
+                        <div
+                            class="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center mr-4">
+                            <i class="bi bi-people text-green-600 dark:text-green-400 text-xl"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Unique Patients</p>
+                            <p class="text-2xl font-bold text-gray-900 dark:text-white">{{
+                                appointment_metrics.get('unique_patients', 0) }}</p>
+                            <p class="text-sm text-blue-600 dark:text-blue-400">Patient visits</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-100 dark:border-gray-700">
+                    <div class="flex items-center">
+                        <div
+                            class="w-12 h-12 bg-orange-100 dark:bg-orange-900/30 rounded-lg flex items-center justify-center mr-4">
+                            <i class="bi bi-calendar-check text-orange-600 dark:text-orange-400 text-xl"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Today's Summary</p>
+                            <p class="text-2xl font-bold text-gray-900 dark:text-white">{{
+                                today_summary.get('total_appointments', 0) }}</p>
+                            <p class="text-sm text-purple-600 dark:text-purple-400">{{
+                                today_summary.get('completed_appointments', 0) }} completed</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-100 dark:border-gray-700">
+                    <div class="flex items-center">
+                        <div class="w-12 h-12 bg-red-100 dark:bg-red-900/30 rounded-lg flex items-center justify-center mr-4">
+                            <i class="bi bi-x-circle text-red-600 dark:text-red-400 text-xl"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Cancellation Rate</p>
+                            <p class="text-2xl font-bold text-gray-900 dark:text-white">{{
+                                appointment_metrics.get('cancellation_rate', 0) }}%</p>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">Of total appointments</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Row -->
+            <div class="grid lg:grid-cols-2 gap-6 mb-8 opacity-0 animate-fade-in-up" style="animation-delay: 0.6s;">
+                <!-- Appointment Timeline Chart -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-100 dark:border-gray-700">
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Appointment Timeline</h3>
+                    <div class="h-64">
+                        <canvas id="appointmentTimelineChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Appointment Status Chart -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-100 dark:border-gray-700">
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Appointment Status Distribution</h3>
+                    <div class="h-64">
+                        <canvas id="appointmentStatusChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Data Tables Row -->
+            <div class="grid lg:grid-cols-2 gap-6 opacity-0 animate-fade-in-up" style="animation-delay: 0.8s;">
+                <!-- Top Prescriptions -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-100 dark:border-gray-700">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Top Prescribed Medications</h3>
+                        <a href="{{ url_for('reports.prescription_report') }}"
+                            class="text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 text-sm font-medium">
+                            View All
+                        </a>
+                    </div>
+
+                    {% if prescription_trends %}
+                    <div class="space-y-3">
+                        {% for med in prescription_trends %}
+                        <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                            <div>
+                                <p class="font-medium text-gray-900 dark:text-white">{{ med.medication }}</p>
+                                <p class="text-sm text-gray-600 dark:text-gray-400">{{ med.unique_patients }} patients</p>
+                            </div>
+                            <span
+                                class="px-3 py-1 bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 rounded-full text-sm font-medium">
+                                {{ med.total_prescriptions }}
+                            </span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-8">
+                        <i class="bi bi-prescription2 text-gray-400 dark:text-gray-500 text-3xl mb-4"></i>
+                        <p class="text-gray-600 dark:text-gray-400">No prescription data available</p>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Doctor Performance -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-100 dark:border-gray-700">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Doctor Performance</h3>
+                        <a href="{{ url_for('reports.performance_report') }}"
+                            class="text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 text-sm font-medium">
+                            View All
+                        </a>
+                    </div>
+
+                    {% if doctor_performance %}
+                    <div class="space-y-3">
+                        {% for doc in doctor_performance[:5] %}
+                        <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                            <div>
+                                <p class="font-medium text-gray-900 dark:text-white">{{ doc.doctor_name }}</p>
+                                <p class="text-sm text-gray-600 dark:text-gray-400">{{ doc.unique_patients }} patients</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-sm font-medium text-gray-900 dark:text-white">{{ doc.completion_rate }}%</p>
+                                <p class="text-xs text-gray-600 dark:text-gray-400">completion</p>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-8">
+                        <i class="bi bi-person-badge text-gray-400 dark:text-gray-500 text-3xl mb-4"></i>
+                        <p class="text-gray-600 dark:text-gray-400">No performance data available</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Export Options -->
+            <div class="mt-8 bg-gray-50 dark:bg-gray-700 rounded-xl p-6 opacity-0 animate-fade-in-up"
+                style="animation-delay: 1.0s;">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Export Reports</h3>
+                <div class="flex flex-wrap gap-3">
+                    <a href="{{ url_for('reports.export_report', report_type='appointments', format='json', start_date=start_date, end_date=end_date) }}"
+                        class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200">
+                        <i class="bi bi-download mr-2"></i>Export Appointments (JSON)
+                    </a>
+                    <a href="{{ url_for('reports.export_report', report_type='appointments', format='csv', start_date=start_date, end_date=end_date) }}"
+                        class="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200">
+                        <i class="bi bi-file-earmark-spreadsheet mr-2"></i>Export Appointments (CSV)
+                    </a>
+                    <a href="{{ url_for('reports.export_report', report_type='prescriptions', format='json', start_date=start_date, end_date=end_date) }}"
+                        class="inline-flex items-center px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors duration-200">
+                        <i class="bi bi-download mr-2"></i>Export Prescriptions (JSON)
+                    </a>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -337,4 +350,8 @@
             });
     });
 </script>
+{% endblock %}
+
+{% block include_footer %}
+<!-- Footer excluded for full-screen reports interface -->
 {% endblock %}
