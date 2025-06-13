@@ -13,14 +13,8 @@ from sqlalchemy import desc, func, and_, or_
 medical_dashboard_bp = Blueprint("medical_dashboard", __name__, url_prefix="/medical")
 
 
-@medical_dashboard_bp.route("/")
-@login_required
-def dashboard():
-    """Central medical dashboard for healthcare professionals."""
-    if current_user.role not in ["doctor", "staff"]:
-        flash("Access denied. This area is for healthcare professionals only.", "error")
-        return redirect(url_for("main.home"))
-
+def get_sidebar_stats():
+    """Get statistics for sidebar display (exported for reuse in other modules)."""
     # Get user's timezone for displaying timestamps
     user_timezone = get_user_timezone()
     current_time_local = get_current_time(user_timezone)
@@ -86,8 +80,8 @@ def dashboard():
             )
         ).count()
 
-    elif current_user.role == "staff":
-        # Staff can see system-wide statistics
+    elif current_user.role in ["staff", "admin"]:
+        # Staff/admin can see system-wide statistics
         stats["total_patients"] = User.query.filter_by(role="patient").count()
 
         # All appointments today
@@ -131,6 +125,24 @@ def dashboard():
             InternalMessage.is_deleted_by_recipient == False,
         )
     ).count()
+
+    return stats
+
+
+@medical_dashboard_bp.route("/")
+@login_required
+def dashboard():
+    """Central medical dashboard for healthcare professionals."""
+    if current_user.role not in ["doctor", "staff"]:
+        flash("Access denied. This area is for healthcare professionals only.", "error")
+        return redirect(url_for("main.home"))
+
+    # Get user's timezone for displaying timestamps
+    user_timezone = get_user_timezone()
+    current_time_local = get_current_time(user_timezone)
+
+    # Get sidebar statistics using the shared function
+    stats = get_sidebar_stats()
 
     # Recent activities
     recent_appointments = []
