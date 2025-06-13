@@ -7,11 +7,13 @@
     <div class="max-w-7xl mx-auto">
         {% include 'partials/admin/logs/header.html' %}
 
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 sm:p-6 border border-gray-200 dark:border-gray-700 opacity-0 animate-fade-in-up mb-4" style="animation-delay: 0.1s;">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 sm:p-6 border border-gray-200 dark:border-gray-700 opacity-0 animate-fade-in-up mb-4"
+            style="animation-delay: 0.1s;">
             {% include 'partials/admin/logs/filters.html' %}
         </div>
 
-        <h2 class="text-lg sm:text-xl font-bold text-gray-900 dark:text-white mb-4 sm:mb-6 opacity-0 animate-fade-in-up" style="animation-delay: 0.2s;">Recent Logs - {{ log_type.replace('_', ' ').title() }}</h2>
+        <h2 class="text-lg sm:text-xl font-bold text-gray-900 dark:text-white mb-4 sm:mb-6 opacity-0 animate-fade-in-up"
+            style="animation-delay: 0.2s;">Recent Logs - {{ log_type.replace('_', ' ').title() }}</h2>
         <div class="animate-fade-in-up opacity-0" style="animation-delay: 0.3s;">
             <!-- Top Pagination -->
             {% macro build_pagination_url(page) -%}
@@ -24,11 +26,11 @@
 
             <!-- Bottom Section -->
             {% if pagination.total > 0 %}
-                <!-- Bottom Pagination -->
-                {% set position = 'bottom' %}
-                {% include 'partials/shared/pagination.html' %}
+            <!-- Bottom Pagination -->
+            {% set position = 'bottom' %}
+            {% include 'partials/shared/pagination.html' %}
             {% else %}
-                {% include 'partials/admin/logs/empty-state.html' %}
+            {% include 'partials/admin/logs/empty-state.html' %}
             {% endif %}
         </div>
     </div>
@@ -37,4 +39,26 @@
 
 {% block extra_js %}
 <script type="module" src="{{ url_for('static', filename='js/logs.js') }}"></script>
+<script>
+    // Enhanced timestamp handling for logs
+    document.addEventListener('DOMContentLoaded', function () {
+        function enhanceLogTimestamps() {
+            const timestampElements = document.querySelectorAll('[data-time]');
+            timestampElements.forEach(element => {
+                const utcTime = element.getAttribute('data-time');
+                if (utcTime && window.timezoneManager) {
+                    const localTime = window.timezoneManager.formatTimeToLocal(utcTime);
+                    const relativeTime = window.timezoneManager.formatRelativeTime(utcTime);
+
+                    // Update tooltip with both local time and relative time
+                    const currentTitle = element.getAttribute('title') || '';
+                    element.setAttribute('title', `${localTime} (${relativeTime})`);
+                }
+            });
+        }
+
+        // Run timestamp enhancement
+        setTimeout(enhanceLogTimestamps, 500);
+    });
+</script>
 {% endblock %}
