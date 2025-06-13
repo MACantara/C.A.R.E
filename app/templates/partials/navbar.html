@@ -107,16 +107,16 @@
                 </a>
                 {% endif %}
 
-                <!-- Information Group -->
+                <!-- Company Group -->
                 <div class="relative group">
                     <button
                         class="flex items-center text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-300 font-medium px-3 py-2 rounded-lg"
-                        data-dropdown-toggle="info-menu">
-                        <i class="bi bi-info-circle mr-1"></i>
-                        Info
+                        data-dropdown-toggle="company-menu">
+                        <i class="bi bi-building mr-1"></i>
+                        Company
                         <i class="bi bi-chevron-down ml-1 text-sm"></i>
                     </button>
-                    <div id="info-menu"
+                    <div id="company-menu"
                         class="hidden absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-50">
                         <div class="py-1">
                             <a href="{{ url_for('main.about') }}"
@@ -322,7 +322,7 @@
 
             <div class="border-b border-gray-200 dark:border-gray-700 pb-2 mb-2">
                 <p class="px-3 py-1 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    Information</p>
+                    Company</p>
                 <a href="{{ url_for('main.about') }}"
                     class="block px-3 py-2 text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50/50 dark:hover:bg-gray-800/50 transition-all duration-300 rounded-lg font-medium">
                     <i class="bi bi-building mr-2"></i>About
