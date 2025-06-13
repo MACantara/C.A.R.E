@@ -15,22 +15,22 @@
 <script>
     // Update chat bubble unread count
     function updateChatBubble() {
-        if (typeof current_user !== 'undefined' && current_user.role && ['doctor', 'staff'].includes(current_user.role)) {
-            fetch('/messages/api/unread_count')
-                .then(response => response.json())
-                .then(data => {
-                    const badge = document.getElementById('unreadBadge');
-                    const count = document.getElementById('unreadCount');
+        fetch('/messages/api/unread_count')
+            .then(response => response.json())
+            .then(data => {
+                const badge = document.getElementById('unreadBadge');
+                const count = document.getElementById('unreadCount');
 
+                if (badge && count) {
                     if (data.count > 0) {
                         count.textContent = data.count > 99 ? '99+' : data.count;
                         badge.classList.remove('hidden');
                     } else {
                         badge.classList.add('hidden');
                     }
-                })
-                .catch(error => console.error('Error fetching unread count:', error));
-        }
+                }
+            })
+            .catch(error => console.error('Error fetching unread count:', error));
     }
 
     // Update on page load
@@ -38,5 +38,8 @@
 
     // Update every 30 seconds
     setInterval(updateChatBubble, 30000);
+
+    // Make function globally available
+    window.updateChatBubble = updateChatBubble;
 </script>
 {% endif %}
