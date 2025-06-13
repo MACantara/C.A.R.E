@@ -12,7 +12,8 @@
             <div class="hidden md:flex items-center space-x-2">
                 <!-- Basic Navigation -->
                 <a href="{{ url_for('main.home') }}"
-                    class="text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-300 font-medium px-3 py-2 rounded-lg">
+                    class="text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-300 font-medium px-3 py-2 rounded-lg flex items-center">
+                    <i class="bi bi-house mr-1"></i>
                     Home
                 </a>
 
@@ -137,7 +138,7 @@
                 {% if not config.get('DISABLE_DATABASE', False) and current_user and current_user.is_admin and
                 current_user.active %}
                 <a href="{{ url_for('admin.dashboard') }}"
-                    class="text-orange-600 dark:text-orange-400 hover:text-orange-700 dark:hover:text-orange-300 transition-all duration-300 font-medium relative group px-3 py-2 rounded-lg">
+                    class="text-orange-600 dark:text-orange-400 hover:text-orange-700 dark:hover:text-orange-300 transition-all duration-300 font-medium relative group px-3 py-2 rounded-lg flex items-center">
                     <i class="bi bi-gear mr-1"></i>Admin
                 </a>
                 {% endif %}
@@ -180,7 +181,8 @@
                 </div>
                 {% else %}
                 <a href="{{ url_for('auth.login') }}"
-                    class="text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-300 font-medium relative group hover:scale-105 transform px-3 py-2 rounded-lg">
+                    class="text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-300 font-medium relative group hover:scale-105 transform px-3 py-2 rounded-lg flex items-center">
+                    <i class="bi bi-box-arrow-in-right mr-1"></i>
                     Login
                 </a>
                 <a href="{{ url_for('auth.signup') }}"
@@ -270,7 +272,9 @@
         class="hidden md:hidden bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-t border-gray-200/50 dark:border-gray-700/50 animate-slide-down transition-colors duration-300">
         <div class="px-2 pt-2 pb-3 space-y-1">
             <a href="{{ url_for('main.home') }}"
-                class="block px-3 py-2 text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50/50 dark:hover:bg-gray-800/50 transition-all duration-300 rounded-lg font-medium">Home</a>
+                class="block px-3 py-2 text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50/50 dark:hover:bg-gray-800/50 transition-all duration-300 rounded-lg font-medium">
+                <i class="bi bi-house mr-2"></i>Home
+            </a>
 
             <!-- Mobile Authentication Links -->
             {% if current_user.is_authenticated %}
