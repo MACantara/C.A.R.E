@@ -118,6 +118,13 @@
                     <label for="content" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                         Message <span class="text-red-500">*</span>
                     </label>
+
+                    <!-- Typing indicator -->
+                    <div id="typingIndicator" class="hidden mb-2 text-sm text-gray-500 dark:text-gray-400 italic">
+                        <i class="bi bi-three-dots animate-pulse"></i>
+                        <span id="typingText">Someone is typing...</span>
+                    </div>
+
                     <textarea id="content" name="content" required rows="8"
                         class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 resize-vertical"
                         placeholder="Type your message here...">{{ request.form.content }}</textarea>
@@ -174,7 +181,115 @@
     </div>
 </div>
 
+<!-- Include Socket.IO client -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+
 <script>
+    let socket;
+    let typingTimeout;
+    let isTyping = false;
+
+    // Initialize Socket.IO connection
+    function initializeSocket() {
+        socket = io();
+
+        socket.on('connect', function () {
+            console.log('Connected to messaging system');
+            socket.emit('join_user_room');
+        });
+
+        socket.on('user_typing', function (data) {
+            handleTypingIndicator(data);
+        });
+
+        socket.on('disconnect', function () {
+            console.log('Disconnected from messaging system');
+        });
+    }
+
+    function handleTypingIndicator(data) {
+        const typingIndicator = document.getElementById('typingIndicator');
+        const typingText = document.getElementById('typingText');
+        const recipientSelect = document.getElementById('recipient_id');
+
+        // Only show if the typing user is the selected recipient
+        if (data.user_id == recipientSelect.value) {
+            if (data.typing) {
+                typingText.textContent = `${data.user_name} is typing...`;
+                typingIndicator.classList.remove('hidden');
+            } else {
+                typingIndicator.classList.add('hidden');
+            }
+        }
+    }
+
+    function startTyping() {
+        const recipientSelect = document.getElementById('recipient_id');
+        if (recipientSelect.value && !isTyping) {
+            isTyping = true;
+            socket.emit('typing_start', {
+                recipient_id: recipientSelect.value
+            });
+        }
+    }
+
+    function stopTyping() {
+        const recipientSelect = document.getElementById('recipient_id');
+        if (recipientSelect.value && isTyping) {
+            isTyping = false;
+            socket.emit('typing_stop', {
+                recipient_id: recipientSelect.value
+            });
+        }
+    }
+
+    // Initialize compose features
+    document.addEventListener('DOMContentLoaded', function () {
+        initializeSocket();
+
+        const contentTextarea = document.getElementById('content');
+        const recipientSelect = document.getElementById('recipient_id');
+
+        // Handle typing indicators
+        contentTextarea.addEventListener('input', function () {
+            if (recipientSelect.value) {
+                startTyping();
+
+                // Clear existing timeout
+                clearTimeout(typingTimeout);
+
+                // Set new timeout to stop typing indicator
+                typingTimeout = setTimeout(() => {
+                    stopTyping();
+                }, 2000);
+            }
+        });
+
+        // Stop typing when changing recipient
+        recipientSelect.addEventListener('change', function () {
+            if (isTyping) {
+                stopTyping();
+            }
+            // Hide typing indicator when changing recipient
+            document.getElementById('typingIndicator').classList.add('hidden');
+        });
+
+        // Stop typing when losing focus
+        contentTextarea.addEventListener('blur', function () {
+            setTimeout(stopTyping, 1000); // Delay to allow for quick refocus
+        });
+
+        // Clean up on page unload
+        window.addEventListener('beforeunload', function () {
+            if (isTyping) {
+                stopTyping();
+            }
+            if (socket) {
+                socket.disconnect();
+            }
+        });
+    });
+
     function useTemplate(subject, content) {
         document.getElementById('subject').value = subject;
         document.getElementById('content').value = content;

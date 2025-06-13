@@ -82,7 +82,7 @@
                             </div>
 
                             {% if message.read_at %}
-                            <div class="flex items-center space-x-2">
+                            <div class="flex items-center space-x-2" data-read-status>
                                 <i class="bi bi-check2-all text-green-500"></i>
                                 <span>Read on {{ message.read_at.strftime('%B %d, %Y at %I:%M %p') }}</span>
                             </div>
@@ -163,4 +163,66 @@
         </div>
     </div>
 </div>
+
+<!-- Include Socket.IO client -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+
+<script>
+    let socket;
+    const messageId = {{ message.id }};
+
+    // Initialize Socket.IO connection
+    function initializeSocket() {
+        socket = io();
+
+        socket.on('connect', function () {
+            console.log('Connected to messaging system');
+            socket.emit('join_user_room');
+        });
+
+        socket.on('message_read', function (data) {
+            // Update read status if this is the message being viewed
+            if (data.message_id == messageId) {
+                updateReadStatus(data.read_at);
+            }
+        });
+
+        socket.on('disconnect', function () {
+            console.log('Disconnected from messaging system');
+        });
+    }
+
+    function updateReadStatus(readAt) {
+        // Find and update read status display
+        const readStatusElements = document.querySelectorAll('[data-read-status]');
+        readStatusElements.forEach(element => {
+            if (readAt) {
+                const readDate = new Date(readAt);
+                element.innerHTML = `
+                    <i class="bi bi-check2-all text-green-500"></i>
+                    <span>Read on ${readDate.toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    hour: 'numeric',
+                    minute: '2-digit',
+                    hour12: true
+                })}</span>
+                `;
+            }
+        });
+    }
+
+    // Initialize read view features
+    document.addEventListener('DOMContentLoaded', function () {
+        initializeSocket();
+
+        // Clean up on page unload
+        window.addEventListener('beforeunload', function () {
+            if (socket) {
+                socket.disconnect();
+            }
+        });
+    });
+</script>
 {% endblock %}

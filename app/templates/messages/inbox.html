@@ -271,11 +271,130 @@
     </div>
 </div>
 
+<!-- Include Socket.IO client -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+
 <script>
     let lastUpdateTime = null;
     let refreshInterval;
     let currentReceivedMessages = [];
     let currentSentMessages = [];
+    let socket;
+
+    // Initialize Socket.IO connection
+    function initializeSocket() {
+        socket = io();
+
+        socket.on('connect', function () {
+            console.log('Connected to messaging system');
+            socket.emit('join_user_room');
+        });
+
+        socket.on('new_message', function (data) {
+            console.log('New message received:', data);
+            showNewMessageNotification(data.notification);
+            refreshInbox();
+
+            // Update unread count in navbar
+            updateNavbarMessageCount();
+
+            // Play notification sound if available
+            playNotificationSound();
+        });
+
+        socket.on('message_sent', function (data) {
+            console.log('Message sent confirmation:', data);
+            // Optionally show sent confirmation
+        });
+
+        socket.on('message_read', function (data) {
+            console.log('Message was read:', data);
+            // Update read status in sent messages if currently viewing
+            updateMessageReadStatus(data.message_id, data.read_at);
+        });
+
+        socket.on('unread_count_update', function (data) {
+            updateUnreadCount(data.count);
+        });
+
+        socket.on('user_typing', function (data) {
+            handleTypingIndicator(data);
+        });
+
+        socket.on('disconnect', function () {
+            console.log('Disconnected from messaging system');
+        });
+    }
+
+    function showNewMessageNotification(notification) {
+        const notificationElement = document.getElementById('newMessageNotification');
+        const messageText = notificationElement.querySelector('span');
+
+        // Update notification text
+        messageText.textContent = `${notification.title}: ${notification.body}`;
+
+        // Add priority styling
+        if (notification.priority === 'urgent') {
+            notificationElement.className = notificationElement.className.replace('bg-green-500', 'bg-red-500');
+        } else if (notification.priority === 'high') {
+            notificationElement.className = notificationElement.className.replace('bg-green-500', 'bg-orange-500');
+        }
+
+        notificationElement.classList.remove('hidden', 'translate-x-full');
+
+        // Auto-dismiss after 7 seconds for urgent messages, 5 seconds otherwise
+        const dismissTime = notification.priority === 'urgent' ? 7000 : 5000;
+        setTimeout(() => {
+            dismissNotification();
+        }, dismissTime);
+    }
+
+    function playNotificationSound() {
+        // Create and play notification sound
+        try {
+            const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmEaAC+R1+7ZgCcCC2+I2e+HJgIQXrXo7qpVFAhBlN3vvmAaACl+zO/BdCEEFYPU9N2YOgQNRJzh7rpU...');
+            audio.volume = 0.3;
+            audio.play().catch(e => console.log('Could not play notification sound:', e));
+        } catch (e) {
+            console.log('Notification sound not available');
+        }
+    }
+
+    function updateNavbarMessageCount() {
+        // Trigger navbar message count update
+        if (typeof updateMessageCount === 'function') {
+            updateMessageCount();
+        }
+    }
+
+    function updateMessageReadStatus(messageId, readAt) {
+        // Find and update read status in sent messages view
+        const sentMessages = document.querySelectorAll('#sent-content .divide-y > div');
+        sentMessages.forEach(messageDiv => {
+            const links = messageDiv.querySelectorAll('a[href*="/messages/read/"]');
+            links.forEach(link => {
+                if (link.href.includes(`/messages/read/${messageId}`)) {
+                    const readStatusSpan = messageDiv.querySelector('.bg-gray-100, .bg-green-100');
+                    if (readStatusSpan && readStatusSpan.textContent.trim() === 'Unread') {
+                        readStatusSpan.className = readStatusSpan.className.replace('bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200', 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200');
+                        readStatusSpan.textContent = 'Read';
+                    }
+                }
+            });
+        });
+    }
+
+    function updateUnreadCount(count) {
+        const unreadCountElement = document.querySelector('.bg-yellow-100').parentElement.nextElementSibling.children[1];
+        if (unreadCountElement) {
+            unreadCountElement.textContent = count;
+        }
+    }
+
+    function handleTypingIndicator(data) {
+        // Show typing indicator in compose view if applicable
+        console.log(`${data.user_name} is ${data.typing ? 'typing' : 'not typing'}`);
+    }
 
     function showTab(tabName) {
         // Hide all tab contents
@@ -533,21 +652,31 @@
         // Set initial state
         lastUpdateTime = new Date().toISOString();
 
-        // Start auto-refresh
-        startAutoRefresh();
+        // Initialize WebSocket connection
+        initializeSocket();
+
+        // Start auto-refresh as backup (longer interval since we have real-time updates)
+        refreshInterval = setInterval(refreshInbox, 60000); // Reduced frequency to 1 minute
 
         // Stop refresh when page is hidden (performance optimization)
         document.addEventListener('visibilitychange', function () {
             if (document.hidden) {
-                stopAutoRefresh();
+                if (refreshInterval) clearInterval(refreshInterval);
             } else {
-                startAutoRefresh();
+                refreshInterval = setInterval(refreshInbox, 60000);
                 refreshInbox(); // Immediately refresh when page becomes visible
             }
         });
 
-        // Stop refresh before page unload
-        window.addEventListener('beforeunload', stopAutoRefresh);
+        // Clean up on page unload
+        window.addEventListener('beforeunload', function () {
+            if (socket) {
+                socket.disconnect();
+            }
+            if (refreshInterval) {
+                clearInterval(refreshInterval);
+            }
+        });
     });
 </script>
 {% endblock %}
