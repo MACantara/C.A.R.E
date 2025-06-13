@@ -6,6 +6,8 @@ from flask_login import LoginManager
 from flask_socketio import SocketIO
 from config import config
 import os
+import pytz
+from datetime import datetime, timedelta, date
 
 # Initialize extensions
 db = SQLAlchemy()
@@ -13,6 +15,40 @@ migrate = Migrate()
 mail = Mail()
 login_manager = LoginManager()
 socketio = SocketIO()
+
+
+def get_user_timezone():
+    """Get user's timezone from session or default to Philippines timezone."""
+    user_timezone = session.get("user_timezone", "Asia/Manila")
+    try:
+        return pytz.timezone(user_timezone)
+    except pytz.exceptions.UnknownTimeZoneError:
+        return pytz.timezone("Asia/Manila")
+
+
+def localize_datetime(dt, timezone=None):
+    """Convert UTC datetime to user's timezone."""
+    if dt is None:
+        return None
+
+    if timezone is None:
+        timezone = get_user_timezone()
+
+    # If datetime is naive, assume it's UTC
+    if dt.tzinfo is None:
+        dt = pytz.utc.localize(dt)
+
+    return dt.astimezone(timezone)
+
+
+def get_current_time(timezone=None):
+    """Get current time in user's timezone."""
+    if timezone is None:
+        timezone = get_user_timezone()
+
+    utc_now = datetime.utcnow()
+    utc_dt = pytz.utc.localize(utc_now)
+    return utc_dt.astimezone(timezone)
 
 
 def create_app(config_name=None):
@@ -194,8 +230,6 @@ def create_app(config_name=None):
                 # Create sample patient user if it doesn't exist
                 patient_user = User.query.filter_by(username="patient_sample").first()
                 if not patient_user:
-                    from datetime import datetime, date
-
                     patient_user = User(
                         username="patient_sample",
                         email="patient@care-system.com",
@@ -229,27 +263,65 @@ def create_app(config_name=None):
             except Exception as e:
                 app.logger.warning(f"Database initialization failed: {e}")
 
-        # Add current year and date to template context
+        # Add timezone-aware datetime functions to template context
         @app.context_processor
         def inject_current_date():
-            from datetime import datetime, timedelta, date
+            """Inject timezone-aware datetime utilities into templates."""
+            user_tz = get_user_timezone()
+            current_time_local = get_current_time(user_tz)
 
-            current_date = datetime.now()
+            # Common Philippine timezones for user selection
+            common_timezones = [
+                ("Asia/Manila", "Philippines (Manila)"),
+                ("UTC", "UTC"),
+                ("America/New_York", "Eastern Time (US)"),
+                ("America/Los_Angeles", "Pacific Time (US)"),
+                ("Europe/London", "London"),
+                ("Asia/Tokyo", "Tokyo"),
+                ("Asia/Singapore", "Singapore"),
+                ("Australia/Sydney", "Sydney"),
+            ]
 
-            # Remove current_user injection since Flask-Login handles it
             return {
-                "current_year": current_date.year,
-                "current_date": current_date,
+                "current_year": current_time_local.year,
+                "current_date": current_time_local,
+                "current_time": current_time_local,
+                "user_timezone": user_tz,
+                "user_timezone_name": str(user_tz),
+                "common_timezones": common_timezones,
                 "datetime": datetime,
                 "timedelta": timedelta,
                 "date": date,
+                "pytz": pytz,
+                "localize_datetime": localize_datetime,
+                "get_current_time": get_current_time,
+                "get_user_timezone": get_user_timezone,
             }
 
-    # Make hCaptcha available in templates
+    # Add timezone route for AJAX updates
+    @app.route("/api/set_timezone", methods=["POST"])
+    def set_timezone():
+        """Set user's timezone preference."""
+        from flask import request, jsonify
+
+        timezone = request.json.get("timezone", "Asia/Manila")
+        try:
+            # Validate timezone
+            pytz.timezone(timezone)
+            session["user_timezone"] = timezone
+            return jsonify({"success": True, "timezone": timezone})
+        except pytz.exceptions.UnknownTimeZoneError:
+            return jsonify({"success": False, "error": "Invalid timezone"}), 400
+
+    # Make hCaptcha and timezone functions available in templates
     from app.utils.hcaptcha_utils import hcaptcha, is_hcaptcha_enabled
 
     app.jinja_env.globals.update(
-        hcaptcha=hcaptcha, hcaptcha_enabled=is_hcaptcha_enabled
+        hcaptcha=hcaptcha,
+        hcaptcha_enabled=is_hcaptcha_enabled,
+        localize_datetime=localize_datetime,
+        get_current_time=get_current_time,
+        get_user_timezone=get_user_timezone,
     )
 
     return app
