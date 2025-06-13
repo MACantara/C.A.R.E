@@ -61,8 +61,10 @@
     <!-- Floating Chat Bubble for Doctors and Staff -->
     {% include 'partials/chat-bubble.html' %}
 
-    <!-- Include Footer -->
+    <!-- Include Footer (conditional) -->
+    {% block include_footer %}
     {% include 'partials/footer.html' %}
+    {% endblock %}
 
     <!-- Main JavaScript as ES6 module -->
     <script type="module" src="{{ url_for('static', filename='js/main.js') }}"></script>
