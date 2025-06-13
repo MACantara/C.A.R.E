@@ -7,6 +7,19 @@ export class ConversationManager {
         this.messageSystem = messageSystem;
         this.conversations = [];
         this.allUsers = [];
+        this.userTimezone = this.getUserTimezone();
+    }
+
+    /**
+     * Get user's timezone
+     */
+    getUserTimezone() {
+        return (
+            document.querySelector("[data-user-timezone]")?.dataset
+                .userTimezone ||
+            sessionStorage.getItem("user_timezone") ||
+            Intl.DateTimeFormat().resolvedOptions().timeZone
+        );
     }
 
     /**
@@ -18,6 +31,17 @@ export class ConversationManager {
             const data = await response.json();
 
             this.conversations = data.conversations;
+
+            // Update timezone info if provided
+            if (data.timezone) {
+                this.userTimezone = data.timezone;
+                document.dispatchEvent(
+                    new CustomEvent("timezoneUpdated", {
+                        detail: { timezone: data.timezone },
+                    })
+                );
+            }
+
             this.messageSystem.messageRenderer.renderChatList(
                 this.conversations
             );
@@ -28,6 +52,9 @@ export class ConversationManager {
             } else {
                 this.messageSystem.uiManager.showChatItems();
             }
+
+            // Dispatch event for timestamp enhancement
+            document.dispatchEvent(new CustomEvent("messagesLoaded"));
         } catch (error) {
             console.error("Error loading conversations:", error);
             this.messageSystem.uiManager.hideLoadingState();
@@ -62,7 +89,12 @@ export class ConversationManager {
             );
             const data = await response.json();
 
-            // Add status to messages based on sender
+            // Update timezone info if provided
+            if (data.timezone) {
+                this.userTimezone = data.timezone;
+            }
+
+            // Add status to messages based on sender and timezone info
             const messagesWithStatus = data.messages.map((message) => ({
                 ...message,
                 status:
@@ -71,6 +103,7 @@ export class ConversationManager {
                             ? "read"
                             : "delivered"
                         : "received",
+                timezone: data.timezone,
             }));
 
             this.messageSystem.messageRenderer.renderChatHeader(
@@ -86,6 +119,9 @@ export class ConversationManager {
                 const input = document.getElementById("messageInput");
                 input?.focus();
             }, 100);
+
+            // Dispatch event for timestamp enhancement
+            document.dispatchEvent(new CustomEvent("messagesLoaded"));
         } catch (error) {
             console.error("Error loading chat messages:", error);
         }
