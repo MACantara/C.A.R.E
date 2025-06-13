@@ -17,6 +17,9 @@ from app.services.analytics_service import AnalyticsService
 from functools import wraps
 import json
 
+# Import the sidebar stats function from medical_dashboard
+from app.routes.medical_dashboard import get_sidebar_stats
+
 reports_bp = Blueprint("reports", __name__, url_prefix="/reports")
 
 
@@ -51,6 +54,9 @@ def dashboard():
     # Get user's timezone for displaying timestamps
     user_timezone = get_user_timezone()
     current_time_local = get_current_time(user_timezone)
+    
+    # Get sidebar statistics
+    stats = get_sidebar_stats()
     
     # Get date range from query params or default to last 30 days
     end_date = date.today()
@@ -136,6 +142,7 @@ def dashboard():
         doctor_filter=doctor_filter,
         user_timezone=user_timezone,
         current_time_local=current_time_local,
+        stats=stats,
     )
 
 
@@ -146,6 +153,9 @@ def appointment_report():
     # Get user's timezone for displaying timestamps
     user_timezone = get_user_timezone()
     current_time_local = get_current_time(user_timezone)
+    
+    # Get sidebar statistics
+    stats = get_sidebar_stats()
     
     # Get parameters
     report_type = request.args.get("type", "daily")
@@ -199,6 +209,7 @@ def appointment_report():
         selected_doctor=doctor_id,
         user_timezone=user_timezone,
         current_time_local=current_time_local,
+        stats=stats,
     )
 
 
@@ -209,6 +220,9 @@ def prescription_report():
     # Get user's timezone for displaying timestamps
     user_timezone = get_user_timezone()
     current_time_local = get_current_time(user_timezone)
+    
+    # Get sidebar statistics
+    stats = get_sidebar_stats()
     
     # Get date range
     end_date = date.today()
@@ -254,6 +268,7 @@ def prescription_report():
         doctor_filter=doctor_filter,
         user_timezone=user_timezone,
         current_time_local=current_time_local,
+        stats=stats,
     )
 
 
@@ -264,6 +279,9 @@ def performance_report():
     # Get user's timezone for displaying timestamps
     user_timezone = get_user_timezone()
     current_time_local = get_current_time(user_timezone)
+    
+    # Get sidebar statistics
+    stats = get_sidebar_stats()
     
     # Get date range
     end_date = date.today()
@@ -309,6 +327,7 @@ def performance_report():
         doctor_filter=doctor_filter,
         user_timezone=user_timezone,
         current_time_local=current_time_local,
+        stats=stats,
     )
 
 
