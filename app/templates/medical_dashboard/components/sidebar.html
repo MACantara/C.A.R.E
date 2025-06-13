@@ -1,0 +1,301 @@
+<!-- Medical Dashboard Sidebar Navigation -->
+<div
+    class="w-80 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col flex-shrink-0 min-h-screen">
+    <!-- Sidebar Header -->
+    <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+        <div class="flex items-center">
+            <div
+                class="w-10 h-10 bg-gradient-to-r from-blue-500 to-teal-600 rounded-lg flex items-center justify-center mr-3">
+                <i class="bi bi-hospital text-white text-lg"></i>
+            </div>
+            <div>
+                <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Medical Hub</h2>
+                <p class="text-xs text-gray-500 dark:text-gray-400">{{ current_user.role.title() }} Dashboard</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation Menu -->
+    <div class="flex-1 overflow-y-auto py-4">
+        <!-- Patient Management Section -->
+        <div class="px-4 mb-6">
+            <h3 class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3 px-2">
+                <i class="bi bi-people mr-1"></i>
+                Patient Management
+            </h3>
+            <nav class="space-y-1">
+                <a href="{{ url_for('medical_records.patients') }}"
+                    class="group flex items-center px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-200">
+                    <i class="bi bi-list-ul mr-3 text-gray-400 group-hover:text-blue-500"></i>
+                    Patient Directory
+                </a>
+                <a href="{{ url_for('medical_records.search_records') }}"
+                    class="group flex items-center px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-200">
+                    <i class="bi bi-search mr-3 text-gray-400 group-hover:text-blue-500"></i>
+                    Search Patients
+                </a>
+                {% if current_user.role == 'doctor' %}
+                <a href="{{ url_for('medical_records.new_consultation') }}"
+                    class="group flex items-center px-3 py-2 text-sm font-medium text-teal-700 dark:text-teal-300 rounded-lg hover:bg-teal-50 dark:hover:bg-teal-900/20 hover:text-teal-600 dark:hover:text-teal-400 transition-all duration-200 bg-teal-50/50 dark:bg-teal-900/10">
+                    <i class="bi bi-plus-circle mr-3 text-teal-500"></i>
+                    New Consultation
+                    <span
+                        class="ml-auto bg-teal-100 dark:bg-teal-900/30 text-teal-600 dark:text-teal-400 text-xs px-2 py-1 rounded-full">Quick</span>
+                </a>
+                {% endif %}
+            </nav>
+        </div>
+
+        <!-- Appointments & Schedule Section -->
+        <div class="px-4 mb-6">
+            <h3 class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3 px-2">
+                <i class="bi bi-calendar-week mr-1"></i>
+                Appointments
+            </h3>
+            <nav class="space-y-1">
+                <a href="{{ url_for('appointments.doctor_schedule') }}"
+                    class="group flex items-center px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-lg hover:bg-green-50 dark:hover:bg-green-900/20 hover:text-green-600 dark:hover:text-green-400 transition-all duration-200">
+                    <i class="bi bi-calendar-event mr-3 text-gray-400 group-hover:text-green-500"></i>
+                    View Schedule
+                </a>
+                <a href="{{ url_for('queue.dashboard') }}"
+                    class="group flex items-center px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-lg hover:bg-orange-50 dark:hover:bg-orange-900/20 hover:text-orange-600 dark:hover:text-orange-400 transition-all duration-200">
+                    <i class="bi bi-people mr-3 text-gray-400 group-hover:text-orange-500"></i>
+                    Queue Management
+                    <span id="queue-count"
+                        class="ml-auto bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 text-xs px-2 py-1 rounded-full hidden">{{
+                        stats.queue_waiting }}</span>
+                </a>
+                <a href="{{ url_for('reports.appointment_report') }}"
+                    class="group flex items-center px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-lg hover:bg-green-50 dark:hover:bg-green-900/20 hover:text-green-600 dark:hover:text-green-400 transition-all duration-200">
+                    <i class="bi bi-graph-up mr-3 text-gray-400 group-hover:text-green-500"></i>
+                    Appointment Reports
+                </a>
+            </nav>
+        </div>
+
+        <!-- Medical Records Section -->
+        <div class="px-4 mb-6">
+            <h3 class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3 px-2">
+                <i class="bi bi-file-medical mr-1"></i>
+                Medical Records
+            </h3>
+            <nav class="space-y-1">
+                <a href="{{ url_for('medical_records.index') }}"
+                    class="group flex items-center px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-lg hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-purple-600 dark:hover:text-purple-400 transition-all duration-200">
+                    <i class="bi bi-file-medical mr-3 text-gray-400 group-hover:text-purple-500"></i>
+                    Medical Records
+                </a>
+                {% if current_user.role == 'doctor' %}
+                <a href="{{ url_for('medical_records.new_prescription') }}"
+                    class="group flex items-center px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-lg hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-purple-600 dark:hover:text-purple-400 transition-all duration-200">
+                    <i class="bi bi-prescription2 mr-3 text-gray-400 group-hover:text-purple-500"></i>
+                    Write Prescription
+                </a>
+                {% endif %}
+                <a href="{{ url_for('reports.prescription_report') }}"
+                    class="group flex items-center px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-lg hover:bg-purple-50 dark:hover:bg-purple-900/20 hover:text-purple-600 dark:hover:text-purple-400 transition-all duration-200">
+                    <i class="bi bi-graph-up mr-3 text-gray-400 group-hover:text-purple-500"></i>
+                    Prescription Reports
+                </a>
+            </nav>
+        </div>
+
+        <!-- Reports & Analytics Section -->
+        <div class="px-4 mb-6">
+            <h3 class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3 px-2">
+                <i class="bi bi-graph-up mr-1"></i>
+                Reports & Analytics
+            </h3>
+            <nav class="space-y-1">
+                <a href="{{ url_for('reports.dashboard') }}"
+                    class="group flex items-center px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-lg hover:bg-teal-50 dark:hover:bg-teal-900/20 hover:text-teal-600 dark:hover:text-teal-400 transition-all duration-200">
+                    <i class="bi bi-pie-chart mr-3 text-gray-400 group-hover:text-teal-500"></i>
+                    Analytics Dashboard
+                </a>
+                <a href="{{ url_for('reports.performance_report') }}"
+                    class="group flex items-center px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-lg hover:bg-teal-50 dark:hover:bg-teal-900/20 hover:text-teal-600 dark:hover:text-teal-400 transition-all duration-200">
+                    <i class="bi bi-speedometer2 mr-3 text-gray-400 group-hover:text-teal-500"></i>
+                    Performance Metrics
+                </a>
+            </nav>
+        </div>
+
+        <!-- Quick Actions Section -->
+        <div class="px-4 mb-6">
+            <h3 class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3 px-2">
+                <i class="bi bi-lightning mr-1"></i>
+                Quick Actions
+            </h3>
+            <nav class="space-y-2">
+                {% if current_user.role == 'doctor' %}
+                <button onclick="quickAction('new_consultation')"
+                    class="w-full group flex items-center px-3 py-2 text-sm font-medium text-white bg-gradient-to-r from-teal-600 to-blue-600 rounded-lg hover:from-teal-700 hover:to-blue-700 transition-all duration-200 shadow-sm hover:shadow-md">
+                    <i class="bi bi-plus-circle mr-3"></i>
+                    Start Consultation
+                </button>
+                <button onclick="quickAction('emergency')"
+                    class="w-full group flex items-center px-3 py-2 text-sm font-medium text-white bg-gradient-to-r from-red-600 to-pink-600 rounded-lg hover:from-red-700 hover:to-pink-700 transition-all duration-200 shadow-sm hover:shadow-md">
+                    <i class="bi bi-exclamation-triangle mr-3"></i>
+                    Emergency Alert
+                </button>
+                {% endif %}
+                <button onclick="quickAction('search')"
+                    class="w-full group flex items-center px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-all duration-200">
+                    <i class="bi bi-search mr-3"></i>
+                    Quick Search
+                </button>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Sidebar Footer -->
+    <div class="p-4 border-t border-gray-200 dark:border-gray-700">
+        <div class="flex items-center text-xs text-gray-500 dark:text-gray-400">
+            <i class="bi bi-clock mr-2"></i>
+            <span id="sidebar-timezone">{{ user_timezone }}</span>
+            <span class="mx-2">•</span>
+            <span id="sidebar-time">{{ current_time_local.strftime('%I:%M %p') }}</span>
+        </div>
+        <div class="mt-2 flex items-center justify-between">
+            <div class="flex items-center text-xs text-gray-500 dark:text-gray-400">
+                <div class="w-2 h-2 bg-green-400 rounded-full mr-2 animate-pulse"></div>
+                <span>Online</span>
+            </div>
+            <button onclick="toggleSidebar()"
+                class="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                title="Collapse sidebar">
+                <i class="bi bi-chevron-left text-sm"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Collapsed Sidebar (Hidden by default) -->
+<div id="collapsed-sidebar"
+    class="w-16 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col flex-shrink-0 min-h-screen hidden">
+    <!-- Collapsed Header -->
+    <div class="px-3 py-4 border-b border-gray-200 dark:border-gray-700 flex justify-center">
+        <div class="w-10 h-10 bg-gradient-to-r from-blue-500 to-teal-600 rounded-lg flex items-center justify-center">
+            <i class="bi bi-hospital text-white text-lg"></i>
+        </div>
+    </div>
+
+    <!-- Collapsed Navigation -->
+    <div class="flex-1 py-4">
+        <nav class="space-y-2 px-2">
+            <!-- Quick access icons -->
+            <a href="{{ url_for('medical_records.patients') }}"
+                class="flex justify-center p-3 text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-all duration-200"
+                title="Patient Directory">
+                <i class="bi bi-people text-lg"></i>
+            </a>
+            <a href="{{ url_for('appointments.doctor_schedule') }}"
+                class="flex justify-center p-3 text-gray-400 hover:text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-lg transition-all duration-200"
+                title="Schedule">
+                <i class="bi bi-calendar-event text-lg"></i>
+            </a>
+            <a href="{{ url_for('medical_records.index') }}"
+                class="flex justify-center p-3 text-gray-400 hover:text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded-lg transition-all duration-200"
+                title="Medical Records">
+                <i class="bi bi-file-medical text-lg"></i>
+            </a>
+            <a href="{{ url_for('reports.dashboard') }}"
+                class="flex justify-center p-3 text-gray-400 hover:text-teal-600 hover:bg-teal-50 dark:hover:bg-teal-900/20 rounded-lg transition-all duration-200"
+                title="Reports">
+                <i class="bi bi-graph-up text-lg"></i>
+            </a>
+        </nav>
+    </div>
+
+    <!-- Collapsed Footer -->
+    <div class="p-3 border-t border-gray-200 dark:border-gray-700 flex justify-center">
+        <button onclick="toggleSidebar()"
+            class="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+            title="Expand sidebar">
+            <i class="bi bi-chevron-right text-sm"></i>
+        </button>
+    </div>
+</div>
+
+<script>
+    // Sidebar functionality
+    function toggleSidebar() {
+        const fullSidebar = document.querySelector('.w-80');
+        const collapsedSidebar = document.getElementById('collapsed-sidebar');
+
+        if (fullSidebar.classList.contains('hidden')) {
+            // Show full sidebar
+            fullSidebar.classList.remove('hidden');
+            collapsedSidebar.classList.add('hidden');
+            localStorage.setItem('sidebarCollapsed', 'false');
+        } else {
+            // Show collapsed sidebar
+            fullSidebar.classList.add('hidden');
+            collapsedSidebar.classList.remove('hidden');
+            localStorage.setItem('sidebarCollapsed', 'true');
+        }
+    }
+
+    // Quick actions
+    function quickAction(action) {
+        switch (action) {
+            case 'new_consultation':
+                window.location.href = '{{ url_for("medical_records.new_consultation") }}';
+                break;
+            case 'emergency':
+                // Emergency alert functionality
+                if (confirm('Are you sure you want to send an emergency alert to all staff?')) {
+                    fetch('/medical/api/emergency-alert', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ type: 'emergency_alert' })
+                    }).then(() => {
+                        alert('Emergency alert sent to all staff!');
+                    });
+                }
+                break;
+            case 'search':
+                const searchTerm = prompt('Enter patient name or ID to search:');
+                if (searchTerm) {
+                    window.location.href = `{{ url_for("medical_records.search_records") }}?q=${encodeURIComponent(searchTerm)}`;
+                }
+                break;
+        }
+    }
+
+    // Update sidebar time
+    function updateSidebarTime() {
+        const sidebarTime = document.getElementById('sidebar-time');
+        if (sidebarTime && window.timezoneManager) {
+            const userTimezone = window.timezoneManager.getUserTimezone();
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('en-US', {
+                timeZone: userTimezone,
+                hour: 'numeric',
+                minute: '2-digit',
+                hour12: true
+            });
+            sidebarTime.textContent = timeString;
+        }
+    }
+
+    // Initialize sidebar
+    document.addEventListener('DOMContentLoaded', function () {
+        // Restore sidebar state
+        const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+        if (isCollapsed) {
+            toggleSidebar();
+        }
+
+        // Update time every minute
+        updateSidebarTime();
+        setInterval(updateSidebarTime, 60000);
+
+        // Update queue count if available
+        const queueCount = document.getElementById('queue-count');
+            if (queueCount && {{ stats.queue_waiting }} > 0) {
+                queueCount.classList.remove('hidden');
+            }
+        });
+    </script>
