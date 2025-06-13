@@ -11,7 +11,7 @@ from flask import (
 )
 from flask_login import login_required, current_user
 from datetime import datetime, date, timedelta
-from app import db
+from app import db, get_user_timezone, localize_datetime, get_current_time
 from app.models.user import User
 from app.services.analytics_service import AnalyticsService
 from functools import wraps
@@ -48,6 +48,10 @@ def admin_or_doctor_required(f):
 @admin_or_doctor_required
 def dashboard():
     """Reports and analytics dashboard."""
+    # Get user's timezone for displaying timestamps
+    user_timezone = get_user_timezone()
+    current_time_local = get_current_time(user_timezone)
+    
     # Get date range from query params or default to last 30 days
     end_date = date.today()
     start_date = end_date - timedelta(days=30)
@@ -130,6 +134,8 @@ def dashboard():
         start_date=start_date,
         end_date=end_date,
         doctor_filter=doctor_filter,
+        user_timezone=user_timezone,
+        current_time_local=current_time_local,
     )
 
 
@@ -137,6 +143,10 @@ def dashboard():
 @admin_or_doctor_required
 def appointment_report():
     """Detailed appointment analytics report."""
+    # Get user's timezone for displaying timestamps
+    user_timezone = get_user_timezone()
+    current_time_local = get_current_time(user_timezone)
+    
     # Get parameters
     report_type = request.args.get("type", "daily")
     doctor_id = (
@@ -187,6 +197,8 @@ def appointment_report():
         report_type=report_type,
         doctors=doctors,
         selected_doctor=doctor_id,
+        user_timezone=user_timezone,
+        current_time_local=current_time_local,
     )
 
 
@@ -194,6 +206,10 @@ def appointment_report():
 @admin_or_doctor_required
 def prescription_report():
     """Prescription analytics and trends report."""
+    # Get user's timezone for displaying timestamps
+    user_timezone = get_user_timezone()
+    current_time_local = get_current_time(user_timezone)
+    
     # Get date range
     end_date = date.today()
     start_date = end_date - timedelta(days=30)
@@ -236,6 +252,8 @@ def prescription_report():
         start_date=start_date,
         end_date=end_date,
         doctor_filter=doctor_filter,
+        user_timezone=user_timezone,
+        current_time_local=current_time_local,
     )
 
 
@@ -243,6 +261,10 @@ def prescription_report():
 @admin_or_doctor_required
 def performance_report():
     """Doctor performance analytics report."""
+    # Get user's timezone for displaying timestamps
+    user_timezone = get_user_timezone()
+    current_time_local = get_current_time(user_timezone)
+    
     # Get date range
     end_date = date.today()
     start_date = end_date - timedelta(days=30)
@@ -285,6 +307,8 @@ def performance_report():
         start_date=start_date,
         end_date=end_date,
         doctor_filter=doctor_filter,
+        user_timezone=user_timezone,
+        current_time_local=current_time_local,
     )
 
 
