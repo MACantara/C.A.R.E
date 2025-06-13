@@ -82,16 +82,16 @@
 
                 <!-- Message Input -->
                 <div class="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-4 flex-shrink-0">
-                    <div class="flex items-end space-x-3">
+                    <div class="flex items-center space-x-3">
                         <div class="flex-1">
                             <textarea id="messageInput" placeholder="Type a message..."
-                                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white resize-none"
-                                rows="1" style="min-height: 44px; max-height: 120px;"></textarea>
+                                class="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white resize-none leading-tight"
+                                rows="1" style="min-height: 40px; max-height: 120px; line-height: 1.25;"></textarea>
                         </div>
                         <button id="sendButton" onclick="sendMessage()"
-                            class="p-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+                            class="flex items-center justify-center w-10 h-10 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed flex-shrink-0"
                             disabled>
-                            <i class="bi bi-send"></i>
+                            <i class="bi bi-send text-sm"></i>
                         </button>
                     </div>
                 </div>
