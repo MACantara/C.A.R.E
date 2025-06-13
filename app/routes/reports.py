@@ -119,7 +119,7 @@ def dashboard():
         )
 
     return render_template(
-        "reports/dashboard.html",
+        "medical_dashboard/reports/dashboard.html",
         appointment_metrics=appointment_metrics,
         prescription_trends=prescription_trends,
         diagnosis_trends=diagnosis_trends,
@@ -182,7 +182,7 @@ def appointment_report():
         doctors = User.query.filter_by(role="doctor", active=True).all()
 
     return render_template(
-        "reports/appointments.html",
+        "medical_dashboard/reports/appointments.html",
         data=data,
         report_type=report_type,
         doctors=doctors,
@@ -230,7 +230,7 @@ def prescription_report():
         doctors = User.query.filter_by(role="doctor", active=True).all()
 
     return render_template(
-        "reports/prescriptions.html",
+        "medical_dashboard/reports/prescriptions.html",
         prescription_trends=prescription_trends,
         doctors=doctors,
         start_date=start_date,
@@ -279,7 +279,7 @@ def performance_report():
         doctors = User.query.filter_by(role="doctor", active=True).all()
 
     return render_template(
-        "reports/performance.html",
+        "medical_dashboard/reports/performance.html",
         performance_data=performance_data,
         doctors=doctors,
         start_date=start_date,
