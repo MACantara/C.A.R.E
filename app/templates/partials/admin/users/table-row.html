@@ -37,13 +37,13 @@
     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400"
         data-time="{{ user.created_at.isoformat() }}"
         title="{{ localize_datetime(user.created_at, user_timezone).strftime('%A, %B %d, %Y at %I:%M:%S %p %Z') }}">
-        {{ localize_datetime(user.created_at, user_timezone).strftime('%m/%d/%Y %H:%M') }}
+        {{ localize_datetime(user.created_at, user_timezone).strftime('%m/%d/%Y %I:%M %p') }}
     </td>
     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
         {% if user.last_login %}
         <span data-time="{{ user.last_login.isoformat() }}"
             title="{{ localize_datetime(user.last_login, user_timezone).strftime('%A, %B %d, %Y at %I:%M:%S %p %Z') }}">
-            {{ localize_datetime(user.last_login, user_timezone).strftime('%m/%d/%Y %H:%M') }}
+            {{ localize_datetime(user.last_login, user_timezone).strftime('%m/%d/%Y %I:%M %p') }}
         </span>
         {% else %}
         Never

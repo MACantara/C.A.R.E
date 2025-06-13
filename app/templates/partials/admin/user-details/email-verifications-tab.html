@@ -41,7 +41,7 @@
                 <p class="text-xs text-gray-500 dark:text-gray-400"
                     data-time="{{ verification.created_at.isoformat() }}"
                     title="{{ localize_datetime(verification.created_at, user_timezone).strftime('%A, %B %d, %Y at %I:%M:%S %p %Z') }}">
-                    Sent: {{ localize_datetime(verification.created_at, user_timezone).strftime('%m/%d/%Y %H:%M') }}
+                    Sent: {{ localize_datetime(verification.created_at, user_timezone).strftime('%m/%d/%Y %I:%M %p') }}
                 </p>
                 <span
                     class="px-2 py-1 text-xs rounded-full {{ 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' if verification.is_verified else ('bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' if verification.is_expired() else 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400') }} sm:mt-1 whitespace-nowrap">
