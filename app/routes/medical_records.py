@@ -101,7 +101,7 @@ def index():
     }
 
     return render_template(
-        "medical_records/dashboard.html",
+        "medical_dashboard/medical_records/dashboard.html",
         recent_records=recent_records,
         recent_consultations=recent_consultations,
         stats=stats,
@@ -133,7 +133,7 @@ def patients():
     )
 
     return render_template(
-        "medical_records/patients.html", patients=patients_pagination, search=search
+        "medical_dashboard/medical_records/patients.html", patients=patients_pagination, search=search
     )
 
 
@@ -176,7 +176,7 @@ def patient_records(patient_id):
     )
 
     return render_template(
-        "medical_records/patient_detail.html",
+        "medical_dashboard/medical_records/patient_detail.html",
         patient=patient,
         records=records,
         consultations=consultations,
@@ -212,7 +212,7 @@ def new_consultation():
     )
 
     return render_template(
-        "medical_records/consultation_form.html",
+        "medical_dashboard/medical_records/consultation_form.html",
         patient=patient,
         appointment=appointment,
         patients=patients,
@@ -375,7 +375,7 @@ def new_prescription():
     )
 
     return render_template(
-        "medical_records/prescription_form.html",
+        "medical_dashboard/medical_records/prescription_form.html",
         patient=patient,
         consultation=consultation,
         patients=patients,
@@ -512,7 +512,7 @@ def search_records():
         results = search_query.order_by(desc(MedicalRecord.record_date)).limit(50).all()
 
     return render_template(
-        "medical_records/search.html",
+        "medical_dashboard/medical_records/search.html",
         results=results,
         query=query,
         record_type=record_type,
