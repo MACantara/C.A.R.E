@@ -300,17 +300,26 @@
         document.addEventListener('timezoneChanged', updateTimeDisplay);
     });
 
-    // Enhanced message timestamp handling
+    // Enhanced message timestamp handling - now shows actual time
     function enhanceMessageTimestamps() {
         const messageElements = document.querySelectorAll('[data-time]');
         messageElements.forEach(element => {
             const utcTime = element.getAttribute('data-time');
             if (utcTime && window.timezoneManager) {
-                const formattedTime = window.timezoneManager.formatTimeToLocal(utcTime);
+                // Format as actual time instead of relative
+                const actualTime = window.timezoneManager.formatTimeToLocal(utcTime, {
+                    hour: 'numeric',
+                    minute: '2-digit',
+                    hour12: true,
+                    month: 'short',
+                    day: 'numeric'
+                });
+
+                const fullTime = window.timezoneManager.formatTimeToLocal(utcTime);
                 const relativeTime = window.timezoneManager.formatRelativeTime(utcTime);
 
-                element.textContent = relativeTime;
-                element.title = formattedTime;
+                element.textContent = actualTime;
+                element.title = `${fullTime} (${relativeTime})`;
                 element.classList.add('message-time');
             }
         });

@@ -87,7 +87,7 @@ class TimezoneManager {
     }
 
     /**
-     * Format UTC time to user's local timezone
+     * Format UTC time to user's local timezone with actual time display
      */
     formatTimeToLocal(utcTimeString, options = {}) {
         try {
@@ -96,15 +96,40 @@ class TimezoneManager {
                 sessionStorage.getItem("user_timezone") ||
                 Intl.DateTimeFormat().resolvedOptions().timeZone;
 
-            const defaultOptions = {
-                timeZone: userTimezone,
-                year: "numeric",
-                month: "short",
-                day: "numeric",
-                hour: "2-digit",
-                minute: "2-digit",
-                hour12: true,
-            };
+            const now = new Date();
+            const diffInHours = (now - date) / (1000 * 60 * 60);
+
+            // Default options based on how recent the timestamp is
+            let defaultOptions;
+            if (diffInHours < 24) {
+                // Same day - show time only
+                defaultOptions = {
+                    timeZone: userTimezone,
+                    hour: "numeric",
+                    minute: "2-digit",
+                    hour12: true,
+                };
+            } else if (diffInHours < 168) {
+                // Within a week - show day and time
+                defaultOptions = {
+                    timeZone: userTimezone,
+                    weekday: "short",
+                    hour: "numeric",
+                    minute: "2-digit",
+                    hour12: true,
+                };
+            } else {
+                // Older - show date and time
+                defaultOptions = {
+                    timeZone: userTimezone,
+                    month: "short",
+                    day: "numeric",
+                    hour: "numeric",
+                    minute: "2-digit",
+                    hour12: true,
+                    year: diffInHours > 8760 ? "numeric" : undefined,
+                };
+            }
 
             const formatOptions = { ...defaultOptions, ...options };
             return date.toLocaleString("en-US", formatOptions);

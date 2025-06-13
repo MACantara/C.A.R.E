@@ -18,7 +18,7 @@ export class TimeFormatter {
     }
 
     /**
-     * Format timestamp for display with timezone awareness
+     * Format timestamp for display with actual time
      */
     formatTime(timestamp) {
         try {
@@ -26,7 +26,9 @@ export class TimeFormatter {
             const now = new Date();
             const diffInHours = (now - date) / (1000 * 60 * 60);
 
+            // Always show actual time, but vary the format based on recency
             if (diffInHours < 24) {
+                // Same day - show time only
                 return date.toLocaleTimeString("en-US", {
                     timeZone: this.userTimezone,
                     hour: "numeric",
@@ -34,22 +36,67 @@ export class TimeFormatter {
                     hour12: true,
                 });
             } else if (diffInHours < 168) {
-                // 7 days
+                // Within a week - show day and time
                 return date.toLocaleDateString("en-US", {
                     timeZone: this.userTimezone,
                     weekday: "short",
+                    hour: "numeric",
+                    minute: "2-digit",
+                    hour12: true,
                 });
             } else {
+                // Older than a week - show date and time
                 return date.toLocaleDateString("en-US", {
                     timeZone: this.userTimezone,
                     month: "short",
                     day: "numeric",
+                    hour: "numeric",
+                    minute: "2-digit",
+                    hour12: true,
                     year: diffInHours > 8760 ? "numeric" : undefined, // Show year if > 1 year
                 });
             }
         } catch (error) {
             console.error("Error formatting time:", error);
             return new Date(timestamp).toLocaleString();
+        }
+    }
+
+    /**
+     * Format timestamp for chat list (more compact)
+     */
+    formatChatListTime(timestamp) {
+        try {
+            const date = new Date(timestamp);
+            const now = new Date();
+            const diffInHours = (now - date) / (1000 * 60 * 60);
+
+            if (diffInHours < 24) {
+                // Same day - show time only
+                return date.toLocaleTimeString("en-US", {
+                    timeZone: this.userTimezone,
+                    hour: "numeric",
+                    minute: "2-digit",
+                    hour12: true,
+                });
+            } else if (diffInHours < 168) {
+                // Within a week - show day only
+                return date.toLocaleDateString("en-US", {
+                    timeZone: this.userTimezone,
+                    weekday: "short",
+                });
+            } else {
+                // Older - show date
+                return date.toLocaleDateString("en-US", {
+                    timeZone: this.userTimezone,
+                    month: "short",
+                    day: "numeric",
+                    year: diffInHours > 8760 ? "numeric" : undefined,
+                });
+            }
+        } catch (error) {
+            console.error("Error formatting chat list time:", error);
+            return this.formatTime(timestamp);
         }
     }
 
@@ -75,7 +122,7 @@ export class TimeFormatter {
     }
 
     /**
-     * Get relative time (e.g., "2 hours ago") with timezone awareness
+     * Get relative time (e.g., "2 hours ago") - kept for tooltip use
      */
     getRelativeTime(timestamp) {
         try {

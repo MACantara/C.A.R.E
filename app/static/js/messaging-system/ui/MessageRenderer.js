@@ -42,7 +42,12 @@ export class MessageRenderer {
 
         const lastMessage = conversation.last_message;
         const timeStr = lastMessage
-            ? this.timeFormatter.formatTime(lastMessage.created_at)
+            ? this.timeFormatter.formatChatListTime(lastMessage.created_at)
+            : "";
+
+        // Get full timestamp for tooltip
+        const fullTimeStr = lastMessage
+            ? this.timeFormatter.formatFullDateTime(lastMessage.created_at)
             : "";
 
         div.innerHTML = `
@@ -65,7 +70,7 @@ export class MessageRenderer {
             conversation.other_user.last_name
         }
                     </h3>
-                    <span class="text-xs text-gray-500 dark:text-gray-400">${timeStr}</span>
+                    <span class="text-xs text-gray-500 dark:text-gray-400" title="${fullTimeStr}">${timeStr}</span>
                 </div>
                 <div class="flex items-center justify-between">
                     <p class="text-sm text-gray-500 dark:text-gray-400 truncate">
@@ -162,6 +167,14 @@ export class MessageRenderer {
             ? `data-timezone="${message.timezone}"`
             : "";
 
+        // Get full timestamp and relative time for tooltip
+        const fullTimestamp = message.created_at
+            ? this.timeFormatter.formatFullDateTime(message.created_at)
+            : messageTime;
+        const relativeTime = message.created_at
+            ? this.timeFormatter.getRelativeTime(message.created_at)
+            : "";
+
         div.innerHTML = `
             <div class="max-w-xs lg:max-w-md ${
                 isOwn
@@ -181,8 +194,8 @@ export class MessageRenderer {
                         isOwn
                             ? "text-blue-100"
                             : "text-gray-500 dark:text-gray-400"
-                    } opacity-75 message-time" ${timestampData} ${timezoneData} title="${
-            message.created_at_local || messageTime
+                    } opacity-75 message-time cursor-help" ${timestampData} ${timezoneData} title="${fullTimestamp}${
+            relativeTime ? " (" + relativeTime + ")" : ""
         }">
                         ${messageTime}
                     </p>
