@@ -154,6 +154,14 @@ export class MessageRenderer {
         const messageTime = this.timeFormatter.formatTime(message.created_at);
         const statusIcon = this.getStatusIcon(message.status || "sent", isOwn);
 
+        // Add timezone-aware timestamp data attributes
+        const timestampData = message.created_at
+            ? `data-time="${message.created_at}"`
+            : "";
+        const timezoneData = message.timezone
+            ? `data-timezone="${message.timezone}"`
+            : "";
+
         div.innerHTML = `
             <div class="max-w-xs lg:max-w-md ${
                 isOwn
@@ -173,7 +181,9 @@ export class MessageRenderer {
                         isOwn
                             ? "text-blue-100"
                             : "text-gray-500 dark:text-gray-400"
-                    } opacity-75">
+                    } opacity-75 message-time" ${timestampData} ${timezoneData} title="${
+            message.created_at_local || messageTime
+        }">
                         ${messageTime}
                     </p>
                     ${
