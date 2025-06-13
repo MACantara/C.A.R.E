@@ -62,10 +62,23 @@ export class ConversationManager {
             );
             const data = await response.json();
 
+            // Add status to messages based on sender
+            const messagesWithStatus = data.messages.map((message) => ({
+                ...message,
+                status:
+                    message.sender_id === this.messageSystem.currentUserId
+                        ? message.is_read
+                            ? "read"
+                            : "delivered"
+                        : "received",
+            }));
+
             this.messageSystem.messageRenderer.renderChatHeader(
                 data.other_user
             );
-            this.messageSystem.messageRenderer.renderMessages(data.messages);
+            this.messageSystem.messageRenderer.renderMessages(
+                messagesWithStatus
+            );
             this.markConversationAsRead(userId);
 
             // Focus on message input after loading

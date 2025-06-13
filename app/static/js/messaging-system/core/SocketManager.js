@@ -29,6 +29,14 @@ export class SocketManager {
             this.messageSystem.handleTypingIndicator(data);
         });
 
+        this.socket.on("message_delivered", (data) => {
+            this.messageSystem.handleMessageDelivered(data);
+        });
+
+        this.socket.on("message_read", (data) => {
+            this.messageSystem.handleMessageRead(data);
+        });
+
         this.socket.on("disconnect", () => {
             console.log("Disconnected from messaging system");
         });

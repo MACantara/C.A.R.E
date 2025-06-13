@@ -149,8 +149,10 @@ export class MessageRenderer {
         const isOwn = message.sender_id === this.messageSystem.currentUserId;
         const div = document.createElement("div");
         div.className = `flex ${isOwn ? "justify-end" : "justify-start"} mb-3`;
+        div.setAttribute("data-message-id", message.id || message.temp_id);
 
         const messageTime = this.timeFormatter.formatTime(message.created_at);
+        const statusIcon = this.getStatusIcon(message.status || "sent", isOwn);
 
         div.innerHTML = `
             <div class="max-w-xs lg:max-w-md ${
@@ -166,15 +168,43 @@ export class MessageRenderer {
                 <p class="text-sm whitespace-pre-wrap break-words">${
                     message.content
                 }</p>
-                <p class="text-xs mt-1 ${
-                    isOwn ? "text-blue-100" : "text-gray-500 dark:text-gray-400"
-                } opacity-75">
-                    ${messageTime}
-                </p>
+                <div class="flex items-center justify-between mt-1">
+                    <p class="text-xs ${
+                        isOwn
+                            ? "text-blue-100"
+                            : "text-gray-500 dark:text-gray-400"
+                    } opacity-75">
+                        ${messageTime}
+                    </p>
+                    ${
+                        isOwn
+                            ? `<div class="ml-2 flex items-center space-x-1" data-status-indicator>
+                        ${statusIcon}
+                    </div>`
+                            : ""
+                    }
+                </div>
             </div>
         `;
 
         return div;
+    }
+
+    /**
+     * Get status icon based on message status
+     */
+    getStatusIcon(status, isOwn) {
+        if (!isOwn) return "";
+
+        const icons = {
+            sending: `<i class="bi bi-clock text-xs opacity-60" title="Sending..."></i>`,
+            sent: `<i class="bi bi-check text-xs opacity-60" title="Sent"></i>`,
+            delivered: `<i class="bi bi-check-all text-xs opacity-60" title="Delivered"></i>`,
+            read: `<i class="bi bi-check-all text-xs text-blue-200" title="Read"></i>`,
+            failed: `<i class="bi bi-exclamation-triangle text-xs text-red-300" title="Failed to send"></i>`,
+        };
+
+        return icons[status] || icons["sent"];
     }
 
     /**

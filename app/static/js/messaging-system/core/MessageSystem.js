@@ -5,6 +5,7 @@ import { UIManager } from "../ui/UIManager.js";
 import { ComposeModal } from "../ui/ComposeModal.js";
 import { SearchManager } from "../utils/SearchManager.js";
 import { TimeFormatter } from "../utils/TimeFormatter.js";
+import { MessageStatusManager } from "../utils/MessageStatusManager.js";
 
 /**
  * Main Message System Class
@@ -23,6 +24,7 @@ export class MessageSystem {
         this.composeModal = new ComposeModal(this);
         this.searchManager = new SearchManager(this);
         this.timeFormatter = new TimeFormatter();
+        this.messageStatusManager = new MessageStatusManager(this);
 
         this.init();
     }
@@ -83,13 +85,31 @@ export class MessageSystem {
 
         this.uiManager.disableMessageInput();
 
+        // Generate temporary message ID for tracking
+        const tempMessageId = "temp_" + Date.now();
+
         const messageData = {
             recipient_id: this.currentChatUserId,
             content: content,
             subject: "Chat Message",
             priority: "normal",
             message_type: "general",
+            temp_id: tempMessageId,
         };
+
+        // Add message immediately with "sending" status
+        const tempMessage = {
+            id: tempMessageId,
+            sender_id: this.currentUserId,
+            content: content,
+            created_at: new Date().toISOString(),
+            sender_name: "You",
+            status: "sending",
+        };
+
+        this.messageRenderer.addMessageToUI(tempMessage);
+        input.value = "";
+        this.uiManager.autoResizeTextarea(input);
 
         try {
             const response = await fetch("/messages/api/send", {
@@ -103,23 +123,26 @@ export class MessageSystem {
             const data = await response.json();
 
             if (data.success) {
-                input.value = "";
-                this.uiManager.autoResizeTextarea(input);
-
-                // Add message immediately for better UX
-                this.messageRenderer.addMessageToUI({
-                    sender_id: this.currentUserId,
-                    content: content,
-                    created_at: new Date().toISOString(),
-                    sender_name: "You",
-                });
-
-                // Refresh conversation list
+                // Update message status to sent
+                this.messageStatusManager.updateMessageStatus(
+                    tempMessageId,
+                    "sent",
+                    data.message.id
+                );
                 this.conversationManager.loadConversations();
             } else {
+                // Update message status to failed
+                this.messageStatusManager.updateMessageStatus(
+                    tempMessageId,
+                    "failed"
+                );
                 console.error("Failed to send message:", data.error);
             }
         } catch (error) {
+            this.messageStatusManager.updateMessageStatus(
+                tempMessageId,
+                "failed"
+            );
             console.error("Error sending message:", error);
         } finally {
             this.uiManager.enableMessageInput();
@@ -140,6 +163,7 @@ export class MessageSystem {
                     "New message from ",
                     ""
                 ),
+                status: "delivered",
             });
             this.conversationManager.markConversationAsRead(
                 this.currentChatUserId
@@ -161,27 +185,26 @@ export class MessageSystem {
      * Handle typing indicators
      */
     handleTypingIndicator(data) {
-        console.log(
-            `${data.user_name} is ${data.typing ? "typing" : "not typing"}`
+        if (this.currentChatUserId === data.user_id) {
+            this.uiManager.showTypingIndicator(data.user_name, data.typing);
+        }
+    }
+
+    /**
+     * Handle message delivery confirmation
+     */
+    handleMessageDelivered(data) {
+        this.messageStatusManager.updateMessageStatus(
+            data.message_id,
+            "delivered"
         );
     }
 
     /**
-     * Start typing indicator
+     * Handle message read confirmation
      */
-    startTyping() {
-        if (this.currentChatUserId) {
-            this.socketManager.startTyping(this.currentChatUserId);
-        }
-    }
-
-    /**
-     * Stop typing indicator
-     */
-    stopTyping() {
-        if (this.currentChatUserId) {
-            this.socketManager.stopTyping(this.currentChatUserId);
-        }
+    handleMessageRead(data) {
+        this.messageStatusManager.updateMessageStatus(data.message_id, "read");
     }
 
     /**
