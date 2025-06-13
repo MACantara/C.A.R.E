@@ -1,7 +1,8 @@
 from flask import Blueprint, render_template, request, jsonify, flash, redirect, url_for
 from flask_login import login_required, current_user
+from flask_socketio import emit, join_room, leave_room
 from datetime import datetime
-from app import db
+from app import db, socketio
 from app.models.user import User
 from app.models.message import InternalMessage, MessageType, MessagePriority
 from sqlalchemy import and_, or_
@@ -151,6 +152,27 @@ def send_message():
         db.session.add(message)
         db.session.commit()
 
+        # Emit real-time notification to recipient
+        socketio.emit(
+            "new_message",
+            {
+                "message": message.to_dict(),
+                "notification": {
+                    "title": f"New message from {current_user.first_name} {current_user.last_name}",
+                    "body": subject,
+                    "priority": priority,
+                },
+            },
+            room=f"user_{recipient_id}",
+        )
+
+        # Emit message sent confirmation to sender
+        socketio.emit(
+            "message_sent",
+            {"message": message.to_dict()},
+            room=f"user_{current_user.id}",
+        )
+
         flash("Message sent successfully!", "success")
         return redirect(url_for("messages.inbox"))
 
@@ -173,6 +195,16 @@ def read_message(message_id):
     # Mark as read if recipient is viewing
     if message.recipient_id == current_user.id and not message.is_read:
         message.mark_as_read()
+
+        # Notify sender that message was read
+        socketio.emit(
+            "message_read",
+            {
+                "message_id": message.id,
+                "read_at": message.read_at.isoformat() if message.read_at else None,
+            },
+            room=f"user_{message.sender_id}",
+        )
 
     return render_template("messages/read.html", message=message)
 
@@ -279,3 +311,76 @@ def api_latest_messages():
             "last_updated": datetime.utcnow().isoformat(),
         }
     )
+
+
+# WebSocket Events
+@socketio.on("connect")
+def on_connect():
+    """Handle client connection."""
+    if current_user.is_authenticated and current_user.role in ["doctor", "staff"]:
+        join_room(f"user_{current_user.id}")
+        emit("connected", {"status": "Connected to messaging system"})
+
+
+@socketio.on("disconnect")
+def on_disconnect():
+    """Handle client disconnection."""
+    if current_user.is_authenticated and current_user.role in ["doctor", "staff"]:
+        leave_room(f"user_{current_user.id}")
+
+
+@socketio.on("join_user_room")
+def on_join_user_room():
+    """Explicitly join user room for messages."""
+    if current_user.is_authenticated and current_user.role in ["doctor", "staff"]:
+        join_room(f"user_{current_user.id}")
+        emit("room_joined", {"room": f"user_{current_user.id}"})
+
+
+@socketio.on("typing_start")
+def on_typing_start(data):
+    """Handle typing indicator start."""
+    if current_user.is_authenticated and current_user.role in ["doctor", "staff"]:
+        recipient_id = data.get("recipient_id")
+        if recipient_id:
+            emit(
+                "user_typing",
+                {
+                    "user_id": current_user.id,
+                    "user_name": f"{current_user.first_name} {current_user.last_name}",
+                    "typing": True,
+                },
+                room=f"user_{recipient_id}",
+            )
+
+
+@socketio.on("typing_stop")
+def on_typing_stop(data):
+    """Handle typing indicator stop."""
+    if current_user.is_authenticated and current_user.role in ["doctor", "staff"]:
+        recipient_id = data.get("recipient_id")
+        if recipient_id:
+            emit(
+                "user_typing",
+                {
+                    "user_id": current_user.id,
+                    "user_name": f"{current_user.first_name} {current_user.last_name}",
+                    "typing": False,
+                },
+                room=f"user_{recipient_id}",
+            )
+
+
+@socketio.on("request_unread_count")
+def on_request_unread_count():
+    """Send current unread message count to client."""
+    if current_user.is_authenticated and current_user.role in ["doctor", "staff"]:
+        count = InternalMessage.query.filter(
+            and_(
+                InternalMessage.recipient_id == current_user.id,
+                InternalMessage.is_read == False,
+                InternalMessage.is_deleted_by_recipient == False,
+            )
+        ).count()
+
+        emit("unread_count_update", {"count": count})
