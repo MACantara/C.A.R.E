@@ -380,7 +380,7 @@ def api_send_message():
         db.session.add(message)
         db.session.commit()
 
-        # Emit real-time notification
+        # Emit real-time notification to recipient
         socketio.emit(
             "new_message",
             {
@@ -392,6 +392,16 @@ def api_send_message():
                 },
             },
             room=f"user_{recipient_id}",
+        )
+
+        # Emit delivery confirmation to sender
+        socketio.emit(
+            "message_delivered",
+            {
+                "message_id": message.id,
+                "delivered_at": message.created_at.isoformat(),
+            },
+            room=f"user_{current_user.id}",
         )
 
         return jsonify({"success": True, "message": message.to_dict()})
@@ -421,15 +431,17 @@ def api_mark_conversation_read(user_id):
 
     # Notify sender that messages were read
     if unread_messages:
-        socketio.emit(
-            "messages_read",
-            {
-                "reader_id": current_user.id,
-                "reader_name": f"{current_user.first_name} {current_user.last_name}",
-                "message_count": len(unread_messages),
-            },
-            room=f"user_{user_id}",
-        )
+        for message in unread_messages:
+            socketio.emit(
+                "message_read",
+                {
+                    "message_id": message.id,
+                    "read_at": message.read_at.isoformat() if message.read_at else None,
+                    "reader_id": current_user.id,
+                    "reader_name": f"{current_user.first_name} {current_user.last_name}",
+                },
+                room=f"user_{message.sender_id}",
+            )
 
     return jsonify({"success": True, "marked_read": len(unread_messages)})
 
