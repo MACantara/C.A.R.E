@@ -7,6 +7,7 @@ export class UIManager {
         this.messageSystem = messageSystem;
         this.typingIndicatorVisible = false;
         this.typingTimer = null;
+        this.isCurrentlyTyping = false;
     }
 
     /**
@@ -35,9 +36,16 @@ export class UIManager {
             if (e.key === "Enter" && !e.shiftKey) {
                 e.preventDefault();
                 if (!sendButton.disabled) {
+                    // Stop typing indicator before sending
+                    this.handleTypingStop();
                     this.messageSystem.sendMessage();
                 }
             }
+        });
+
+        // Clear typing on blur (when user clicks away)
+        input.addEventListener("blur", () => {
+            this.handleTypingStop();
         });
 
         // Initially disable input
@@ -104,6 +112,9 @@ export class UIManager {
         const sendButton = document.getElementById("sendButton");
 
         if (input && sendButton) {
+            // Stop typing indicator when sending
+            this.handleTypingStop();
+
             input.disabled = true;
             sendButton.disabled = true;
         }
@@ -168,29 +179,39 @@ export class UIManager {
      * Handle typing start
      */
     handleTypingStart() {
-        if (this.messageSystem.currentChatUserId) {
+        if (this.messageSystem.currentChatUserId && !this.isCurrentlyTyping) {
+            this.isCurrentlyTyping = true;
             this.messageSystem.socketManager.startTyping(
                 this.messageSystem.currentChatUserId
             );
-
-            // Clear existing timer and set new one
-            clearTimeout(this.typingTimer);
-            this.typingTimer = setTimeout(() => {
-                this.handleTypingStop();
-            }, 3000);
         }
+
+        // Reset the typing timer
+        clearTimeout(this.typingTimer);
+        this.typingTimer = setTimeout(() => {
+            this.handleTypingStop();
+        }, 3000); // Stop typing after 3 seconds of inactivity
     }
 
     /**
      * Handle typing stop
      */
     handleTypingStop() {
-        if (this.messageSystem.currentChatUserId) {
+        if (this.messageSystem.currentChatUserId && this.isCurrentlyTyping) {
+            this.isCurrentlyTyping = false;
             this.messageSystem.socketManager.stopTyping(
                 this.messageSystem.currentChatUserId
             );
         }
         clearTimeout(this.typingTimer);
+    }
+
+    /**
+     * Clear typing when switching conversations
+     */
+    clearTypingForConversationSwitch() {
+        this.handleTypingStop();
+        this.hideTypingIndicator();
     }
 
     /**
@@ -213,7 +234,7 @@ export class UIManager {
                 typingIndicator.innerHTML = `
                     <div class="max-w-xs lg:max-w-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg px-4 py-2 shadow-sm">
                         <div class="flex items-center space-x-2">
-                            <span class="text-xs font-medium opacity-75">${userName}</span>
+                            <span class="text-xs font-medium opacity-75">${userName} is typing</span>
                             <div class="flex space-x-1">
                                 <div
                                     class="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
@@ -234,17 +255,14 @@ export class UIManager {
 
                 messagesArea.appendChild(typingIndicator);
                 this.typingIndicatorVisible = true;
-            }
 
-            // Auto-scroll to show typing indicator
-            requestAnimationFrame(() => {
-                messagesArea.scrollTop = messagesArea.scrollHeight;
-            });
-        } else {
-            if (typingIndicator) {
-                typingIndicator.remove();
-                this.typingIndicatorVisible = false;
+                // Auto-scroll to show typing indicator
+                requestAnimationFrame(() => {
+                    messagesArea.scrollTop = messagesArea.scrollHeight;
+                });
             }
+        } else {
+            this.hideTypingIndicator();
         }
     }
 

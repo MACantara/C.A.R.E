@@ -67,6 +67,11 @@ export class MessageSystem {
      * Open a chat conversation
      */
     openChat(userId) {
+        // Clear typing indicator for previous conversation
+        if (this.currentChatUserId !== userId) {
+            this.uiManager.clearTypingForConversationSwitch();
+        }
+
         this.currentChatUserId = userId;
         this.uiManager.updateChatSelection(userId);
         this.conversationManager.loadChatMessages(userId);
@@ -83,6 +88,7 @@ export class MessageSystem {
 
         if (!content || !this.currentChatUserId) return;
 
+        // Clear typing indicator and disable input
         this.uiManager.disableMessageInput();
 
         // Generate temporary message ID for tracking

@@ -8,6 +8,7 @@ export class SocketManager {
         this.socket = null;
         this.isTyping = false;
         this.typingTimeout = null;
+        this.currentTypingRecipient = null;
     }
 
     /**
@@ -46,8 +47,9 @@ export class SocketManager {
      * Start typing indicator
      */
     startTyping(recipientId) {
-        if (!this.isTyping) {
+        if (!this.isTyping || this.currentTypingRecipient !== recipientId) {
             this.isTyping = true;
+            this.currentTypingRecipient = recipientId;
             this.socket?.emit("typing_start", {
                 recipient_id: recipientId,
             });
@@ -64,13 +66,23 @@ export class SocketManager {
      * Stop typing indicator
      */
     stopTyping(recipientId) {
-        if (this.isTyping) {
+        if (this.isTyping && this.currentTypingRecipient === recipientId) {
             this.isTyping = false;
+            this.currentTypingRecipient = null;
             this.socket?.emit("typing_stop", {
                 recipient_id: recipientId,
             });
         }
         clearTimeout(this.typingTimeout);
+    }
+
+    /**
+     * Force stop all typing indicators
+     */
+    forceStopTyping() {
+        if (this.isTyping && this.currentTypingRecipient) {
+            this.stopTyping(this.currentTypingRecipient);
+        }
     }
 
     /**
