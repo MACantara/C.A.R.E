@@ -118,8 +118,8 @@
                 </div>
             </div>
 
-            <!-- hCaptcha -->
-            {% if hcaptcha_enabled() %}
+            <!-- hCaptcha (temporarily disabled) -->
+            {% if false and hcaptcha_enabled() %}
             <div class="opacity-0 animate-fade-in-up" style="animation-delay: 0.55s;">
                 {{ hcaptcha }}
             </div>
@@ -154,8 +154,8 @@
     </div>
 </div>
 
-<!-- Include hCaptcha handler script -->
-{% if hcaptcha_enabled() %}
+<!-- Include hCaptcha handler script (temporarily disabled) -->
+{% if false and hcaptcha_enabled() %}
 <script src="{{ url_for('static', filename='js/hcaptcha-handler.js') }}"></script>
 {% endif %}
 {% endblock %}

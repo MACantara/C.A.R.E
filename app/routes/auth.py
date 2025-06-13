@@ -64,10 +64,10 @@ def login():
             flash("Please provide both username/email and password.", "error")
             return render_template("auth/login.html")
 
-        # Verify hCaptcha
-        if not verify_hcaptcha():
-            flash("Please complete the captcha verification.", "error")
-            return render_template("auth/login.html")
+        # Temporarily disable hCaptcha verification
+        # if not verify_hcaptcha():
+        #     flash("Please complete the captcha verification.", "error")
+        #     return render_template("auth/login.html")
 
         # Check if database is disabled (Vercel environment)
         if current_app.config.get("DISABLE_DATABASE", False):
