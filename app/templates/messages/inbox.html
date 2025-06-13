@@ -9,14 +9,24 @@
 {% endblock %}
 
 {% block content %}
-<div class="h-screen bg-gray-50 dark:bg-gray-900 flex flex-col" data-current-user-id="{{ current_user.id }}">
+<div class="h-screen bg-gray-50 dark:bg-gray-900 flex flex-col" data-current-user-id="{{ current_user.id }}"
+    data-user-timezone="{{ user_timezone_name }}" data-current-time="{{ current_time.isoformat() }}">
     <!-- Header -->
     <div class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex-shrink-0">
         <div class="flex items-center justify-between">
-            <h1 class="text-2xl font-bold text-gray-900 dark:text-white flex items-center">
-                <i class="bi bi-chat-dots text-blue-600 mr-3"></i>
-                Messages
-            </h1>
+            <div class="flex items-center">
+                <h1 class="text-2xl font-bold text-gray-900 dark:text-white flex items-center">
+                    <i class="bi bi-chat-dots text-blue-600 mr-3"></i>
+                    Messages
+                </h1>
+                <!-- Timezone indicator -->
+                <div
+                    class="ml-4 px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-xs text-gray-600 dark:text-gray-400">
+                    <i class="bi bi-clock mr-1"></i>
+                    <span id="timezone-display">{{ user_timezone_name }}</span>
+                    <span class="ml-1" id="current-time-display">{{ current_time.strftime('%H:%M') }}</span>
+                </div>
+            </div>
             <button onclick="openComposeModal()"
                 class="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors">
                 <i class="bi bi-plus mr-2"></i>New Chat
@@ -215,6 +225,34 @@
     [data-status-indicator] i:hover {
         transform: scale(1.1);
     }
+
+    /* Timezone-specific styles */
+    .timezone-tooltip {
+        position: relative;
+    }
+
+    .timezone-tooltip:hover::after {
+        content: attr(data-timezone-full);
+        position: absolute;
+        bottom: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(0, 0, 0, 0.8);
+        color: white;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 11px;
+        white-space: nowrap;
+        z-index: 1000;
+    }
+
+    .message-time {
+        transition: all 0.2s ease-in-out;
+    }
+
+    .message-time:hover {
+        transform: scale(1.05);
+    }
 </style>
 {% endblock %}
 
@@ -223,4 +261,63 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
 <!-- Include Message System -->
 <script type="module" src="{{ url_for('static', filename='js/messaging-system/index.js') }}"></script>
+
+<script>
+    // Update timezone and time display
+    function updateTimeDisplay() {
+        const timeDisplay = document.getElementById('current-time-display');
+        const timezoneDisplay = document.getElementById('timezone-display');
+
+        if (timeDisplay && window.timezoneManager) {
+            const userTimezone = window.timezoneManager.getUserTimezone();
+            const now = new Date();
+
+            const timeString = now.toLocaleTimeString('en-US', {
+                timeZone: userTimezone,
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: false
+            });
+
+            timeDisplay.textContent = timeString;
+
+            if (timezoneDisplay) {
+                // Show short timezone name
+                const shortName = userTimezone.split('/').pop().replace('_', ' ');
+                timezoneDisplay.textContent = shortName;
+                timezoneDisplay.setAttribute('data-timezone-full', userTimezone);
+                timezoneDisplay.classList.add('timezone-tooltip');
+            }
+        }
+    }
+
+    // Update time every minute
+    document.addEventListener('DOMContentLoaded', function () {
+        updateTimeDisplay();
+        setInterval(updateTimeDisplay, 60000); // Update every minute
+
+        // Listen for timezone changes
+        document.addEventListener('timezoneChanged', updateTimeDisplay);
+    });
+
+    // Enhanced message timestamp handling
+    function enhanceMessageTimestamps() {
+        const messageElements = document.querySelectorAll('[data-time]');
+        messageElements.forEach(element => {
+            const utcTime = element.getAttribute('data-time');
+            if (utcTime && window.timezoneManager) {
+                const formattedTime = window.timezoneManager.formatTimeToLocal(utcTime);
+                const relativeTime = window.timezoneManager.formatRelativeTime(utcTime);
+
+                element.textContent = relativeTime;
+                element.title = formattedTime;
+                element.classList.add('message-time');
+            }
+        });
+    }
+
+    // Refresh timestamps when new messages arrive
+    document.addEventListener('messageReceived', enhanceMessageTimestamps);
+    document.addEventListener('messagesLoaded', enhanceMessageTimestamps);
+</script>
 {% endblock %}
