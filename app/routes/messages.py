@@ -313,6 +313,258 @@ def api_latest_messages():
     )
 
 
+@messages_bp.route("/api/conversations")
+@login_required
+def api_conversations():
+    """Get all conversations for the current user."""
+    if current_user.role not in ["doctor", "staff"]:
+        return jsonify({"error": "Unauthorized"}), 403
+
+    # Get all unique conversation partners
+    conversations_query = (
+        db.session.query(
+            User.id,
+            User.first_name,
+            User.last_name,
+            User.role,
+            db.func.max(InternalMessage.created_at).label("last_message_time"),
+        )
+        .join(
+            InternalMessage,
+            or_(
+                and_(
+                    InternalMessage.sender_id == User.id,
+                    InternalMessage.recipient_id == current_user.id,
+                ),
+                and_(
+                    InternalMessage.recipient_id == User.id,
+                    InternalMessage.sender_id == current_user.id,
+                ),
+            ),
+        )
+        .filter(User.id != current_user.id)
+        .group_by(User.id, User.first_name, User.last_name, User.role)
+        .order_by(db.func.max(InternalMessage.created_at).desc())
+        .all()
+    )
+
+    conversations = []
+    for conv in conversations_query:
+        # Get last message
+        last_message = (
+            InternalMessage.query.filter(
+                or_(
+                    and_(
+                        InternalMessage.sender_id == conv.id,
+                        InternalMessage.recipient_id == current_user.id,
+                    ),
+                    and_(
+                        InternalMessage.recipient_id == conv.id,
+                        InternalMessage.sender_id == current_user.id,
+                    ),
+                )
+            )
+            .order_by(InternalMessage.created_at.desc())
+            .first()
+        )
+
+        # Count unread messages from this user
+        unread_count = InternalMessage.query.filter(
+            and_(
+                InternalMessage.sender_id == conv.id,
+                InternalMessage.recipient_id == current_user.id,
+                InternalMessage.is_read == False,
+                InternalMessage.is_deleted_by_recipient == False,
+            )
+        ).count()
+
+        conversations.append(
+            {
+                "other_user": {
+                    "id": conv.id,
+                    "first_name": conv.first_name,
+                    "last_name": conv.last_name,
+                    "role": conv.role,
+                },
+                "last_message": last_message.to_dict() if last_message else None,
+                "unread_count": unread_count,
+            }
+        )
+
+    return jsonify({"conversations": conversations})
+
+
+@messages_bp.route("/api/conversation/<int:user_id>")
+@login_required
+def api_conversation(user_id):
+    """Get conversation messages with a specific user."""
+    if current_user.role not in ["doctor", "staff"]:
+        return jsonify({"error": "Unauthorized"}), 403
+
+    other_user = User.query.get_or_404(user_id)
+
+    # Get all messages between current user and specified user
+    messages = (
+        InternalMessage.query.filter(
+            or_(
+                and_(
+                    InternalMessage.sender_id == current_user.id,
+                    InternalMessage.recipient_id == user_id,
+                ),
+                and_(
+                    InternalMessage.sender_id == user_id,
+                    InternalMessage.recipient_id == current_user.id,
+                ),
+            )
+        )
+        .filter(
+            and_(
+                InternalMessage.is_deleted_by_sender == False,
+                InternalMessage.is_deleted_by_recipient == False,
+            )
+        )
+        .order_by(InternalMessage.created_at.asc())
+        .all()
+    )
+
+    return jsonify(
+        {
+            "other_user": {
+                "id": other_user.id,
+                "first_name": other_user.first_name,
+                "last_name": other_user.last_name,
+                "role": other_user.role,
+            },
+            "messages": [
+                {
+                    **msg.to_dict(),
+                    "sender_name": f"{msg.sender.first_name} {msg.sender.last_name}",
+                }
+                for msg in messages
+            ],
+        }
+    )
+
+
+@messages_bp.route("/api/users")
+@login_required
+def api_users():
+    """Get all users that can receive messages."""
+    if current_user.role not in ["doctor", "staff"]:
+        return jsonify({"error": "Unauthorized"}), 403
+
+    users = (
+        User.query.filter(
+            and_(
+                User.role.in_(["doctor", "staff"]),
+                User.id != current_user.id,
+                User.active == True,
+            )
+        )
+        .order_by(User.first_name, User.last_name)
+        .all()
+    )
+
+    return jsonify(
+        {
+            "users": [
+                {
+                    "id": user.id,
+                    "first_name": user.first_name,
+                    "last_name": user.last_name,
+                    "role": user.role,
+                }
+                for user in users
+            ]
+        }
+    )
+
+
+@messages_bp.route("/api/send", methods=["POST"])
+@login_required
+def api_send_message():
+    """Send a message via API."""
+    if current_user.role not in ["doctor", "staff"]:
+        return jsonify({"error": "Unauthorized"}), 403
+
+    data = request.get_json()
+
+    recipient_id = data.get("recipient_id")
+    subject = data.get("subject", "").strip()
+    content = data.get("content", "").strip()
+    priority = data.get("priority", "normal")
+    message_type = data.get("message_type", "general")
+
+    if not recipient_id or not content:
+        return jsonify({"error": "Missing required fields"}), 400
+
+    try:
+        message = InternalMessage(
+            sender_id=current_user.id,
+            recipient_id=int(recipient_id),
+            subject=subject or "Chat Message",
+            content=content,
+            message_type=MessageType(message_type),
+            priority=MessagePriority(priority),
+        )
+
+        db.session.add(message)
+        db.session.commit()
+
+        # Emit real-time notification
+        socketio.emit(
+            "new_message",
+            {
+                "message": message.to_dict(),
+                "notification": {
+                    "title": f"New message from {current_user.first_name} {current_user.last_name}",
+                    "body": content[:100] + ("..." if len(content) > 100 else ""),
+                    "priority": priority,
+                },
+            },
+            room=f"user_{recipient_id}",
+        )
+
+        return jsonify({"success": True, "message": message.to_dict()})
+
+    except Exception as e:
+        return jsonify({"error": "Failed to send message"}), 500
+
+
+@messages_bp.route("/api/mark_conversation_read/<int:user_id>", methods=["POST"])
+@login_required
+def api_mark_conversation_read(user_id):
+    """Mark all messages from a user as read."""
+    if current_user.role not in ["doctor", "staff"]:
+        return jsonify({"error": "Unauthorized"}), 403
+
+    # Mark all unread messages from this user as read
+    unread_messages = InternalMessage.query.filter(
+        and_(
+            InternalMessage.sender_id == user_id,
+            InternalMessage.recipient_id == current_user.id,
+            InternalMessage.is_read == False,
+        )
+    ).all()
+
+    for message in unread_messages:
+        message.mark_as_read()
+
+    # Notify sender that messages were read
+    if unread_messages:
+        socketio.emit(
+            "messages_read",
+            {
+                "reader_id": current_user.id,
+                "reader_name": f"{current_user.first_name} {current_user.last_name}",
+                "message_count": len(unread_messages),
+            },
+            room=f"user_{user_id}",
+        )
+
+    return jsonify({"success": True, "marked_read": len(unread_messages)})
+
+
 # WebSocket Events
 @socketio.on("connect")
 def on_connect():
