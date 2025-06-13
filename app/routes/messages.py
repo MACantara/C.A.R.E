@@ -1,13 +1,50 @@
-from flask import Blueprint, render_template, request, jsonify, flash, redirect, url_for
+from flask import (
+    Blueprint,
+    render_template,
+    request,
+    jsonify,
+    flash,
+    redirect,
+    url_for,
+    session,
+)
 from flask_login import login_required, current_user
 from flask_socketio import emit, join_room, leave_room
 from datetime import datetime
-from app import db, socketio
+import pytz
+from app import db, socketio, get_user_timezone, localize_datetime, get_current_time
 from app.models.user import User
 from app.models.message import InternalMessage, MessageType, MessagePriority
 from sqlalchemy import and_, or_
 
 messages_bp = Blueprint("messages", __name__, url_prefix="/messages")
+
+
+def format_message_for_api(message, user_timezone=None):
+    """Format message for API response with timezone-aware timestamps."""
+    if user_timezone is None:
+        user_timezone = get_user_timezone()
+
+    message_dict = message.to_dict()
+
+    # Convert timestamps to user's timezone
+    if message_dict.get("created_at"):
+        utc_time = datetime.fromisoformat(
+            message_dict["created_at"].replace("Z", "+00:00")
+        )
+        local_time = localize_datetime(utc_time, user_timezone)
+        message_dict["created_at"] = local_time.isoformat()
+        message_dict["created_at_local"] = local_time.strftime("%Y-%m-%d %H:%M:%S %Z")
+
+    if message_dict.get("read_at") and message_dict["read_at"]:
+        utc_time = datetime.fromisoformat(
+            message_dict["read_at"].replace("Z", "+00:00")
+        )
+        local_time = localize_datetime(utc_time, user_timezone)
+        message_dict["read_at"] = local_time.isoformat()
+        message_dict["read_at_local"] = local_time.strftime("%Y-%m-%d %H:%M:%S %Z")
+
+    return message_dict
 
 
 @messages_bp.route("/")
@@ -137,6 +174,8 @@ def api_latest_messages():
     if current_user.role not in ["doctor", "staff"]:
         return jsonify({"error": "Unauthorized"}), 403
 
+    user_timezone = get_user_timezone()
+
     # Get received messages
     received_messages = (
         InternalMessage.query.filter(
@@ -172,12 +211,19 @@ def api_latest_messages():
         )
     ).count()
 
+    current_time_local = get_current_time(user_timezone)
+
     return jsonify(
         {
-            "received_messages": [msg.to_dict() for msg in received_messages],
-            "sent_messages": [msg.to_dict() for msg in sent_messages],
+            "received_messages": [
+                format_message_for_api(msg, user_timezone) for msg in received_messages
+            ],
+            "sent_messages": [
+                format_message_for_api(msg, user_timezone) for msg in sent_messages
+            ],
             "unread_count": unread_count,
-            "last_updated": datetime.utcnow().isoformat(),
+            "last_updated": current_time_local.isoformat(),
+            "timezone": str(user_timezone),
         }
     )
 
@@ -188,6 +234,8 @@ def api_conversations():
     """Get all conversations for the current user."""
     if current_user.role not in ["doctor", "staff"]:
         return jsonify({"error": "Unauthorized"}), 403
+
+    user_timezone = get_user_timezone()
 
     # Get all unique conversation partners
     conversations_query = (
@@ -255,12 +303,16 @@ def api_conversations():
                     "last_name": conv.last_name,
                     "role": conv.role,
                 },
-                "last_message": last_message.to_dict() if last_message else None,
+                "last_message": (
+                    format_message_for_api(last_message, user_timezone)
+                    if last_message
+                    else None
+                ),
                 "unread_count": unread_count,
             }
         )
 
-    return jsonify({"conversations": conversations})
+    return jsonify({"conversations": conversations, "timezone": str(user_timezone)})
 
 
 @messages_bp.route("/api/conversation/<int:user_id>")
@@ -270,6 +322,7 @@ def api_conversation(user_id):
     if current_user.role not in ["doctor", "staff"]:
         return jsonify({"error": "Unauthorized"}), 403
 
+    user_timezone = get_user_timezone()
     other_user = User.query.get_or_404(user_id)
 
     # Get all messages between current user and specified user
@@ -296,6 +349,12 @@ def api_conversation(user_id):
         .all()
     )
 
+    formatted_messages = []
+    for msg in messages:
+        msg_dict = format_message_for_api(msg, user_timezone)
+        msg_dict["sender_name"] = f"{msg.sender.first_name} {msg.sender.last_name}"
+        formatted_messages.append(msg_dict)
+
     return jsonify(
         {
             "other_user": {
@@ -304,47 +363,8 @@ def api_conversation(user_id):
                 "last_name": other_user.last_name,
                 "role": other_user.role,
             },
-            "messages": [
-                {
-                    **msg.to_dict(),
-                    "sender_name": f"{msg.sender.first_name} {msg.sender.last_name}",
-                }
-                for msg in messages
-            ],
-        }
-    )
-
-
-@messages_bp.route("/api/users")
-@login_required
-def api_users():
-    """Get all users that can receive messages."""
-    if current_user.role not in ["doctor", "staff"]:
-        return jsonify({"error": "Unauthorized"}), 403
-
-    users = (
-        User.query.filter(
-            and_(
-                User.role.in_(["doctor", "staff"]),
-                User.id != current_user.id,
-                User.active == True,
-            )
-        )
-        .order_by(User.first_name, User.last_name)
-        .all()
-    )
-
-    return jsonify(
-        {
-            "users": [
-                {
-                    "id": user.id,
-                    "first_name": user.first_name,
-                    "last_name": user.last_name,
-                    "role": user.role,
-                }
-                for user in users
-            ]
+            "messages": formatted_messages,
+            "timezone": str(user_timezone),
         }
     )
 
@@ -357,6 +377,7 @@ def api_send_message():
         return jsonify({"error": "Unauthorized"}), 403
 
     data = request.get_json()
+    user_timezone = get_user_timezone()
 
     recipient_id = data.get("recipient_id")
     subject = data.get("subject", "").strip()
@@ -380,15 +401,19 @@ def api_send_message():
         db.session.add(message)
         db.session.commit()
 
+        # Get current time in user's timezone for consistent display
+        current_time_local = get_current_time(user_timezone)
+
         # Emit real-time notification to recipient
         socketio.emit(
             "new_message",
             {
-                "message": message.to_dict(),
+                "message": format_message_for_api(message, user_timezone),
                 "notification": {
                     "title": f"New message from {current_user.first_name} {current_user.last_name}",
                     "body": content[:100] + ("..." if len(content) > 100 else ""),
                     "priority": priority,
+                    "timestamp": current_time_local.isoformat(),
                 },
             },
             room=f"user_{recipient_id}",
@@ -399,12 +424,19 @@ def api_send_message():
             "message_delivered",
             {
                 "message_id": message.id,
-                "delivered_at": message.created_at.isoformat(),
+                "delivered_at": current_time_local.isoformat(),
+                "timezone": str(user_timezone),
             },
             room=f"user_{current_user.id}",
         )
 
-        return jsonify({"success": True, "message": message.to_dict()})
+        return jsonify(
+            {
+                "success": True,
+                "message": format_message_for_api(message, user_timezone),
+                "timezone": str(user_timezone),
+            }
+        )
 
     except Exception as e:
         return jsonify({"error": "Failed to send message"}), 500
@@ -416,6 +448,8 @@ def api_mark_conversation_read(user_id):
     """Mark all messages from a user as read."""
     if current_user.role not in ["doctor", "staff"]:
         return jsonify({"error": "Unauthorized"}), 403
+
+    user_timezone = get_user_timezone()
 
     # Mark all unread messages from this user as read
     unread_messages = InternalMessage.query.filter(
@@ -431,19 +465,34 @@ def api_mark_conversation_read(user_id):
 
     # Notify sender that messages were read
     if unread_messages:
+        current_time_local = get_current_time(user_timezone)
+
         for message in unread_messages:
+            read_time_local = (
+                localize_datetime(message.read_at, user_timezone)
+                if message.read_at
+                else current_time_local
+            )
+
             socketio.emit(
                 "message_read",
                 {
                     "message_id": message.id,
-                    "read_at": message.read_at.isoformat() if message.read_at else None,
+                    "read_at": read_time_local.isoformat(),
                     "reader_id": current_user.id,
                     "reader_name": f"{current_user.first_name} {current_user.last_name}",
+                    "timezone": str(user_timezone),
                 },
                 room=f"user_{message.sender_id}",
             )
 
-    return jsonify({"success": True, "marked_read": len(unread_messages)})
+    return jsonify(
+        {
+            "success": True,
+            "marked_read": len(unread_messages),
+            "timezone": str(user_timezone),
+        }
+    )
 
 
 # WebSocket Events
