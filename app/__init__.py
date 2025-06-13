@@ -3,6 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_mail import Mail
 from flask_login import LoginManager
+from flask_socketio import SocketIO
 from config import config
 import os
 
@@ -11,6 +12,7 @@ db = SQLAlchemy()
 migrate = Migrate()
 mail = Mail()
 login_manager = LoginManager()
+socketio = SocketIO()
 
 
 def create_app(config_name=None):
@@ -45,6 +47,9 @@ def create_app(config_name=None):
     else:
         # Initialize a dummy db for compatibility
         db.init_app(app)
+
+    # Initialize Flask-SocketIO
+    socketio.init_app(app, cors_allowed_origins="*", async_mode="threading")
 
     # Initialize Flask-Mail
     mail.init_app(app)
