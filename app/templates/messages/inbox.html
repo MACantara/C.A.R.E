@@ -285,15 +285,29 @@
         document.querySelectorAll('#chatItems > div').forEach(item => {
             item.classList.remove('bg-blue-50', 'dark:bg-blue-900/20');
         });
-        event.currentTarget.classList.add('bg-blue-50', 'dark:bg-blue-900/20');
+
+        // Find the clicked item and highlight it
+        const clickedItem = event.currentTarget;
+        if (clickedItem) {
+            clickedItem.classList.add('bg-blue-50', 'dark:bg-blue-900/20');
+        }
 
         // Load chat messages
         loadChatMessages(userId);
 
-        // Show chat view
+        // Show chat view and hide welcome screen
         document.getElementById('chatWelcome').classList.add('hidden');
-        document.getElementById('chatView').classList.remove('hidden');
-        document.getElementById('chatView').classList.add('flex');
+        const chatView = document.getElementById('chatView');
+        chatView.classList.remove('hidden');
+        chatView.classList.remove('flex-col');
+        chatView.classList.add('flex', 'flex-col');
+
+        // Enable message input
+        const messageInput = document.getElementById('messageInput');
+        const sendButton = document.getElementById('sendButton');
+        messageInput.disabled = false;
+        messageInput.placeholder = 'Type a message...';
+        sendButton.disabled = !messageInput.value.trim();
     }
 
     function loadChatMessages(userId) {
@@ -303,6 +317,11 @@
                 renderChatHeader(data.other_user);
                 renderMessages(data.messages);
                 markConversationAsRead(userId);
+
+                // Focus on message input after loading
+                setTimeout(() => {
+                    document.getElementById('messageInput').focus();
+                }, 100);
             })
             .catch(error => console.error('Error loading chat messages:', error));
     }
@@ -310,15 +329,22 @@
     function renderChatHeader(user) {
         const header = document.getElementById('chatHeader');
         header.innerHTML = `
-            <div class="flex items-center">
-                <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold mr-3">
-                    ${user.first_name[0]}${user.last_name[0]}
+            <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                    <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold mr-3">
+                        ${user.first_name[0]}${user.last_name[0]}
+                    </div>
+                    <div>
+                        <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
+                            ${user.first_name} ${user.last_name}
+                        </h2>
+                        <p class="text-sm text-gray-500 dark:text-gray-400">${user.role.charAt(0).toUpperCase() + user.role.slice(1)}</p>
+                    </div>
                 </div>
-                <div>
-                    <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
-                        ${user.first_name} ${user.last_name}
-                    </h2>
-                    <p class="text-sm text-gray-500 dark:text-gray-400">${user.role.charAt(0).toUpperCase() + user.role.slice(1)}</p>
+                <div class="flex items-center space-x-2">
+                    <button onclick="showChatOptions()" class="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                        <i class="bi bi-three-dots-vertical"></i>
+                    </button>
                 </div>
             </div>
         `;
@@ -360,8 +386,13 @@
         const sendButton = document.getElementById('sendButton');
 
         input.addEventListener('input', function () {
-            sendButton.disabled = !this.value.trim();
+            sendButton.disabled = !this.value.trim() || !currentChatUserId;
             autoResize(this);
+
+            // Handle typing indicators
+            if (currentChatUserId && this.value.trim()) {
+                // Implement typing indicator logic here
+            }
         });
 
         input.addEventListener('keypress', function (e) {
@@ -372,6 +403,11 @@
                 }
             }
         });
+
+        // Initially disable input
+        input.disabled = true;
+        input.placeholder = 'Select a conversation to start messaging...';
+        sendButton.disabled = true;
     }
 
     function autoResize(textarea) {
@@ -384,6 +420,10 @@
         const content = input.value.trim();
 
         if (!content || !currentChatUserId) return;
+
+        // Disable input while sending
+        input.disabled = true;
+        document.getElementById('sendButton').disabled = true;
 
         const messageData = {
             recipient_id: currentChatUserId,
@@ -404,13 +444,22 @@
             .then(data => {
                 if (data.success) {
                     input.value = '';
-                    document.getElementById('sendButton').disabled = true;
                     autoResize(input);
                     loadChatMessages(currentChatUserId);
                     loadConversations(); // Refresh conversation list
+                } else {
+                    console.error('Failed to send message:', data.error);
                 }
             })
-            .catch(error => console.error('Error sending message:', error));
+            .catch(error => {
+                console.error('Error sending message:', error);
+            })
+            .finally(() => {
+                // Re-enable input
+                input.disabled = false;
+                input.focus();
+                document.getElementById('sendButton').disabled = !input.value.trim();
+            });
     }
 
     // Modal functions
@@ -492,6 +541,44 @@
         if (typeof updateChatBubble === 'function') {
             updateChatBubble();
         }
+
+        // Show notification for new message if not currently viewing that conversation
+        if (currentChatUserId !== data.message.sender_id) {
+            showNewMessageToast(data);
+        }
+    }
+
+    function showNewMessageToast(data) {
+        // Create a simple toast notification for new messages
+        const toast = document.createElement('div');
+        toast.className = 'fixed bottom-20 right-6 bg-blue-600 text-white px-4 py-3 rounded-lg shadow-lg z-40 animate-slide-in-right';
+        toast.innerHTML = `
+            <div class="flex items-center">
+                <i class="bi bi-chat-dots mr-2"></i>
+                <div>
+                    <p class="font-medium">New message</p>
+                    <p class="text-sm opacity-90">${data.notification.title}</p>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(toast);
+
+        // Auto remove after 5 seconds
+        setTimeout(() => {
+            toast.remove();
+        }, 5000);
+
+        // Click to open conversation
+        toast.addEventListener('click', () => {
+            openChat(data.message.sender_id);
+            toast.remove();
+        });
+    }
+
+    function showChatOptions() {
+        // Placeholder for chat options menu
+        console.log('Chat options clicked');
     }
 
     function markConversationAsRead(userId) {
