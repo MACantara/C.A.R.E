@@ -9,7 +9,7 @@ from flask import (
     current_app,
 )
 from flask_login import login_required, current_user
-from app import db
+from app import db, get_user_timezone, localize_datetime, get_current_time
 from app.models.user import User
 import re
 
@@ -33,7 +33,28 @@ def profile():
         )
         return redirect(url_for("main.home"))
 
-    return render_template("profile/profile.html", user=current_user)
+    # Get user's timezone for displaying timestamps
+    user_timezone = get_user_timezone()
+    current_time_local = get_current_time(user_timezone)
+
+    # Convert user's timestamps to local timezone
+    member_since = None
+    last_login_local = None
+
+    if current_user.created_at:
+        member_since = localize_datetime(current_user.created_at, user_timezone)
+
+    if current_user.last_login:
+        last_login_local = localize_datetime(current_user.last_login, user_timezone)
+
+    return render_template(
+        "profile/profile.html",
+        user=current_user,
+        user_timezone=user_timezone,
+        current_time_local=current_time_local,
+        member_since=member_since,
+        last_login_local=last_login_local,
+    )
 
 
 @profile_bp.route("/edit", methods=["GET", "POST"])
@@ -46,6 +67,9 @@ def edit_profile():
             "warning",
         )
         return redirect(url_for("main.home"))
+
+    # Get timezone for any datetime operations
+    user_timezone = get_user_timezone()
 
     if request.method == "POST":
         # Basic fields that all users can edit
@@ -177,6 +201,7 @@ def edit_profile():
             if new_password:
                 current_user.set_password(new_password)
 
+            # Update last modified timestamp (implicitly handled by SQLAlchemy)
             db.session.commit()
 
             flash("Profile updated successfully!", "success")
@@ -188,6 +213,12 @@ def edit_profile():
                 "An error occurred while updating your profile. Please try again.",
                 "error",
             )
-            return render_template("profile/edit-profile.html", user=current_user)
+            return render_template(
+                "profile/edit-profile.html",
+                user=current_user,
+                user_timezone=user_timezone,
+            )
 
-    return render_template("profile/edit-profile.html", user=current_user)
+    return render_template(
+        "profile/edit-profile.html", user=current_user, user_timezone=user_timezone
+    )

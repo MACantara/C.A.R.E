@@ -3,7 +3,8 @@
 {% block title %}Profile - C.A.R.E. System{% endblock %}
 
 {% block content %}
-<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12" data-user-timezone="{{ user_timezone }}"
+    data-current-time="{{ current_time_local.isoformat() }}">
     <div class="bg-white dark:bg-gray-800 shadow-xl rounded-lg overflow-hidden">
         <div class="px-6 py-8">
             <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-8 opacity-0 animate-fade-in-up">
@@ -53,12 +54,24 @@
                         {% endif %}
                     </div>
 
-                    <!-- Member Since Badge -->
+                    <!-- Member Since Badge with timezone-aware timestamp -->
                     <div class="opacity-0 animate-fade-in-up" style="animation-delay: 0.3s;">
                         <span
-                            class="inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200 transition-all duration-200 hover:scale-105 shadow-md">
+                            class="inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200 transition-all duration-200 hover:scale-105 shadow-md cursor-help"
+                            title="{% if member_since %}{{ member_since.strftime('%B %d, %Y at %I:%M %p %Z') }}{% endif %}">
                             <i class="bi bi-calendar-event mr-2"></i>
-                            Member since {{ user.created_at.strftime('%B %Y') }}
+                            Member since {% if member_since %}{{ member_since.strftime('%B %Y') }}{% else %}Unknown{%
+                            endif %}
+                        </span>
+                    </div>
+
+                    <!-- Timezone Display Badge -->
+                    <div class="opacity-0 animate-fade-in-up" style="animation-delay: 0.4s;">
+                        <span
+                            class="inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 transition-all duration-200 hover:scale-105 shadow-md cursor-help"
+                            title="Your current timezone setting" id="timezone-badge">
+                            <i class="bi bi-clock mr-2"></i>
+                            <span id="timezone-display">{{ user_timezone }}</span>
                         </span>
                     </div>
                 </div>
@@ -187,19 +200,60 @@
             </div>
         </div>
 
-        <!-- Profile Actions Section -->
+        <!-- Profile Actions Section with timezone-aware last login -->
         <div class="bg-gray-50 dark:bg-gray-900/50 px-6 py-4 border-t border-gray-200 dark:border-gray-700 opacity-0 animate-fade-in-up"
             style="animation-delay: 0.6s;">
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
                 <div class="text-sm text-gray-500 dark:text-gray-400 min-w-0">
-                    <div class="flex items-center">
-                        <i class="bi bi-clock mr-1 flex-shrink-0"></i>
-                        <span class="truncate">
-                            Last login: {% if user.last_login %}{{ user.last_login.strftime('%B %d, %Y at %I:%M %p')
-                            }}{% else %}First time login{% endif %}
-                        </span>
+                    <div class="flex flex-col space-y-1">
+                        <!-- Last Login with timezone awareness -->
+                        <div class="flex items-center">
+                            <i class="bi bi-clock mr-1 flex-shrink-0"></i>
+                            <span class="truncate">
+                                Last login:
+                                {% if last_login_local %}
+                                <span class="font-medium"
+                                    title="{{ last_login_local.strftime('%A, %B %d, %Y at %I:%M:%S %p %Z') }}"
+                                    data-time="{{ current_user.last_login.isoformat() }}">
+                                    {{ last_login_local.strftime('%B %d, %Y at %I:%M %p') }}
+                                </span>
+                                {% else %}
+                                <span class="font-medium">First time login</span>
+                                {% endif %}
+                            </span>
+                        </div>
+
+                        <!-- Account Created with timezone awareness -->
+                        {% if member_since %}
+                        <div class="flex items-center">
+                            <i class="bi bi-person-plus mr-1 flex-shrink-0"></i>
+                            <span class="truncate">
+                                Account created:
+                                <span class="font-medium"
+                                    title="{{ member_since.strftime('%A, %B %d, %Y at %I:%M:%S %p %Z') }}"
+                                    data-time="{{ current_user.created_at.isoformat() }}">
+                                    {{ member_since.strftime('%B %d, %Y at %I:%M %p') }}
+                                </span>
+                            </span>
+                        </div>
+                        {% endif %}
+
+                        <!-- Current Time Display -->
+                        <div class="flex items-center">
+                            <i class="bi bi-globe mr-1 flex-shrink-0"></i>
+                            <span class="truncate">
+                                Current time:
+                                <span class="font-medium" id="current-time-display">
+                                    {{ current_time_local.strftime('%I:%M:%S %p') }}
+                                </span>
+                                <span class="text-xs opacity-75 ml-1" id="current-date-display">
+                                    {{ current_time_local.strftime('%B %d, %Y') }}
+                                </span>
+                            </span>
+                        </div>
                     </div>
                 </div>
+
                 <div class="flex space-x-3">
                     <a href="{{ url_for('profile.edit_profile') }}"
                         class="group inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-sm font-medium rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-blue-500/25 shadow-md hover:shadow-lg cursor-pointer hover:scale-105 transform">
@@ -218,4 +272,172 @@
         </div>
     </div>
 </div>
+
+<!-- Timezone Settings Modal -->
+<div id="timezoneModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-md">
+        <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Timezone Settings</h3>
+        </div>
+        <div class="p-6">
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Select your timezone:
+            </label>
+            <select id="timezoneSelect"
+                class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                data-timezone-selector>
+                {% for tz_value, tz_label in common_timezones %}
+                <option value="{{ tz_value }}" {% if user_timezone==tz_value %}selected{% endif %}>
+                    {{ tz_label }}
+                </option>
+                {% endfor %}
+            </select>
+            <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                This setting affects how times are displayed throughout the system.
+            </p>
+        </div>
+        <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex justify-end space-x-3">
+            <button onclick="closeTimezoneModal()"
+                class="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                Cancel
+            </button>
+            <button onclick="saveTimezone()"
+                class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                Save
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Timezone badge hover effects */
+    #timezone-badge:hover {
+        cursor: pointer;
+        transform: scale(1.05);
+    }
+
+    /* Time display animations */
+    .time-update {
+        transition: all 0.3s ease-in-out;
+    }
+
+    .time-update.updating {
+        opacity: 0.7;
+        transform: scale(0.98);
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let userTimezone;
+
+    document.addEventListener('DOMContentLoaded', function () {
+        userTimezone = document.querySelector('[data-user-timezone]')?.dataset.userTimezone || 'Asia/Manila';
+
+        // Update time displays
+        updateTimeDisplays();
+
+        // Update every second
+        setInterval(updateTimeDisplays, 1000);
+
+        // Add click handler for timezone badge
+        document.getElementById('timezone-badge')?.addEventListener('click', openTimezoneModal);
+
+        // Listen for timezone changes from the global timezone manager
+        document.addEventListener('timezoneChanged', function (e) {
+            userTimezone = e.detail.timezone;
+            updateTimeDisplays();
+            updateTimezoneDisplay();
+        });
+    });
+
+    function updateTimeDisplays() {
+        const currentTimeDisplay = document.getElementById('current-time-display');
+        const currentDateDisplay = document.getElementById('current-date-display');
+
+        if (currentTimeDisplay && window.timezoneManager) {
+            const now = new Date();
+
+            const timeString = now.toLocaleTimeString('en-US', {
+                timeZone: userTimezone,
+                hour: 'numeric',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: true
+            });
+
+            const dateString = now.toLocaleDateString('en-US', {
+                timeZone: userTimezone,
+                month: 'long',
+                day: 'numeric',
+                year: 'numeric'
+            });
+
+            // Add smooth transition effect
+            currentTimeDisplay.classList.add('updating');
+            setTimeout(() => {
+                currentTimeDisplay.textContent = timeString;
+                currentTimeDisplay.classList.remove('updating');
+            }, 150);
+
+            if (currentDateDisplay) {
+                currentDateDisplay.textContent = dateString;
+            }
+        }
+    }
+
+    function updateTimezoneDisplay() {
+        const timezoneDisplay = document.getElementById('timezone-display');
+        if (timezoneDisplay) {
+            const shortName = userTimezone.split('/').pop().replace('_', ' ');
+            timezoneDisplay.textContent = shortName;
+        }
+    }
+
+    function openTimezoneModal() {
+        document.getElementById('timezoneModal').classList.remove('hidden');
+    }
+
+    function closeTimezoneModal() {
+        document.getElementById('timezoneModal').classList.add('hidden');
+    }
+
+    function saveTimezone() {
+        const select = document.getElementById('timezoneSelect');
+        const newTimezone = select.value;
+
+        if (window.timezoneManager) {
+            window.timezoneManager.setTimezone(newTimezone);
+            userTimezone = newTimezone;
+            updateTimeDisplays();
+            updateTimezoneDisplay();
+            closeTimezoneModal();
+        }
+    }
+
+    // Enhanced timestamp handling for profile page
+    function enhanceProfileTimestamps() {
+        const timestampElements = document.querySelectorAll('[data-time]');
+        timestampElements.forEach(element => {
+            const utcTime = element.getAttribute('data-time');
+            if (utcTime && window.timezoneManager) {
+                const localTime = window.timezoneManager.formatTimeToLocal(utcTime);
+                const relativeTime = window.timezoneManager.formatRelativeTime(utcTime);
+
+                // Update tooltip with both local time and relative time
+                const currentTitle = element.getAttribute('title') || '';
+                element.setAttribute('title', `${localTime} (${relativeTime})`);
+            }
+        });
+    }
+
+    // Run timestamp enhancement when timezone manager is available
+    document.addEventListener('DOMContentLoaded', function () {
+        // Wait a bit for timezone manager to load
+        setTimeout(enhanceProfileTimestamps, 500);
+    });
+</script>
 {% endblock %}
