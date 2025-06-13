@@ -1,4 +1,5 @@
-{% if current_user.is_authenticated and current_user.role in ['doctor', 'staff'] %}
+{% if current_user.is_authenticated and current_user.role in ['doctor', 'staff'] and request.endpoint !=
+'messages.inbox' %}
 <div id="chatBubble" class="fixed bottom-6 right-6 z-50">
     <a href="{{ url_for('messages.inbox') }}"
         class="relative flex items-center justify-center w-16 h-16 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
