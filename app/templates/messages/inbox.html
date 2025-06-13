@@ -5,7 +5,7 @@
 {% block content %}
 <div class="h-screen bg-gray-50 dark:bg-gray-900 flex flex-col">
     <!-- Header -->
-    <div class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4">
+    <div class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex-shrink-0">
         <div class="flex items-center justify-between">
             <h1 class="text-2xl font-bold text-gray-900 dark:text-white flex items-center">
                 <i class="bi bi-chat-dots text-blue-600 mr-3"></i>
@@ -19,11 +19,12 @@
     </div>
 
     <!-- Main Chat Interface -->
-    <div class="flex-1 flex overflow-hidden">
+    <div class="flex-1 flex overflow-hidden min-h-0">
         <!-- Sidebar - Chat List (30%) -->
-        <div class="w-80 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col">
+        <div
+            class="w-80 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col flex-shrink-0">
             <!-- Search -->
-            <div class="p-4 border-b border-gray-200 dark:border-gray-700">
+            <div class="p-4 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
                 <div class="relative">
                     <input type="text" id="chatSearch" placeholder="Search conversations..."
                         class="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
@@ -32,7 +33,7 @@
             </div>
 
             <!-- Chat List -->
-            <div class="flex-1 overflow-y-auto" id="chatList">
+            <div class="flex-1 overflow-y-auto min-h-0" id="chatList">
                 <!-- Loading state -->
                 <div id="chatListLoading" class="p-4 text-center text-gray-500 dark:text-gray-400">
                     <i class="bi bi-chat-dots animate-pulse text-2xl mb-2"></i>
@@ -52,7 +53,7 @@
         </div>
 
         <!-- Main Chat Area (70%) -->
-        <div class="flex-1 flex flex-col">
+        <div class="flex-1 flex flex-col min-h-0 min-w-0">
             <!-- Welcome/Empty State -->
             <div id="chatWelcome" class="flex-1 flex items-center justify-center bg-gray-50 dark:bg-gray-900">
                 <div class="text-center">
@@ -67,20 +68,20 @@
             </div>
 
             <!-- Chat View (Hidden by default) -->
-            <div id="chatView" class="flex-1 flex-col hidden">
+            <div id="chatView" class="flex-1 flex flex-col min-h-0 hidden">
                 <!-- Chat Header -->
                 <div id="chatHeader"
-                    class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4">
+                    class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex-shrink-0">
                     <!-- Content populated by JavaScript -->
                 </div>
 
                 <!-- Messages Area -->
-                <div id="messagesArea" class="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50 dark:bg-gray-900">
+                <div id="messagesArea" class="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50 dark:bg-gray-900 min-h-0">
                     <!-- Messages populated by JavaScript -->
                 </div>
 
                 <!-- Message Input -->
-                <div class="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-4">
+                <div class="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-4 flex-shrink-0">
                     <div class="flex items-end space-x-3">
                         <div class="flex-1">
                             <textarea id="messageInput" placeholder="Type a message..."
@@ -299,8 +300,6 @@
         document.getElementById('chatWelcome').classList.add('hidden');
         const chatView = document.getElementById('chatView');
         chatView.classList.remove('hidden');
-        chatView.classList.remove('flex-col');
-        chatView.classList.add('flex', 'flex-col');
 
         // Enable message input
         const messageInput = document.getElementById('messageInput');
@@ -359,21 +358,26 @@
             container.appendChild(messageElement);
         });
 
-        // Scroll to bottom
-        container.scrollTop = container.scrollHeight;
+        // Scroll to bottom smoothly
+        requestAnimationFrame(() => {
+            container.scrollTop = container.scrollHeight;
+        });
     }
 
     function createMessageElement(message) {
         const isOwn = message.sender_id === currentUserId;
         const div = document.createElement('div');
-        div.className = `flex ${isOwn ? 'justify-end' : 'justify-start'}`;
+        div.className = `flex ${isOwn ? 'justify-end' : 'justify-start'} mb-3`;
+
+        // Format timestamp
+        const messageTime = formatTime(message.created_at);
 
         div.innerHTML = `
-            <div class="max-w-xs lg:max-w-md ${isOwn ? 'bg-blue-600 text-white' : 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white'} rounded-lg px-4 py-2 shadow">
-                ${!isOwn ? `<p class="text-xs font-medium mb-1">${message.sender_name}</p>` : ''}
-                <p class="text-sm">${message.content}</p>
-                <p class="text-xs mt-1 ${isOwn ? 'text-blue-100' : 'text-gray-500 dark:text-gray-400'}">
-                    ${formatTime(message.created_at)}
+            <div class="max-w-xs lg:max-w-md ${isOwn ? 'bg-blue-600 text-white' : 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white'} rounded-lg px-4 py-2 shadow-sm">
+                ${!isOwn ? `<p class="text-xs font-medium mb-1 opacity-75">${message.sender_name}</p>` : ''}
+                <p class="text-sm whitespace-pre-wrap break-words">${message.content}</p>
+                <p class="text-xs mt-1 ${isOwn ? 'text-blue-100' : 'text-gray-500 dark:text-gray-400'} opacity-75">
+                    ${messageTime}
                 </p>
             </div>
         `;
@@ -445,8 +449,18 @@
                 if (data.success) {
                     input.value = '';
                     autoResize(input);
-                    loadChatMessages(currentChatUserId);
-                    loadConversations(); // Refresh conversation list
+
+                    // Add message immediately for better UX
+                    addMessageToUI({
+                        sender_id: currentUserId,
+                        content: content,
+                        created_at: new Date().toISOString(),
+                        sender_name: 'You'
+                    });
+
+                    // Refresh conversation list and messages
+                    loadConversations();
+                    setTimeout(() => loadChatMessages(currentChatUserId), 500);
                 } else {
                     console.error('Failed to send message:', data.error);
                 }
@@ -462,69 +476,14 @@
             });
     }
 
-    // Modal functions
-    function openComposeModal() {
-        document.getElementById('composeModal').classList.remove('hidden');
-    }
+    function addMessageToUI(message) {
+        const container = document.getElementById('messagesArea');
+        const messageElement = createMessageElement(message);
+        container.appendChild(messageElement);
 
-    function closeComposeModal() {
-        document.getElementById('composeModal').classList.add('hidden');
-        document.getElementById('composeForm').reset();
-    }
-
-    function populateRecipientSelect() {
-        const select = document.getElementById('composeRecipient');
-        select.innerHTML = '<option value="">Select recipient...</option>';
-
-        allUsers.forEach(user => {
-            const option = document.createElement('option');
-            option.value = user.id;
-            option.textContent = `${user.first_name} ${user.last_name} - ${user.role.charAt(0).toUpperCase() + user.role.slice(1)}`;
-            select.appendChild(option);
-        });
-    }
-
-    function sendNewMessage() {
-        const form = document.getElementById('composeForm');
-        const formData = new FormData(form);
-
-        const messageData = {
-            recipient_id: formData.get('recipient_id'),
-            subject: formData.get('subject'),
-            content: formData.get('content'),
-            priority: formData.get('priority'),
-            message_type: 'general'
-        };
-
-        fetch('/messages/api/send', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(messageData)
-        })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    closeComposeModal();
-                    loadConversations();
-                    // Open the new conversation
-                    openChat(parseInt(messageData.recipient_id));
-                }
-            })
-            .catch(error => console.error('Error sending message:', error));
-    }
-
-    function setupSearch() {
-        const searchInput = document.getElementById('chatSearch');
-        searchInput.addEventListener('input', function () {
-            const searchTerm = this.value.toLowerCase();
-            const chatItems = document.querySelectorAll('#chatItems > div');
-
-            chatItems.forEach(item => {
-                const text = item.textContent.toLowerCase();
-                item.style.display = text.includes(searchTerm) ? 'flex' : 'none';
-            });
+        // Scroll to bottom smoothly
+        requestAnimationFrame(() => {
+            container.scrollTop = container.scrollHeight;
         });
     }
 
@@ -532,9 +491,13 @@
         // Refresh conversation list
         loadConversations();
 
-        // If chat is open with sender, refresh messages
+        // If chat is open with sender, add message to UI immediately
         if (currentChatUserId === data.message.sender_id) {
-            loadChatMessages(currentChatUserId);
+            addMessageToUI({
+                ...data.message,
+                sender_name: data.notification.title.replace('New message from ', '')
+            });
+            markConversationAsRead(currentChatUserId);
         }
 
         // Update chat bubble
