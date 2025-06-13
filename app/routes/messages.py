@@ -62,151 +62,27 @@ def inbox():
 @messages_bp.route("/compose")
 @login_required
 def compose():
-    """Display compose message form."""
-    if current_user.role not in ["doctor", "staff"]:
-        flash("Access denied.", "error")
-        return redirect(url_for("main.home"))
-
-    # Get all healthcare professionals for recipient list
-    recipients = (
-        User.query.filter(
-            and_(
-                User.role.in_(["doctor", "staff"]),
-                User.id != current_user.id,
-                User.active == True,
-            )
-        )
-        .order_by(User.first_name, User.last_name)
-        .all()
-    )
-
-    # Handle reply functionality
-    reply_to_id = request.args.get("reply_to")
-    reply_data = None
-
-    if reply_to_id:
-        try:
-            original_message = InternalMessage.query.get(int(reply_to_id))
-            if original_message and (
-                original_message.recipient_id == current_user.id
-                or original_message.sender_id == current_user.id
-            ):
-                # Determine who to reply to (sender if we're the recipient, recipient if we're the sender)
-                reply_to_user = (
-                    original_message.sender
-                    if original_message.recipient_id == current_user.id
-                    else original_message.recipient
-                )
-
-                reply_data = {
-                    "recipient_id": reply_to_user.id,
-                    "subject": (
-                        f"Re: {original_message.subject}"
-                        if not original_message.subject.startswith("Re:")
-                        else original_message.subject
-                    ),
-                    "priority": original_message.priority.value,
-                    "message_type": original_message.message_type.value,
-                    "original_content": original_message.content,
-                    "original_sender": f"{original_message.sender.first_name} {original_message.sender.last_name}",
-                    "original_date": original_message.created_at.strftime(
-                        "%B %d, %Y at %I:%M %p"
-                    ),
-                }
-        except (ValueError, AttributeError):
-            pass  # Invalid reply_to_id, ignore
-
-    return render_template(
-        "messages/compose.html", recipients=recipients, reply_data=reply_data
-    )
-
-
-@messages_bp.route("/send", methods=["POST"])
-@login_required
-def send_message():
-    """Send a new message."""
-    if current_user.role not in ["doctor", "staff"]:
-        return jsonify({"error": "Unauthorized"}), 403
-
-    recipient_id = request.form.get("recipient_id")
-    subject = request.form.get("subject", "").strip()
-    content = request.form.get("content", "").strip()
-    priority = request.form.get("priority", "normal")
-    message_type = request.form.get("message_type", "general")
-
-    # Validation
-    if not recipient_id or not subject or not content:
-        flash("Please fill in all required fields.", "error")
-        return redirect(url_for("messages.compose"))
-
-    try:
-        message = InternalMessage(
-            sender_id=current_user.id,
-            recipient_id=int(recipient_id),
-            subject=subject,
-            content=content,
-            message_type=MessageType(message_type),
-            priority=MessagePriority(priority),
-        )
-
-        db.session.add(message)
-        db.session.commit()
-
-        # Emit real-time notification to recipient
-        socketio.emit(
-            "new_message",
-            {
-                "message": message.to_dict(),
-                "notification": {
-                    "title": f"New message from {current_user.first_name} {current_user.last_name}",
-                    "body": subject,
-                    "priority": priority,
-                },
-            },
-            room=f"user_{recipient_id}",
-        )
-
-        # Emit message sent confirmation to sender
-        socketio.emit(
-            "message_sent",
-            {"message": message.to_dict()},
-            room=f"user_{current_user.id}",
-        )
-
-        flash("Message sent successfully!", "success")
-        return redirect(url_for("messages.inbox"))
-
-    except Exception as e:
-        flash("Failed to send message. Please try again.", "error")
-        return redirect(url_for("messages.compose"))
+    """Redirect to inbox for compose functionality."""
+    return redirect(url_for("messages.inbox"))
 
 
 @messages_bp.route("/read/<int:message_id>")
 @login_required
 def read_message(message_id):
-    """Display a specific message."""
-    message = InternalMessage.query.get_or_404(message_id)
+    """Redirect to inbox for reading messages."""
+    return redirect(url_for("messages.inbox"))
 
-    # Check if user has permission to read this message
-    if message.recipient_id != current_user.id and message.sender_id != current_user.id:
-        flash("Access denied.", "error")
-        return redirect(url_for("messages.inbox"))
 
-    # Mark as read if recipient is viewing
-    if message.recipient_id == current_user.id and not message.is_read:
-        message.mark_as_read()
+@messages_bp.route("/send", methods=["POST"])
+@login_required
+def send_message():
+    """Send a new message (legacy form submission - redirects to API)."""
+    if current_user.role not in ["doctor", "staff"]:
+        return jsonify({"error": "Unauthorized"}), 403
 
-        # Notify sender that message was read
-        socketio.emit(
-            "message_read",
-            {
-                "message_id": message.id,
-                "read_at": message.read_at.isoformat() if message.read_at else None,
-            },
-            room=f"user_{message.sender_id}",
-        )
-
-    return render_template("messages/read.html", message=message)
+    # Redirect form submissions to use the API instead
+    flash("Please use the new chat interface to send messages.", "info")
+    return redirect(url_for("messages.inbox"))
 
 
 @messages_bp.route("/api/unread_count")
@@ -250,15 +126,8 @@ def delete_message(message_id):
 @messages_bp.route("/reply/<int:message_id>")
 @login_required
 def reply_to_message(message_id):
-    """Redirect to compose with reply parameters."""
-    message = InternalMessage.query.get_or_404(message_id)
-
-    # Check if user has permission to reply to this message
-    if message.recipient_id != current_user.id and message.sender_id != current_user.id:
-        flash("Access denied.", "error")
-        return redirect(url_for("messages.inbox"))
-
-    return redirect(url_for("messages.compose", reply_to=message_id))
+    """Redirect to inbox for reply functionality."""
+    return redirect(url_for("messages.inbox"))
 
 
 @messages_bp.route("/api/latest_messages")
