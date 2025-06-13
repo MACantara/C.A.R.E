@@ -10,7 +10,7 @@ from flask import (
     jsonify,
 )
 from flask_login import current_user, login_required
-from app import db
+from app import db, get_user_timezone, localize_datetime, get_current_time
 from app.models.user import User
 from app.models.login_attempt import LoginAttempt
 from app.models.email_verification import EmailVerification
@@ -50,22 +50,28 @@ def admin_required(f):
 @admin_required
 def dashboard():
     """Admin dashboard with overview statistics."""
+    # Get user's timezone for displaying timestamps
+    user_timezone = get_user_timezone()
+    current_time_local = get_current_time(user_timezone)
+
     # Get statistics
     total_users = User.query.count()
-    active_users = User.query.filter_by(active=True).count()  # Changed from is_active
+    active_users = User.query.filter_by(active=True).count()
     inactive_users = total_users - active_users
 
-    # Recent user registrations (last 30 days)
-    thirty_days_ago = datetime.utcnow() - timedelta(days=30)
-    recent_registrations = User.query.filter(User.created_at >= thirty_days_ago).count()
+    # Recent user registrations (last 30 days) - using timezone-aware calculation
+    thirty_days_ago_utc = datetime.utcnow() - timedelta(days=30)
+    recent_registrations = User.query.filter(
+        User.created_at >= thirty_days_ago_utc
+    ).count()
 
-    # Login attempts statistics (last 24 hours)
-    twenty_four_hours_ago = datetime.utcnow() - timedelta(hours=24)
+    # Login attempts statistics (last 24 hours) - using timezone-aware calculation
+    twenty_four_hours_ago_utc = datetime.utcnow() - timedelta(hours=24)
     recent_login_attempts = LoginAttempt.query.filter(
-        LoginAttempt.attempted_at >= twenty_four_hours_ago
+        LoginAttempt.attempted_at >= twenty_four_hours_ago_utc
     ).count()
     failed_login_attempts = LoginAttempt.query.filter(
-        LoginAttempt.attempted_at >= twenty_four_hours_ago,
+        LoginAttempt.attempted_at >= twenty_four_hours_ago_utc,
         LoginAttempt.success == False,
     ).count()
 
@@ -75,10 +81,10 @@ def dashboard():
 
     # Contact form submissions (last 30 days)
     recent_contacts = Contact.query.filter(
-        Contact.created_at >= thirty_days_ago
+        Contact.created_at >= thirty_days_ago_utc
     ).count()
 
-    # Recent activities
+    # Recent activities with timezone conversion
     recent_users = User.query.order_by(desc(User.created_at)).limit(5).all()
     recent_login_logs = (
         LoginAttempt.query.order_by(desc(LoginAttempt.attempted_at)).limit(10).all()
@@ -101,6 +107,8 @@ def dashboard():
         stats=stats,
         recent_users=recent_users,
         recent_login_logs=recent_login_logs,
+        user_timezone=user_timezone,
+        current_time_local=current_time_local,
     )
 
 
@@ -115,6 +123,9 @@ def users():
     if per_page not in [25, 50, 100]:
         per_page = 25
 
+    # Get user's timezone
+    user_timezone = get_user_timezone()
+
     # Search functionality
     search = request.args.get("search", "")
     if search:
@@ -127,9 +138,9 @@ def users():
     # Filter by status
     status_filter = request.args.get("status", "all")
     if status_filter == "active":
-        users_query = users_query.filter_by(active=True)  # Changed from is_active
+        users_query = users_query.filter_by(active=True)
     elif status_filter == "inactive":
-        users_query = users_query.filter_by(active=False)  # Changed from is_active
+        users_query = users_query.filter_by(active=False)
     elif status_filter == "admin":
         users_query = users_query.filter_by(is_admin=True)
 
@@ -143,6 +154,7 @@ def users():
         pagination=users_pagination,
         search=search,
         status_filter=status_filter,
+        user_timezone=user_timezone,
     )
 
 
@@ -151,6 +163,9 @@ def users():
 def user_detail(user_id):
     """View detailed information about a specific user."""
     user = User.query.get_or_404(user_id)
+
+    # Get admin's timezone for displaying timestamps
+    user_timezone = get_user_timezone()
 
     # Get user's login attempts
     login_attempts = (
@@ -184,6 +199,7 @@ def user_detail(user_id):
         user=user,
         login_attempts=all_attempts[:20],
         verifications=verifications,
+        user_timezone=user_timezone,
     )
 
 
@@ -198,10 +214,10 @@ def toggle_user_status(user_id):
         flash("You cannot deactivate your own account.", "error")
         return redirect(url_for("admin.user_detail", user_id=user_id))
 
-    user.active = not user.active  # Changed from is_active
+    user.active = not user.active
     db.session.commit()
 
-    status = "activated" if user.active else "deactivated"  # Changed from is_active
+    status = "activated" if user.active else "deactivated"
     flash(f"User {user.username} has been {status}.", "success")
 
     return redirect(url_for("admin.user_detail", user_id=user_id))
@@ -274,36 +290,43 @@ def change_user_role(user_id):
 @admin_bp.route("/api/stats")
 @admin_required
 def api_stats():
-    """API endpoint for dashboard statistics."""
-    # Login attempts over time (last 7 days)
-    seven_days_ago = datetime.utcnow() - timedelta(days=7)
+    """API endpoint for dashboard statistics with timezone awareness."""
+    user_timezone = get_user_timezone()
+
+    # Login attempts over time (last 7 days) - using timezone-aware calculation
+    seven_days_ago_utc = datetime.utcnow() - timedelta(days=7)
     daily_stats = []
 
     for i in range(7):
-        day = seven_days_ago + timedelta(days=i)
-        day_start = day.replace(hour=0, minute=0, second=0, microsecond=0)
-        day_end = day_start + timedelta(days=1)
+        day_utc = seven_days_ago_utc + timedelta(days=i)
+        day_start_utc = day_utc.replace(hour=0, minute=0, second=0, microsecond=0)
+        day_end_utc = day_start_utc + timedelta(days=1)
 
         total_attempts = LoginAttempt.query.filter(
-            LoginAttempt.attempted_at >= day_start, LoginAttempt.attempted_at < day_end
+            LoginAttempt.attempted_at >= day_start_utc,
+            LoginAttempt.attempted_at < day_end_utc,
         ).count()
 
         failed_attempts = LoginAttempt.query.filter(
-            LoginAttempt.attempted_at >= day_start,
-            LoginAttempt.attempted_at < day_end,
+            LoginAttempt.attempted_at >= day_start_utc,
+            LoginAttempt.attempted_at < day_end_utc,
             LoginAttempt.success == False,
         ).count()
 
+        # Convert day to user's timezone for display
+        day_local = localize_datetime(day_start_utc, user_timezone)
+
         daily_stats.append(
             {
-                "date": day.strftime("%Y-%m-%d"),
+                "date": day_local.strftime("%Y-%m-%d"),
+                "date_display": day_local.strftime("%m/%d"),
                 "total_attempts": total_attempts,
                 "failed_attempts": failed_attempts,
                 "success_attempts": total_attempts - failed_attempts,
             }
         )
 
-    return jsonify(daily_stats)
+    return jsonify({"daily_stats": daily_stats, "timezone": str(user_timezone)})
 
 
 @admin_bp.route("/cleanup", methods=["POST"])
