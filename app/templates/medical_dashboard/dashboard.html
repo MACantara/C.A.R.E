@@ -1,0 +1,501 @@
+{% extends "base.html" %}
+
+{% block title %}Medical Dashboard - C.A.R.E. System{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 dark:bg-gray-900 py-8" data-user-timezone="{{ user_timezone }}"
+    data-current-time="{{ current_time_local.isoformat() }}">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Header -->
+        <div class="mb-8 opacity-0 animate-fade-in-up">
+            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+                <div class="flex items-center mb-4 lg:mb-0">
+                    <div
+                        class="h-16 w-16 flex items-center justify-center rounded-full bg-gradient-to-r from-blue-500 to-teal-600 mr-4">
+                        <i class="bi bi-hospital text-white text-2xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Medical Dashboard</h1>
+                        <p class="text-gray-600 dark:text-gray-400">Centralized healthcare management hub</p>
+                    </div>
+                </div>
+
+                <!-- Timezone and Quick Actions -->
+                <div class="flex flex-col sm:flex-row gap-4">
+                    <!-- Timezone Display -->
+                    <div
+                        class="px-4 py-2 bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+                        <div class="flex items-center text-sm text-gray-600 dark:text-gray-400">
+                            <i class="bi bi-clock mr-2"></i>
+                            <span id="timezone-display">{{ user_timezone }}</span>
+                            <span class="mx-2">•</span>
+                            <span id="current-time-display">{{ current_time_local.strftime('%I:%M %p') }}</span>
+                        </div>
+                    </div>
+
+                    <!-- Emergency Button -->
+                    {% if current_user.role == 'doctor' %}
+                    <button onclick="openEmergencyModal()"
+                        class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center">
+                        <i class="bi bi-exclamation-triangle mr-2"></i>
+                        Emergency
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6 mb-8 opacity-0 animate-fade-in-up"
+            style="animation-delay: 0.1s;">
+            <!-- Total Patients -->
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700">
+                <div class="flex items-center">
+                    <div class="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+                        <i class="bi bi-people text-blue-600 dark:text-blue-400 text-xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Patients</h3>
+                        <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ stats.total_patients }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Today's Appointments -->
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700">
+                <div class="flex items-center">
+                    <div class="p-3 bg-green-100 dark:bg-green-900/30 rounded-lg">
+                        <i class="bi bi-calendar-event text-green-600 dark:text-green-400 text-xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Today's Appointments</h3>
+                        <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ stats.todays_appointments }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pending Consultations -->
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700">
+                <div class="flex items-center">
+                    <div class="p-3 bg-yellow-100 dark:bg-yellow-900/30 rounded-lg">
+                        <i class="bi bi-clipboard-check text-yellow-600 dark:text-yellow-400 text-xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Pending Consultations</h3>
+                        <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ stats.pending_consultations }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Queue Waiting -->
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700">
+                <div class="flex items-center">
+                    <div class="p-3 bg-orange-100 dark:bg-orange-900/30 rounded-lg">
+                        <i class="bi bi-clock text-orange-600 dark:text-orange-400 text-xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Queue Waiting</h3>
+                        <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ stats.queue_waiting }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Unread Messages -->
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700">
+                <div class="flex items-center">
+                    <div class="p-3 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
+                        <i class="bi bi-envelope text-purple-600 dark:text-purple-400 text-xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Unread Messages</h3>
+                        <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ stats.unread_messages }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Prescriptions -->
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700">
+                <div class="flex items-center">
+                    <div class="p-3 bg-teal-100 dark:bg-teal-900/30 rounded-lg">
+                        <i class="bi bi-prescription2 text-teal-600 dark:text-teal-400 text-xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Recent Prescriptions</h3>
+                        <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ stats.recent_prescriptions }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Access Navigation -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-6 mb-8 opacity-0 animate-fade-in-up"
+            style="animation-delay: 0.2s;">
+            <!-- Patient Management -->
+            <div
+                class="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+                <div class="p-6">
+                    <div class="flex items-center mb-4">
+                        <div class="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+                            <i class="bi bi-people text-blue-600 dark:text-blue-400 text-xl"></i>
+                        </div>
+                        <h3 class="ml-3 text-lg font-semibold text-gray-900 dark:text-white">Patient Management</h3>
+                    </div>
+                    <div class="space-y-2">
+                        <a href="{{ url_for('medical_records.index') }}"
+                            class="block p-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded-lg transition-colors">
+                            <i class="bi bi-speedometer2 mr-2"></i>Records Dashboard
+                        </a>
+                        {% if current_user.role == 'doctor' %}
+                        <a href="{{ url_for('medical_records.new_prescription') }}"
+                            class="block p-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded-lg transition-colors">
+                            <i class="bi bi-prescription2 mr-2"></i>Write Prescription
+                        </a>
+                        {% endif %}
+                        <a href="{{ url_for('reports.prescription_report') }}"
+                            class="block p-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded-lg transition-colors">
+                            <i class="bi bi-graph-up mr-2"></i>Prescription Reports
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Appointments & Schedule -->
+            <div
+                class="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+                <div class="p-6">
+                    <div class="flex items-center mb-4">
+                        <div class="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
+                            <i class="bi bi-calendar-week text-green-600 dark:text-green-400 text-xl"></i>
+                        </div>
+                        <h3 class="ml-3 text-lg font-semibold text-gray-900 dark:text-white">Appointments</h3>
+                    </div>
+                    <div class="space-y-2">
+                        <a href="{{ url_for('appointments.doctor_schedule') }}"
+                            class="block p-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-lg transition-colors">
+                            <i class="bi bi-calendar-event mr-2"></i>View Schedule
+                        </a>
+                        <a href="{{ url_for('queue.dashboard') }}"
+                            class="block p-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-lg transition-colors">
+                            <i class="bi bi-people mr-2"></i>Queue Management
+                        </a>
+                        <a href="{{ url_for('reports.appointment_report') }}"
+                            class="block p-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-lg transition-colors">
+                            <i class="bi bi-graph-up mr-2"></i>Appointment Reports
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Medical Records -->
+            <div
+                class="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+                <div class="p-6">
+                    <div class="flex items-center mb-4">
+                        <div class="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
+                            <i class="bi bi-file-medical text-purple-600 dark:text-purple-400 text-xl"></i>
+                        </div>
+                        <h3 class="ml-3 text-lg font-semibold text-gray-900 dark:text-white">Medical Records</h3>
+                    </div>
+                    <div class="space-y-2">
+                        <a href="{{ url_for('medical_records.index') }}"
+                            class="block p-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded-lg transition-colors">
+                            <i class="bi bi-file-medical mr-2"></i>Medical Records
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Reports & Analytics -->
+            <div
+                class="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+                <div class="p-6">
+                    <div class="flex items-center mb-4">
+                        <div class="p-2 bg-teal-100 dark:bg-teal-900/30 rounded-lg">
+                            <i class="bi bi-graph-up text-teal-600 dark:text-teal-400 text-xl"></i>
+                        </div>
+                        <h3 class="ml-3 text-lg font-semibold text-gray-900 dark:text-white">Reports</h3>
+                    </div>
+                    <div class="space-y-2">
+                        <a href="{{ url_for('reports.dashboard') }}"
+                            class="block p-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-teal-50 dark:hover:bg-teal-900/20 rounded-lg transition-colors">
+                            <i class="bi bi-pie-chart mr-2"></i>Analytics Dashboard
+                        </a>
+                        <a href="{{ url_for('reports.performance_report') }}"
+                            class="block p-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-teal-50 dark:hover:bg-teal-900/20 rounded-lg transition-colors">
+                            <i class="bi bi-speedometer2 mr-2"></i>Performance Metrics
+                        </a>
+                        <a href="{{ url_for('messages.inbox') }}"
+                            class="block p-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-teal-50 dark:hover:bg-teal-900/20 rounded-lg transition-colors">
+                            <i class="bi bi-envelope mr-2"></i>Messages
+                            {% if stats.unread_messages > 0 %}
+                            <span class="ml-auto bg-red-500 text-white text-xs rounded-full px-2 py-1">{{
+                                stats.unread_messages }}</span>
+                            {% endif %}
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 opacity-0 animate-fade-in-up" style="animation-delay: 0.3s;">
+            <!-- Recent Appointments -->
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700">
+                <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Recent Appointments</h3>
+                </div>
+                <div class="p-6">
+                    {% if recent_appointments %}
+                    <div class="space-y-4">
+                        {% for appointment in recent_appointments %}
+                        <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                            <div class="flex items-center">
+                                <div
+                                    class="w-8 h-8 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center">
+                                    <i class="bi bi-person text-blue-600 dark:text-blue-400"></i>
+                                </div>
+                                <div class="ml-3">
+                                    <p class="text-sm font-medium text-gray-900 dark:text-white">
+                                        {{ appointment.patient.display_name }}
+                                    </p>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400">
+                                        {{ appointment.doctor.display_name if appointment.doctor else 'N/A' }}
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-sm text-gray-900 dark:text-white"
+                                    data-time="{{ appointment.appointment_date.isoformat() }}"
+                                    title="{{ localize_datetime(appointment.appointment_date, user_timezone).strftime('%A, %B %d, %Y at %I:%M:%S %p %Z') }}">
+                                    {{ localize_datetime(appointment.appointment_date, user_timezone).strftime('%m/%d
+                                    %I:%M %p') }}
+                                </p>
+                                <span class="text-xs px-2 py-1 rounded-full
+                                    {{ 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' if appointment.status.value == 'confirmed'
+                                    else 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400' if appointment.status.value == 'pending'
+                                    else 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400' if appointment.status.value == 'in_progress'
+                                    else 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400' }}">
+                                    {{ appointment.status.value.title() }}
+                                </span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-8">
+                        <i class="bi bi-calendar-x text-gray-400 dark:text-gray-500 text-3xl mb-2"></i>
+                        <p class="text-gray-500 dark:text-gray-400">No recent appointments</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Recent Consultations -->
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700">
+                <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Recent Consultations</h3>
+                </div>
+                <div class="p-6">
+                    {% if recent_consultations %}
+                    <div class="space-y-4">
+                        {% for consultation in recent_consultations %}
+                        <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                            <div class="flex items-center">
+                                <div
+                                    class="w-8 h-8 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center">
+                                    <i class="bi bi-clipboard-check text-green-600 dark:text-green-400"></i>
+                                </div>
+                                <div class="ml-3">
+                                    <p class="text-sm font-medium text-gray-900 dark:text-white">
+                                        {{ consultation.patient.display_name }}
+                                    </p>
+                                    <p class="text-xs text-gray-500 dark:text-gray-400">
+                                        {{ consultation.chief_complaint[:30] }}...
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-sm text-gray-900 dark:text-white"
+                                    data-time="{{ consultation.created_at.isoformat() }}"
+                                    title="{{ localize_datetime(consultation.created_at, user_timezone).strftime('%A, %B %d, %Y at %I:%M:%S %p %Z') }}">
+                                    {{ localize_datetime(consultation.created_at, user_timezone).strftime('%m/%d %I:%M
+                                    %p') }}
+                                </p>
+                                <a href="{{ url_for('medical_records.patient_detail', patient_id=consultation.patient_id) }}"
+                                    class="text-xs text-blue-600 dark:text-blue-400 hover:underline">View</a>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-8">
+                        <i class="bi bi-clipboard-x text-gray-400 dark:text-gray-500 text-3xl mb-2"></i>
+                        <p class="text-gray-500 dark:text-gray-400">No recent consultations</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Emergency Modal (for doctors only) -->
+{% if current_user.role == 'doctor' %}
+<div id="emergencyModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-md">
+        <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-red-50 dark:bg-red-900/20">
+            <h3 class="text-lg font-semibold text-red-800 dark:text-red-200 flex items-center">
+                <i class="bi bi-exclamation-triangle mr-2"></i>Emergency Actions
+            </h3>
+        </div>
+        <div class="p-6">
+            <div class="space-y-3">
+                <button onclick="callEmergency()"
+                    class="w-full p-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center justify-center">
+                    <i class="bi bi-telephone mr-2"></i>Call Emergency Services
+                </button>
+                <button onclick="alertStaff()"
+                    class="w-full p-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors flex items-center justify-center">
+                    <i class="bi bi-bell mr-2"></i>Alert All Staff
+                </button>
+                <button onclick="quickConsultation()"
+                    class="w-full p-3 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors flex items-center justify-center">
+                    <i class="bi bi-plus-circle mr-2"></i>Emergency Consultation
+                </button>
+            </div>
+        </div>
+        <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex justify-end">
+            <button onclick="closeEmergencyModal()"
+                class="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                Cancel
+            </button>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Animation delays for staggered loading */
+    .animate-fade-in-up {
+        animation: fadeInUp 0.6s ease-out forwards;
+    }
+
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Hover effects for cards */
+    .bg-white:hover,
+    .dark .dark\:bg-gray-800:hover {
+        transform: translateY(-2px);
+        transition: transform 0.2s ease-in-out;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let userTimezone;
+
+    document.addEventListener('DOMContentLoaded', function () {
+        userTimezone = document.querySelector('[data-user-timezone]')?.dataset.userTimezone || 'Asia/Manila';
+
+        // Update time display
+        updateTimeDisplay();
+        setInterval(updateTimeDisplay, 1000);
+
+        // Load dashboard stats
+        loadDashboardStats();
+        setInterval(loadDashboardStats, 30000); // Update every 30 seconds
+    });
+
+    function updateTimeDisplay() {
+        const timeDisplay = document.getElementById('current-time-display');
+        if (timeDisplay && window.timezoneManager) {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('en-US', {
+                timeZone: userTimezone,
+                hour: 'numeric',
+                minute: '2-digit',
+                hour12: true
+            });
+            timeDisplay.textContent = timeString;
+        }
+    }
+
+    function loadDashboardStats() {
+        fetch('/medical/api/stats')
+            .then(response => response.json())
+            .then(data => {
+                // Update any real-time statistics here
+                console.log('Dashboard stats updated:', data);
+            })
+            .catch(error => console.error('Error loading dashboard stats:', error));
+    }
+
+    // Emergency modal functions (for doctors)
+    {% if current_user.role == 'doctor' %}
+    function openEmergencyModal() {
+        document.getElementById('emergencyModal').classList.remove('hidden');
+    }
+
+    function closeEmergencyModal() {
+        document.getElementById('emergencyModal').classList.add('hidden');
+    }
+
+    function callEmergency() {
+        // In a real implementation, this would integrate with actual emergency systems
+        alert('Emergency services have been contacted!');
+        closeEmergencyModal();
+    }
+
+    function alertStaff() {
+        // Send alert to all staff members
+        fetch('/medical/api/emergency-alert', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ type: 'staff_alert' })
+        })
+            .then(response => response.json())
+            .then(data => {
+                alert('All staff members have been alerted!');
+                closeEmergencyModal();
+            });
+    }
+
+    function quickConsultation() {
+        window.location.href = '{{ url_for("medical_records.new_consultation") }}?emergency=true';
+    }
+    {% endif %}
+
+    // Enhanced timestamp handling
+    function enhanceTimestamps() {
+        const timestampElements = document.querySelectorAll('[data-time]');
+        timestampElements.forEach(element => {
+            const utcTime = element.getAttribute('data-time');
+            if (utcTime && window.timezoneManager) {
+                const localTime = window.timezoneManager.formatTimeToLocal(utcTime);
+                const relativeTime = window.timezoneManager.formatRelativeTime(utcTime);
+
+                // Update tooltip
+                const currentTitle = element.getAttribute('title') || '';
+                element.setAttribute('title', `${localTime} (${relativeTime})`);
+            }
+        });
+    }
+
+    // Run timestamp enhancement when ready
+    setTimeout(enhanceTimestamps, 500);
+</script>
+{% endblock %}
