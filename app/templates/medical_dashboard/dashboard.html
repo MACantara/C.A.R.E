@@ -215,14 +215,6 @@
                             class="block p-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-teal-50 dark:hover:bg-teal-900/20 rounded-lg transition-colors">
                             <i class="bi bi-speedometer2 mr-2"></i>Performance Metrics
                         </a>
-                        <a href="{{ url_for('messages.inbox') }}"
-                            class="block p-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-teal-50 dark:hover:bg-teal-900/20 rounded-lg transition-colors">
-                            <i class="bi bi-envelope mr-2"></i>Messages
-                            {% if stats.unread_messages > 0 %}
-                            <span class="ml-auto bg-red-500 text-white text-xs rounded-full px-2 py-1">{{
-                                stats.unread_messages }}</span>
-                            {% endif %}
-                        </a>
                     </div>
                 </div>
             </div>
