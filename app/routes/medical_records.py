@@ -660,3 +660,54 @@ def discontinue_prescription(prescription_id):
     return redirect(
         url_for("medical_records.patient_records", patient_id=prescription.patient_id)
     )
+
+
+@medical_records_bp.route("/api/generate-sample-consultation")
+@doctor_required
+def generate_sample_consultation():
+    """Generate sample consultation data for testing."""
+    import random
+    
+    sample_data_sets = [
+        {
+            "chief_complaint": "Patient complains of runny nose, sneezing, and mild headache for the past 3 days.",
+            "history_present_illness": "Patient developed rhinorrhea and sneezing 3 days ago. No fever, but reports mild frontal headache. Symptoms worse in the morning. No cough or sore throat.",
+            "assessment": "Upper respiratory tract infection (common cold). Viral etiology most likely.",
+            "treatment_plan": "Symptomatic treatment with rest, fluids, and over-the-counter decongestants. Saline nasal rinses recommended.",
+            "vitals": {
+                "temperature": 36.8,
+                "bp_systolic": 118,
+                "bp_diastolic": 76,
+                "heart_rate": 72,
+                "pain_scale": 2
+            }
+        },
+        {
+            "chief_complaint": "Follow-up visit for hypertension management. Patient reports good adherence to medications.",
+            "history_present_illness": "Patient diagnosed with hypertension 6 months ago. Currently on lisinopril 10mg daily. Reports good medication compliance. No side effects noted.",
+            "assessment": "Hypertension, well-controlled on current medication regimen.",
+            "treatment_plan": "Continue current lisinopril 10mg daily. Maintain low-sodium diet and regular exercise.",
+            "vitals": {
+                "temperature": 36.5,
+                "bp_systolic": 128,
+                "bp_diastolic": 82,
+                "heart_rate": 68,
+                "pain_scale": 0
+            }
+        },
+        {
+            "chief_complaint": "Patient presents with nausea, vomiting, and diarrhea for 2 days.",
+            "history_present_illness": "Sudden onset of nausea and vomiting 2 days ago, followed by watery diarrhea. 4-5 episodes of vomiting yesterday, 6-7 loose stools today.",
+            "assessment": "Acute gastroenteritis, likely viral or food-borne illness.",
+            "treatment_plan": "Supportive care with oral rehydration. BRAT diet when tolerated. Probiotics recommended.",
+            "vitals": {
+                "temperature": 37.2,
+                "bp_systolic": 110,
+                "bp_diastolic": 70,
+                "heart_rate": 88,
+                "pain_scale": 4
+            }
+        }
+    ]
+    
+    return jsonify(random.choice(sample_data_sets))
