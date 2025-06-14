@@ -393,18 +393,12 @@ button[type="submit"]:disabled:hover {
    SIDEBAR ANIMATIONS & FOUC PREVENTION
    =================== */
 
-/* Prevent FOUC for sidebar - simple approach */
-.sidebar-container {
-    opacity: 0;
-    transition: opacity 0.2s ease;
-}
+/* Simple FOUC prevention - no animations */
 
-.sidebar-container.loaded {
-    opacity: 1;
+/* Remove jerky animations - keep it simple */
+.sidebar-transitioning {
+    pointer-events: none;
 }
-
-/* Simple sidebar transitions */
-.sidebar-full,
 .sidebar-collapsed {
     transition: opacity 0.2s ease;
 }
@@ -412,7 +406,6 @@ button[type="submit"]:disabled:hover {
 /* Remove jerky animations - keep it simple */
 .sidebar-transitioning {
     pointer-events: none;
-}
     animation: sidebarExpand 0.3s ease-out forwards;
 }
 

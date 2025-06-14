@@ -7,7 +7,7 @@
 </script>
 
 <style>
-    /* Simple initial state handling */
+    /* Simple initial state handling - no animations */
     .sidebar-expanded-init .sidebar-full { display: flex; }
     .sidebar-expanded-init .sidebar-collapsed { display: none; }
     .sidebar-collapsed-init .sidebar-full { display: none; }
@@ -209,19 +209,19 @@
 </div>
 
 <script>
-    // Simple sidebar functionality
+    // Simple sidebar functionality - no animations
     function toggleSidebar() {
         const fullSidebar = document.querySelector('.sidebar-full');
         const collapsedSidebar = document.getElementById('collapsed-sidebar');
         const isCurrentlyCollapsed = fullSidebar.style.display === 'none';
 
         if (isCurrentlyCollapsed) {
-            // Show full sidebar
+            // Show full sidebar instantly
             fullSidebar.style.display = 'flex';
             collapsedSidebar.style.display = 'none';
             localStorage.setItem('sidebarCollapsed', 'false');
         } else {
-            // Show collapsed sidebar
+            // Show collapsed sidebar instantly
             fullSidebar.style.display = 'none';
             collapsedSidebar.style.display = 'flex';
             localStorage.setItem('sidebarCollapsed', 'true');
@@ -244,14 +244,13 @@
         }
     }
 
-    // Simple initialization
+    // Simple initialization - no fade effects
     document.addEventListener('DOMContentLoaded', function () {
-        const container = document.querySelector('.sidebar-container');
         const fullSidebar = document.querySelector('.sidebar-full');
         const collapsedSidebar = document.getElementById('collapsed-sidebar');
         const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
         
-        // Set initial state
+        // Set initial state instantly
         if (isCollapsed) {
             fullSidebar.style.display = 'none';
             collapsedSidebar.style.display = 'flex';
@@ -260,8 +259,7 @@
             collapsedSidebar.style.display = 'none';
         }
         
-        // Show container
-        container.classList.add('loaded');
+        // No fade-in animation - sidebar shows immediately
 
         // Update time every minute
         updateSidebarTime();
