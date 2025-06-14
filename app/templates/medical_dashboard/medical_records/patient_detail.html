@@ -182,12 +182,24 @@
                                         Dr. {{ consultation.doctor.display_name }}
                                     </p>
                                 </div>
-                                <span class="px-3 py-1 text-sm font-medium rounded-full
-                                    {% if consultation.status.value == 'completed' %}bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400
-                                    {% elif consultation.status.value == 'draft' %}bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400
-                                    {% else %}bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400{% endif %}">
-                                    {{ consultation.status.value.replace('_', ' ').title() }}
-                                </span>
+                                <div class="flex items-center space-x-3">
+                                    <span class="px-3 py-1 text-sm font-medium rounded-full
+                                        {% if consultation.status.value == 'completed' %}bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400
+                                        {% elif consultation.status.value == 'draft' %}bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400
+                                        {% else %}bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400{% endif %}">
+                                        {{ consultation.status.value.replace('_', ' ').title() }}
+                                    </span>
+                                    
+                                    <!-- Continue Editing Button for Draft Consultations -->
+                                    {% if consultation.status.value == 'draft' and current_user.role == 'doctor' and consultation.doctor_id == current_user.id %}
+                                    <a href="{{ url_for('consultations.new_consultation', consultation_id=consultation.id) }}"
+                                        class="inline-flex items-center px-3 py-1 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors duration-200"
+                                        title="Continue editing this draft consultation">
+                                        <i class="bi bi-pencil-square mr-1"></i>
+                                        Continue Editing
+                                    </a>
+                                    {% endif %}
+                                </div>
                             </div>
 
                             <div class="grid md:grid-cols-2 gap-4">
