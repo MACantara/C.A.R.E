@@ -141,6 +141,9 @@
         <div class="p-4 border-t border-gray-200 dark:border-gray-700">
             <!-- Time and status info -->
             <div class="flex items-center text-xs text-gray-500 dark:text-gray-400 mb-3">
+                <div class="w-2 h-2 bg-green-400 rounded-full mr-2 animate-pulse"></div>
+                <span class="mr-2">Online</span>
+                <span class="mx-2">•</span>
                 <i class="bi bi-clock mr-2"></i>
                 <span id="sidebar-timezone">{{ user_timezone }}</span>
                 <span class="mx-2">•</span>
@@ -192,12 +195,6 @@
                         title="Collapse sidebar">
                         <i class="bi bi-chevron-left text-sm"></i>
                     </button>
-                </div>
-                
-                <!-- Online status -->
-                <div class="flex items-center text-xs text-gray-500 dark:text-gray-400 px-2">
-                    <div class="w-2 h-2 bg-green-400 rounded-full mr-2 animate-pulse"></div>
-                    <span>Online</span>
                 </div>
             </div>
         </div>
