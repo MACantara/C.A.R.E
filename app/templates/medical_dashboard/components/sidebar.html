@@ -254,13 +254,14 @@
                         title="Home">
                         <i class="bi bi-house text-xs"></i>
                     </a>
-                    <button id="collapsed-theme-toggle"
-                        class="p-1 text-gray-400 hover:text-purple-600 dark:hover:text-purple-400 transition-colors duration-200"
-                        title="Toggle theme">
-                        <i class="bi bi-sun-fill text-xs collapsed-theme-light"></i>
-                        <i class="bi bi-moon-fill text-xs collapsed-theme-dark hidden"></i>
-                        <i class="bi bi-circle-half text-xs collapsed-theme-system hidden"></i>
-                    </button>
+                    <!-- Theme dropdown for collapsed sidebar -->
+                    {% set dropdown_id = 'collapsed-theme-menu' %}
+                    {% set button_id = 'collapsed-theme-toggle' %}
+                    {% set size = 'sm' %}
+                    {% set position = 'top-right' %}
+                    {% set show_chevron = false %}
+                    {% set button_classes = 'text-gray-400 hover:text-purple-600 dark:hover:text-purple-400' %}
+                    {% include 'partials/theme-dropdown.html' %}
                 </div>
                 
                 <!-- Expand button -->

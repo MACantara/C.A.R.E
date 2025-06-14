@@ -46,6 +46,10 @@
     {% set menu_position = 'absolute left-0 bottom-full mb-2' %}
 {% elif position == 'top-right' %}
     {% set menu_position = 'absolute right-0 bottom-full mb-2' %}
+    <!-- Adjust position for collapsed sidebar -->
+    {% if button_id == 'collapsed-theme-toggle' %}
+        {% set menu_position = 'absolute left-8 bottom-full mb-2' %}
+    {% endif %}
 {% else %}
     {% set menu_position = 'absolute right-0 mt-2' %}
 {% endif %}
