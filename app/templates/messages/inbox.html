@@ -184,76 +184,7 @@
 {% endblock %}
 
 {% block extra_css %}
-<style>
-    @keyframes fade-in {
-        from {
-            opacity: 0;
-            transform: translateY(10px);
-        }
-
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-
-    .animate-fade-in {
-        animation: fade-in 0.3s ease-out;
-    }
-
-    @keyframes bounce {
-
-        0%,
-        80%,
-        100% {
-            transform: scale(0);
-        }
-
-        40% {
-            transform: scale(1);
-        }
-    }
-
-    .animate-bounce {
-        animation: bounce 1.4s infinite ease-in-out both;
-    }
-
-    [data-status-indicator] i {
-        transition: all 0.2s ease-in-out;
-    }
-
-    [data-status-indicator] i:hover {
-        transform: scale(1.1);
-    }
-
-    /* Timezone-specific styles */
-    .timezone-tooltip {
-        position: relative;
-    }
-
-    .timezone-tooltip:hover::after {
-        content: attr(data-timezone-full);
-        position: absolute;
-        bottom: 100%;
-        left: 50%;
-        transform: translateX(-50%);
-        background: rgba(0, 0, 0, 0.8);
-        color: white;
-        padding: 4px 8px;
-        border-radius: 4px;
-        font-size: 11px;
-        white-space: nowrap;
-        z-index: 1000;
-    }
-
-    .message-time {
-        transition: all 0.2s ease-in-out;
-    }
-
-    .message-time:hover {
-        transform: scale(1.05);
-    }
-</style>
+<!-- No additional CSS needed - animations moved to main.css -->
 {% endblock %}
 
 {% block extra_js %}
