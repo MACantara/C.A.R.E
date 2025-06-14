@@ -192,7 +192,7 @@
                                     
                                     <!-- Continue Editing Button for Draft Consultations -->
                                     {% if consultation.status.value == 'draft' and current_user.role == 'doctor' and consultation.doctor_id == current_user.id %}
-                                    <a href="{{ url_for('consultations.new_consultation', consultation_id=consultation.id) }}"
+                                    <a href="{{ url_for('consultations.new_consultation', appointment_id=consultation.appointment_id) if consultation.appointment_id else url_for('consultations.new_consultation', consultation_id=consultation.id) }}"
                                         class="inline-flex items-center px-3 py-1 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors duration-200"
                                         title="Continue editing this draft consultation">
                                         <i class="bi bi-pencil-square mr-1"></i>
