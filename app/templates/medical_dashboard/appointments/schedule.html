@@ -33,10 +33,11 @@
                 <div class="flex items-center space-x-3">
                     <select id="dateFilter" 
                         class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
-                        <option value="today">Today</option>
-                        <option value="tomorrow">Tomorrow</option>
-                        <option value="week">This Week</option>
-                        <option value="month">This Month</option>
+                        <option value="today" {% if request.args.get('filter') == 'today' %}selected{% endif %}>Today</option>
+                        <option value="tomorrow" {% if request.args.get('filter') == 'tomorrow' %}selected{% endif %}>Tomorrow</option>
+                        <option value="week" {% if request.args.get('filter') == 'week' %}selected{% endif %}>This Week</option>
+                        <option value="month" {% if request.args.get('filter') == 'month' %}selected{% endif %}>This Month</option>
+                        <option value="all" {% if request.args.get('filter') == 'all' %}selected{% endif %}>All Appointments</option>
                     </select>
                     <a href="{{ url_for('medical_dashboard.dashboard') }}"
                         class="inline-flex items-center px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors duration-200">
@@ -104,7 +105,19 @@
             <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden mb-8 opacity-0 animate-fade-in-up"
                 style="animation-delay: 0.4s;">
                 <div class="px-6 py-4 bg-indigo-50 dark:bg-indigo-900/20 border-b border-indigo-200 dark:border-indigo-800">
-                    <h3 class="text-lg font-semibold text-indigo-800 dark:text-indigo-200">Today's Schedule</h3>
+                    <h3 class="text-lg font-semibold text-indigo-800 dark:text-indigo-200">
+                        {% if request.args.get('filter') == 'today' or not request.args.get('filter') %}
+                        Today's Schedule
+                        {% elif request.args.get('filter') == 'tomorrow' %}
+                        Tomorrow's Schedule
+                        {% elif request.args.get('filter') == 'week' %}
+                        This Week's Schedule
+                        {% elif request.args.get('filter') == 'month' %}
+                        This Month's Schedule
+                        {% else %}
+                        Schedule
+                        {% endif %}
+                    </h3>
                 </div>
 
                 <div class="divide-y divide-gray-200 dark:divide-gray-700">
@@ -114,7 +127,7 @@
                         <div class="flex items-center justify-between">
                             <div class="flex items-center space-x-4">
                                 <div class="w-16 h-16 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-lg">
-                                    {{ localize_datetime(appointment.appointment_date, user_timezone).strftime('%H:%M') }}
+                                    {{ localize_datetime(appointment.appointment_date, user_tz).strftime('%H:%M') }}
                                 </div>
                                 <div>
                                     <h4 class="text-lg font-semibold text-gray-900 dark:text-white">{{ appointment.patient.display_name }}</h4>
@@ -170,8 +183,20 @@
                     {% else %}
                     <div class="text-center py-12">
                         <i class="bi bi-calendar-x text-gray-400 dark:text-gray-500 text-4xl mb-4"></i>
-                        <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">No Appointments Today</h3>
-                        <p class="text-gray-600 dark:text-gray-400">You have no appointments scheduled for today.</p>
+                        <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">No Appointments</h3>
+                        <p class="text-gray-600 dark:text-gray-400">
+                            {% if request.args.get('filter') == 'today' or not request.args.get('filter') %}
+                            You have no appointments scheduled for today.
+                            {% elif request.args.get('filter') == 'tomorrow' %}
+                            You have no appointments scheduled for tomorrow.
+                            {% elif request.args.get('filter') == 'week' %}
+                            You have no appointments scheduled for this week.
+                            {% elif request.args.get('filter') == 'month' %}
+                            You have no appointments scheduled for this month.
+                            {% else %}
+                            No appointments found for the selected period.
+                            {% endif %}
+                        </p>
                     </div>
                     {% endif %}
                 </div>
@@ -196,7 +221,7 @@
                                 <div>
                                     <h4 class="font-semibold text-gray-900 dark:text-white">{{ appointment.patient.display_name }}</h4>
                                     <p class="text-sm text-gray-600 dark:text-gray-400">
-                                        {{ localize_datetime(appointment.appointment_date, user_timezone).strftime('%B %d, %Y at %I:%M %p') }}
+                                        {{ localize_datetime(appointment.appointment_date, user_tz).strftime('%B %d, %Y at %I:%M %p') }}
                                     </p>
                                 </div>
                             </div>
@@ -214,6 +239,22 @@
 </div>
 
 <script>
+// Handle date filter changes
+document.getElementById('dateFilter').addEventListener('change', function() {
+    const selectedFilter = this.value;
+    const currentUrl = new URL(window.location);
+    
+    // Update the filter parameter
+    if (selectedFilter === 'all') {
+        currentUrl.searchParams.delete('filter');
+    } else {
+        currentUrl.searchParams.set('filter', selectedFilter);
+    }
+    
+    // Redirect to the new URL
+    window.location.href = currentUrl.toString();
+});
+
 function startAppointment(appointmentId) {
     if (confirm('Start this appointment?')) {
         fetch(`/appointments/api/update-status/${appointmentId}`, {
