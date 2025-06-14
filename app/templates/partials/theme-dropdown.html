@@ -56,13 +56,13 @@
 
 <div class="relative">
     <button id="{{ button_id }}"
-        class="{{ button_padding }} text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-300 hover:scale-110 transform rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center space-x-1 cursor-pointer {{ button_classes or '' }}"
+        class="{{ button_padding }} text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-300 hover:scale-110 transform rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center cursor-pointer {{ button_classes or '' }}{% if not show_chevron %} justify-center{% endif %}"
         aria-label="Select theme" title="Select theme" data-dropdown-toggle="{{ dropdown_id }}">
         <i class="bi bi-sun-fill {{ icon_size }} theme-light"></i>
         <i class="bi bi-moon-fill {{ icon_size }} theme-dark hidden"></i>
         <i class="bi bi-circle-half {{ icon_size }} theme-system hidden"></i>
         {% if show_chevron %}
-        <i class="bi bi-chevron-down text-sm"></i>
+        <i class="bi bi-chevron-down text-sm ml-1"></i>
         {% endif %}
     </button>
     
