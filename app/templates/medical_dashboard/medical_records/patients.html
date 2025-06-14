@@ -108,10 +108,17 @@
                                 View Records
                             </a>
                             {% if current_user.role == 'doctor' %}
-                            <a href="{{ url_for('medical_records.new_consultation', patient_id=patient.id) }}"
-                                class="flex-1 text-center px-3 py-2 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 transition-colors duration-200">
+                            <a href="{{ url_for('consultations.new_consultation', patient_id=patient.id) }}"
+                                class="inline-flex items-center px-3 py-1 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 transition-colors duration-200"
+                                title="Start new consultation">
                                 <i class="bi bi-plus-circle mr-1"></i>
-                                New Visit
+                                Consultation
+                            </a>
+                            <a href="{{ url_for('prescriptions.new_prescription', patient_id=patient.id) }}"
+                                class="inline-flex items-center px-3 py-1 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors duration-200"
+                                title="Write prescription">
+                                <i class="bi bi-prescription2 mr-1"></i>
+                                Prescription
                             </a>
                             {% endif %}
                         </div>
