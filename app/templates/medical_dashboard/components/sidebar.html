@@ -226,10 +226,13 @@
 
     // Initialize sidebar
     document.addEventListener('DOMContentLoaded', function () {
-        // Restore sidebar state
+        // Restore sidebar state from localStorage
         const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
         if (isCollapsed) {
-            toggleSidebar();
+            const fullSidebar = document.querySelector('.w-80');
+            const collapsedSidebar = document.getElementById('collapsed-sidebar');
+            fullSidebar.classList.add('hidden');
+            collapsedSidebar.classList.remove('hidden');
         }
 
         // Update time every minute
@@ -238,8 +241,9 @@
 
         // Update queue count if available
         const queueCount = document.getElementById('queue-count');
-            if (queueCount && {{ stats.queue_waiting }} > 0) {
-                queueCount.classList.remove('hidden');
-            }
-        });
+        const queueWaiting = {{ stats.queue_waiting if stats and stats.queue_waiting else 0 }};
+        if (queueCount && queueWaiting > 0) {
+            queueCount.classList.remove('hidden');
+        }
+    });
 </script>
