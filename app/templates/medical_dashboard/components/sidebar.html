@@ -137,25 +137,68 @@
             </div>
         </div>
 
-        <!-- TODO: Add links to profile, logout, toggle theme mode, and link back to home page -->
         <!-- Sidebar Footer -->
         <div class="p-4 border-t border-gray-200 dark:border-gray-700">
-            <div class="flex items-center text-xs text-gray-500 dark:text-gray-400">
+            <!-- Time and status info -->
+            <div class="flex items-center text-xs text-gray-500 dark:text-gray-400 mb-3">
                 <i class="bi bi-clock mr-2"></i>
                 <span id="sidebar-timezone">{{ user_timezone }}</span>
                 <span class="mx-2">•</span>
                 <span id="sidebar-time">{{ current_time_local.strftime('%I:%M %p') }}</span>
             </div>
-            <div class="mt-2 flex items-center justify-between">
-                <div class="flex items-center text-xs text-gray-500 dark:text-gray-400">
+            
+            <!-- User info and quick actions -->
+            <div class="space-y-2">
+                <!-- User profile link -->
+                <a href="{{ url_for('profile.profile') }}"
+                    class="flex items-center px-2 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-all duration-200">
+                    <div class="w-6 h-6 rounded-full bg-gradient-to-r from-blue-500 to-teal-600 flex items-center justify-center text-white text-xs font-bold mr-3">
+                        {{ current_user.username[0].upper() }}
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="font-medium truncate">{{ current_user.username }}</p>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">{{ current_user.role.title() }}</p>
+                    </div>
+                </a>
+                
+                <!-- Quick action buttons -->
+                <div class="flex items-center justify-between">
+                    <!-- Home link -->
+                    <a href="{{ url_for('main.home') }}"
+                        class="p-2 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-all duration-200"
+                        title="Home">
+                        <i class="bi bi-house text-sm"></i>
+                    </a>
+                    
+                    <!-- Theme toggle -->
+                    <button id="sidebar-theme-toggle"
+                        class="p-2 text-gray-400 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded-lg transition-all duration-200"
+                        title="Toggle theme">
+                        <i class="bi bi-sun-fill text-sm sidebar-theme-light"></i>
+                        <i class="bi bi-moon-fill text-sm sidebar-theme-dark hidden"></i>
+                        <i class="bi bi-circle-half text-sm sidebar-theme-system hidden"></i>
+                    </button>
+                    
+                    <!-- Logout -->
+                    <a href="{{ url_for('auth.logout') }}"
+                        class="p-2 text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all duration-200"
+                        title="Logout">
+                        <i class="bi bi-box-arrow-right text-sm"></i>
+                    </a>
+                    
+                    <!-- Collapse button -->
+                    <button onclick="toggleSidebar()"
+                        class="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-all duration-200"
+                        title="Collapse sidebar">
+                        <i class="bi bi-chevron-left text-sm"></i>
+                    </button>
+                </div>
+                
+                <!-- Online status -->
+                <div class="flex items-center text-xs text-gray-500 dark:text-gray-400 px-2">
                     <div class="w-2 h-2 bg-green-400 rounded-full mr-2 animate-pulse"></div>
                     <span>Online</span>
                 </div>
-                <button onclick="toggleSidebar()"
-                    class="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors cursor-pointer"
-                    title="Collapse sidebar">
-                    <i class="bi bi-chevron-left text-sm"></i>
-                </button>
             </div>
         </div>
     </div>
@@ -198,12 +241,38 @@
         </div>
 
         <!-- Collapsed Footer -->
-        <div class="p-3 border-t border-gray-200 dark:border-gray-700 flex justify-center">
-            <button onclick="toggleSidebar()"
-                class="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors cursor-pointer"
-                title="Expand sidebar">
-                <i class="bi bi-chevron-right text-sm"></i>
-            </button>
+        <div class="p-3 border-t border-gray-200 dark:border-gray-700">
+            <div class="space-y-2 flex flex-col items-center">
+                <!-- User avatar -->
+                <a href="{{ url_for('profile.profile') }}"
+                    class="w-8 h-8 rounded-full bg-gradient-to-r from-blue-500 to-teal-600 flex items-center justify-center text-white text-xs font-bold hover:scale-105 transition-transform duration-200"
+                    title="{{ current_user.username }}">
+                    {{ current_user.username[0].upper() }}
+                </a>
+                
+                <!-- Quick actions -->
+                <div class="flex flex-col space-y-1">
+                    <a href="{{ url_for('main.home') }}"
+                        class="p-1 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-200"
+                        title="Home">
+                        <i class="bi bi-house text-xs"></i>
+                    </a>
+                    <button id="collapsed-theme-toggle"
+                        class="p-1 text-gray-400 hover:text-purple-600 dark:hover:text-purple-400 transition-colors duration-200"
+                        title="Toggle theme">
+                        <i class="bi bi-sun-fill text-xs collapsed-theme-light"></i>
+                        <i class="bi bi-moon-fill text-xs collapsed-theme-dark hidden"></i>
+                        <i class="bi bi-circle-half text-xs collapsed-theme-system hidden"></i>
+                    </button>
+                </div>
+                
+                <!-- Expand button -->
+                <button onclick="toggleSidebar()"
+                    class="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors cursor-pointer"
+                    title="Expand sidebar">
+                    <i class="bi bi-chevron-right text-sm"></i>
+                </button>
+            </div>
         </div>
     </div>
 </div>
@@ -244,6 +313,75 @@
         }
     }
 
+    // Theme toggle functionality
+    function initSidebarThemeToggle() {
+        const sidebarToggle = document.getElementById('sidebar-theme-toggle');
+        const collapsedToggle = document.getElementById('collapsed-theme-toggle');
+        
+        function updateThemeIcons() {
+            const theme = localStorage.getItem('theme') || 'system';
+            const lightIcons = document.querySelectorAll('.sidebar-theme-light, .collapsed-theme-light');
+            const darkIcons = document.querySelectorAll('.sidebar-theme-dark, .collapsed-theme-dark');
+            const systemIcons = document.querySelectorAll('.sidebar-theme-system, .collapsed-theme-system');
+            
+            // Hide all icons first
+            lightIcons.forEach(icon => icon.classList.add('hidden'));
+            darkIcons.forEach(icon => icon.classList.add('hidden'));
+            systemIcons.forEach(icon => icon.classList.add('hidden'));
+            
+            // Show appropriate icon
+            if (theme === 'light') {
+                lightIcons.forEach(icon => icon.classList.remove('hidden'));
+            } else if (theme === 'dark') {
+                darkIcons.forEach(icon => icon.classList.remove('hidden'));
+            } else {
+                systemIcons.forEach(icon => icon.classList.remove('hidden'));
+            }
+        }
+        
+        function toggleTheme() {
+            const currentTheme = localStorage.getItem('theme') || 'system';
+            let newTheme;
+            
+            if (currentTheme === 'light') {
+                newTheme = 'dark';
+            } else if (currentTheme === 'dark') {
+                newTheme = 'system';
+            } else {
+                newTheme = 'light';
+            }
+            
+            localStorage.setItem('theme', newTheme);
+            
+            // Apply theme immediately
+            if (newTheme === 'dark') {
+                document.documentElement.classList.add('dark');
+            } else if (newTheme === 'light') {
+                document.documentElement.classList.remove('dark');
+            } else {
+                // System theme
+                if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                    document.documentElement.classList.add('dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                }
+            }
+            
+            updateThemeIcons();
+        }
+        
+        // Add event listeners
+        if (sidebarToggle) {
+            sidebarToggle.addEventListener('click', toggleTheme);
+        }
+        if (collapsedToggle) {
+            collapsedToggle.addEventListener('click', toggleTheme);
+        }
+        
+        // Initialize theme icons
+        updateThemeIcons();
+    }
+
     // Simple initialization - no fade effects
     document.addEventListener('DOMContentLoaded', function () {
         const fullSidebar = document.querySelector('.sidebar-full');
@@ -271,5 +409,8 @@
         if (queueCount && queueWaiting > 0) {
             queueCount.classList.remove('hidden');
         }
+
+        // Initialize theme toggle
+        initSidebarThemeToggle();
     });
 </script>
