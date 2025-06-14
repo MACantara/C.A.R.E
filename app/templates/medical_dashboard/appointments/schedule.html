@@ -169,7 +169,7 @@
                                 </div>
                                 {% elif appointment.status.value == 'in_progress' %}
                                 <div class="flex space-x-2">
-                                    <a href="{{ url_for('medical_records.new_consultation', appointment_id=appointment.id) }}"
+                                    <a href="{{ url_for('consultations.new_consultation', appointment_id=appointment.id) }}"
                                         class="px-3 py-1 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 transition-colors duration-200">
                                         Continue
                                     </a>
@@ -273,10 +273,10 @@ function startAppointment(appointmentId) {
             if (response.ok) {
                 // If the server returns a redirect (status 302), follow it
                 if (response.type === 'opaqueredirect' || response.redirected) {
-                    window.location.href = response.url || `/medical-records/consultation/new?appointment_id=${appointmentId}`;
+                    window.location.href = response.url || `/consultations/new?appointment_id=${appointmentId}`;
                 } else {
                     // If no redirect, go to consultation form directly
-                    window.location.href = `/medical-records/consultation/new?appointment_id=${appointmentId}`;
+                    window.location.href = `/consultations/new?appointment_id=${appointmentId}`;
                 }
             } else {
                 throw new Error('HTTP error! status: ' + response.status);
@@ -286,7 +286,7 @@ function startAppointment(appointmentId) {
             console.error('Error:', error);
             // On error, try to go to consultation form anyway
             console.log('Attempting to redirect to consultation form...');
-            window.location.href = `/medical-records/consultation/new?appointment_id=${appointmentId}`;
+            window.location.href = `/consultations/new?appointment_id=${appointmentId}`;
         });
     }
 }
