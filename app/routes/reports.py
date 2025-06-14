@@ -14,11 +14,9 @@ from datetime import datetime, date, timedelta
 from app import db, get_user_timezone, localize_datetime, get_current_time
 from app.models.user import User
 from app.services.analytics_service import AnalyticsService
+from app.utils.sidebar_utils import get_sidebar_stats
 from functools import wraps
 import json
-
-# Import the sidebar stats function from medical_dashboard
-from app.routes.medical_dashboard import get_sidebar_stats
 
 reports_bp = Blueprint("reports", __name__, url_prefix="/reports")
 

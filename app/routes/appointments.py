@@ -17,6 +17,7 @@ from app.utils.email_utils import (
     send_appointment_confirmation,
     send_appointment_reminder,
 )
+from app.utils.sidebar_utils import get_sidebar_stats
 import calendar
 
 appointments_bp = Blueprint("appointments", __name__, url_prefix="/appointments")
@@ -219,9 +220,6 @@ def doctor_schedule():
     if current_user.role not in ["doctor", "staff"]:
         flash("Access denied.", "error")
         return redirect(url_for("appointments.index"))
-
-    # Import here to avoid circular import
-    from app.routes.medical_dashboard import get_sidebar_stats
 
     # Get date from query params or default to today
     date_str = request.args.get("date")

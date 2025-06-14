@@ -15,7 +15,7 @@ from app.models.user import User
 from app.models.appointment import Appointment
 from app.models.queue import PatientQueue, QueueStatus
 from app.models.message import InternalMessage, MessageType, MessagePriority
-from app.routes.medical_dashboard import get_sidebar_stats
+from app.utils.sidebar_utils import get_sidebar_stats
 from sqlalchemy import and_, or_
 
 queue_bp = Blueprint("queue", __name__, url_prefix="/queue")

@@ -23,7 +23,7 @@ from app.models.medical_record import (
 )
 from app.models.user import User
 from app.models.appointment import Appointment
-from app.routes.medical_dashboard import get_sidebar_stats
+from app.utils.sidebar_utils import get_sidebar_stats
 from sqlalchemy import or_, and_, desc, func
 from functools import wraps
 
