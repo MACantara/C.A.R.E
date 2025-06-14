@@ -2,188 +2,202 @@
 
 {% block title %}Medical Records Dashboard - C.A.R.E. System{% endblock %}
 
+{% block include_navbar %}
+<!-- Navbar excluded for full-screen medical dashboard interface -->
+{% endblock %}
+
 {% block content %}
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-    <!-- Header -->
-    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-8 opacity-0 animate-fade-in-up">
-        <div class="flex items-center mb-4 lg:mb-0">
-            <div class="h-12 w-12 flex items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30 mr-4">
-                <i class="bi bi-file-medical text-blue-600 dark:text-blue-400 text-xl"></i>
-            </div>
-            <div>
-                <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Medical Records</h1>
-                <p class="text-gray-600 dark:text-gray-400">Electronic Medical Records Management</p>
-            </div>
-        </div>
+<div class="min-h-screen bg-gray-50 dark:bg-gray-900 flex" 
+     data-user-timezone="{{ user_timezone }}"
+     data-current-time="{{ current_time_local.isoformat() }}">
+    
+    <!-- Include Sidebar -->
+    {% include 'medical_dashboard/components/sidebar.html' %}
 
-        <div class="flex flex-col sm:flex-row gap-3">
-            {% if current_user.role == 'doctor' %}
-            <a href="{{ url_for('medical_records.new_consultation') }}"
-                class="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200">
-                <i class="bi bi-plus-circle mr-2"></i>New Consultation
-            </a>
-            <a href="{{ url_for('medical_records.new_prescription') }}"
-                class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200">
-                <i class="bi bi-prescription2 mr-2"></i>New Prescription
-            </a>
-            {% endif %}
-            <a href="{{ url_for('medical_records.search_records') }}"
-                class="inline-flex items-center px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors duration-200">
-                <i class="bi bi-search mr-2"></i>Search Records
-            </a>
-        </div>
-    </div>
-
-    <!-- Statistics Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 opacity-0 animate-fade-in-up"
-        style="animation-delay: 0.2s;">
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-100 dark:border-gray-700">
-            <div class="flex items-center">
-                <div class="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center mr-4">
-                    <i class="bi bi-people text-blue-600 dark:text-blue-400 text-xl"></i>
-                </div>
+    <!-- Main Content Area -->
+    <div class="flex-1 flex flex-col min-h-screen max-h-screen">
+        <!-- Header -->
+        <div class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex-shrink-0">
+            <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Total Patients</p>
-                    <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ stats.total_patients }}</p>
+                    <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Medical Records</h1>
+                    <p class="text-gray-600 dark:text-gray-400">Patient records and medical history management</p>
                 </div>
-            </div>
-        </div>
 
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-100 dark:border-gray-700">
-            <div class="flex items-center">
-                <div
-                    class="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center mr-4">
-                    <i class="bi bi-file-medical text-green-600 dark:text-green-400 text-xl"></i>
-                </div>
-                <div>
-                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Medical Records</p>
-                    <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ stats.total_records }}</p>
-                </div>
-            </div>
-        </div>
-
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-100 dark:border-gray-700">
-            <div class="flex items-center">
-                <div
-                    class="w-12 h-12 bg-orange-100 dark:bg-orange-900/30 rounded-lg flex items-center justify-center mr-4">
-                    <i class="bi bi-calendar-event text-orange-600 dark:text-orange-400 text-xl"></i>
-                </div>
-                <div>
-                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Today's Consultations</p>
-                    <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ stats.today_consultations }}</p>
-                </div>
-            </div>
-        </div>
-
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-100 dark:border-gray-700">
-            <div class="flex items-center">
-                <div
-                    class="w-12 h-12 bg-yellow-100 dark:bg-yellow-900/30 rounded-lg flex items-center justify-center mr-4">
-                    <i class="bi bi-clock text-yellow-600 dark:text-yellow-400 text-xl"></i>
-                </div>
-                <div>
-                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Pending Consultations</p>
-                    <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ stats.pending_consultations }}</p>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Quick Access -->
-    <div class="grid lg:grid-cols-3 gap-6 mb-8 opacity-0 animate-fade-in-up" style="animation-delay: 0.4s;">
-        <div class="lg:col-span-2">
-            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-100 dark:border-gray-700">
-                <div class="flex items-center justify-between mb-6">
-                    <h2 class="text-xl font-bold text-gray-900 dark:text-white">Recent Medical Records</h2>
-                    <a href="{{ url_for('medical_records.search_records') }}"
-                        class="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 text-sm font-medium">
-                        View All
+                <!-- Header Actions -->
+                <div class="flex items-center space-x-3">
+                    {% if current_user.role == 'doctor' %}
+                    <a href="{{ url_for('medical_records.new_consultation') }}"
+                        class="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200">
+                        <i class="bi bi-plus-circle mr-2"></i>New Consultation
                     </a>
+                    <a href="{{ url_for('medical_records.new_prescription') }}"
+                        class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200">
+                        <i class="bi bi-prescription2 mr-2"></i>New Prescription
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Content -->
+        <div class="flex-1 p-6 overflow-y-auto max-h-0">
+            <!-- Quick Actions Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 opacity-0 animate-fade-in-up"
+                style="animation-delay: 0.2s;">
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-100 dark:border-gray-700">
+                    <div class="flex items-center">
+                        <div class="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center mr-4">
+                            <i class="bi bi-people text-blue-600 dark:text-blue-400 text-xl"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Total Patients</p>
+                            <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ stats.total_patients }}</p>
+                        </div>
+                    </div>
                 </div>
 
-                {% if recent_records %}
-                <div class="space-y-4">
-                    {% for record in recent_records %}
-                    <div
-                        class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors duration-200">
-                        <div class="flex items-center space-x-4">
-                            <div
-                                class="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-                                <i class="bi bi-file-medical text-blue-600 dark:text-blue-400"></i>
-                            </div>
-                            <div>
-                                <h3 class="font-medium text-gray-900 dark:text-white">{{ record.title }}</h3>
-                                <p class="text-sm text-gray-600 dark:text-gray-400">
-                                    {{ record.patient.display_name }} • {{ record.record_date.strftime('%B %d, %Y') }}
-                                </p>
-                            </div>
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-100 dark:border-gray-700">
+                    <div class="flex items-center">
+                        <div
+                            class="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center mr-4">
+                            <i class="bi bi-file-medical text-green-600 dark:text-green-400 text-xl"></i>
                         </div>
-                        <div class="flex items-center space-x-2">
-                            <span class="px-2 py-1 text-xs font-medium rounded-full
-                                {% if record.record_type.value == 'consultation' %}bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400
-                                {% elif record.record_type.value == 'prescription' %}bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400
-                                {% else %}bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400{% endif %}">
-                                {{ record.record_type.value.replace('_', ' ').title() }}
-                            </span>
-                            <a href="{{ url_for('medical_records.patient_records', patient_id=record.patient_id) }}"
-                                class="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300">
-                                <i class="bi bi-arrow-right"></i>
+                        <div>
+                            <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Medical Records</p>
+                            <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ stats.total_records }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-100 dark:border-gray-700">
+                    <div class="flex items-center">
+                        <div
+                            class="w-12 h-12 bg-orange-100 dark:bg-orange-900/30 rounded-lg flex items-center justify-center mr-4">
+                            <i class="bi bi-calendar-event text-orange-600 dark:text-orange-400 text-xl"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Today's Consultations</p>
+                            <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ stats.today_consultations }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-100 dark:border-gray-700">
+                    <div class="flex items-center">
+                        <div
+                            class="w-12 h-12 bg-yellow-100 dark:bg-yellow-900/30 rounded-lg flex items-center justify-center mr-4">
+                            <i class="bi bi-clock text-yellow-600 dark:text-yellow-400 text-xl"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Pending Consultations</p>
+                            <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ stats.pending_consultations }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Activity -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 opacity-0 animate-fade-in-up" style="animation-delay: 0.4s;">
+                <div class="lg:col-span-2">
+                    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-100 dark:border-gray-700">
+                        <div class="flex items-center justify-between mb-6">
+                            <h2 class="text-xl font-bold text-gray-900 dark:text-white">Recent Medical Records</h2>
+                            <a href="{{ url_for('medical_records.search_records') }}"
+                                class="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 text-sm font-medium">
+                                View All
                             </a>
                         </div>
-                    </div>
-                    {% endfor %}
-                </div>
-                {% else %}
-                <div class="text-center py-8">
-                    <i class="bi bi-file-medical text-gray-400 dark:text-gray-500 text-4xl mb-4"></i>
-                    <p class="text-gray-600 dark:text-gray-400">No medical records found</p>
-                </div>
-                {% endif %}
-            </div>
-        </div>
 
-        <div>
-            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-100 dark:border-gray-700">
-                <div class="flex items-center justify-between mb-6">
-                    <h2 class="text-xl font-bold text-gray-900 dark:text-white">Recent Consultations</h2>
-                    <a href="{{ url_for('medical_records.patients') }}"
-                        class="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 text-sm font-medium">
-                        View Patients
-                    </a>
-                </div>
-
-                {% if recent_consultations %}
-                <div class="space-y-4">
-                    {% for consultation in recent_consultations %}
-                    <div class="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                        <div class="flex items-center justify-between mb-2">
-                            <h3 class="font-medium text-gray-900 dark:text-white">{{ consultation.patient.display_name
-                                }}</h3>
-                            <span class="px-2 py-1 text-xs font-medium rounded-full
-                                {% if consultation.status.value == 'completed' %}bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400
-                                {% elif consultation.status.value == 'draft' %}bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400
-                                {% else %}bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400{% endif %}">
-                                {{ consultation.status.value.title() }}
-                            </span>
+                        {% if recent_records %}
+                        <div class="space-y-4">
+                            {% for record in recent_records %}
+                            <div
+                                class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors duration-200">
+                                <div class="flex items-center space-x-4">
+                                    <div
+                                        class="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                                        <i class="bi bi-file-medical text-blue-600 dark:text-blue-400"></i>
+                                    </div>
+                                    <div>
+                                        <h3 class="font-medium text-gray-900 dark:text-white">{{ record.title }}</h3>
+                                        <p class="text-sm text-gray-600 dark:text-gray-400">
+                                            {{ record.patient.display_name }} • {{ record.record_date.strftime('%B %d, %Y') }}
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center space-x-2">
+                                    <span class="px-2 py-1 text-xs font-medium rounded-full
+                                        {% if record.record_type.value == 'consultation' %}bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400
+                                        {% elif record.record_type.value == 'prescription' %}bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400
+                                        {% else %}bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400{% endif %}">
+                                    {{ record.record_type.value.replace('_', ' ').title() }}
+                                    </span>
+                                    <a href="{{ url_for('medical_records.patient_records', patient_id=record.patient_id) }}"
+                                        class="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300">
+                                        <i class="bi bi-arrow-right"></i>
+                                    </a>
+                                </div>
+                            </div>
+                            {% endfor %}
                         </div>
-                        <p class="text-sm text-gray-600 dark:text-gray-400">
-                            {{ consultation.consultation_date.strftime('%B %d, %Y at %I:%M %p') }}
-                        </p>
-                        <p class="text-sm text-gray-700 dark:text-gray-300 mt-1">
-                            {{ consultation.chief_complaint[:50] }}{% if consultation.chief_complaint|length > 50
-                            %}...{% endif %}
-                        </p>
+                        {% else %}
+                        <div class="text-center py-8">
+                            <i class="bi bi-file-medical text-gray-400 dark:text-gray-500 text-4xl mb-4"></i>
+                            <p class="text-gray-600 dark:text-gray-400">No medical records found</p>
+                        </div>
+                        {% endif %}
                     </div>
-                    {% endfor %}
                 </div>
-                {% else %}
-                <div class="text-center py-8">
-                    <i class="bi bi-stethoscope text-gray-400 dark:text-gray-500 text-4xl mb-4"></i>
-                    <p class="text-gray-600 dark:text-gray-400">No recent consultations</p>
+
+                <div>
+                    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-100 dark:border-gray-700">
+                        <div class="flex items-center justify-between mb-6">
+                            <h2 class="text-xl font-bold text-gray-900 dark:text-white">Recent Consultations</h2>
+                            <a href="{{ url_for('medical_records.patients') }}"
+                                class="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 text-sm font-medium">
+                                View Patients
+                            </a>
+                        </div>
+
+                        {% if recent_consultations %}
+                        <div class="space-y-4">
+                            {% for consultation in recent_consultations %}
+                            <div class="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                                <div class="flex items-center justify-between mb-2">
+                                    <h3 class="font-medium text-gray-900 dark:text-white">{{ consultation.patient.display_name
+                                        }}</h3>
+                                    <span class="px-2 py-1 text-xs font-medium rounded-full
+                                        {% if consultation.status.value == 'completed' %}bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400
+                                        {% elif consultation.status.value == 'draft' %}bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400
+                                        {% else %}bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400{% endif %}">
+                                        {{ consultation.status.value.title() }}
+                                    </span>
+                                </div>
+                                <p class="text-sm text-gray-600 dark:text-gray-400">
+                                    {{ consultation.consultation_date.strftime('%B %d, %Y at %I:%M %p') }}
+                                </p>
+                                <p class="text-sm text-gray-700 dark:text-gray-300 mt-1">
+                                    {{ consultation.chief_complaint[:50] }}{% if consultation.chief_complaint|length > 50
+                                    %}...{% endif %}
+                                </p>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <div class="text-center py-8">
+                            <i class="bi bi-stethoscope text-gray-400 dark:text-gray-500 text-4xl mb-4"></i>
+                            <p class="text-gray-600 dark:text-gray-400">No recent consultations</p>
+                        </div>
+                        {% endif %}
+                    </div>
                 </div>
-                {% endif %}
             </div>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block include_footer %}
+<!-- Footer excluded for full-screen medical dashboard interface -->
 {% endblock %}

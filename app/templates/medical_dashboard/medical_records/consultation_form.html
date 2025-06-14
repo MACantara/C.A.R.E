@@ -2,270 +2,292 @@
 
 {% block title %}New Consultation - C.A.R.E. System{% endblock %}
 
+{% block include_navbar %}
+<!-- Navbar excluded for full-screen medical dashboard interface -->
+{% endblock %}
+
 {% block content %}
-<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-    <!-- Header -->
-    <div class="flex items-center justify-between mb-8 opacity-0 animate-fade-in-up">
-        <div class="flex items-center">
-            <div class="h-12 w-12 flex items-center justify-center rounded-full bg-green-100 dark:bg-green-900/30 mr-4">
-                <i class="bi bi-plus-circle text-green-600 dark:text-green-400 text-xl"></i>
+<div class="min-h-screen bg-gray-50 dark:bg-gray-900 flex" 
+     data-user-timezone="{{ user_timezone }}"
+     data-current-time="{{ current_time_local.isoformat() }}">
+    
+    <!-- Include Sidebar -->
+    {% include 'medical_dashboard/components/sidebar.html' %}
+
+    <!-- Main Content Area -->
+    <div class="flex-1 flex flex-col min-h-screen max-h-screen">
+        <!-- Header -->
+        <div class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex-shrink-0">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                    <div class="h-12 w-12 flex items-center justify-center rounded-full bg-green-100 dark:bg-green-900/30 mr-4">
+                        <i class="bi bi-plus-circle text-green-600 dark:text-green-400 text-xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-3xl font-bold text-gray-900 dark:text-white">New Consultation</h1>
+                        {% if patient %}
+                        <p class="text-gray-600 dark:text-gray-400">For {{ patient.display_name }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <a href="{{ url_for('medical_records.index') }}"
+                    class="inline-flex items-center px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors duration-200">
+                    <i class="bi bi-arrow-left mr-2"></i>Cancel
+                </a>
             </div>
-            <div>
-                <h1 class="text-3xl font-bold text-gray-900 dark:text-white">New Consultation</h1>
-                {% if patient %}
-                <p class="text-gray-600 dark:text-gray-400">For {{ patient.display_name }}</p>
+        </div>
+
+        <!-- Content -->
+        <div class="flex-1 p-6 overflow-y-auto max-h-0">
+            <form method="POST" class="space-y-8 opacity-0 animate-fade-in-left" style="animation-delay: 0.2s;">
+                <!-- Patient Selection -->
+                {% if not patient %}
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+                    <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4">Select Patient</h2>
+                    <div>
+                        <label for="patient_id"
+                            class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Patient</label>
+                        <select name="patient_id" id="patient_id" required
+                            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                            <option value="">Select a patient...</option>
+                            {% for p in patients %}
+                            <option value="{{ p.id }}">{{ p.display_name }} ({{ p.email }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                {% else %}
+                <input type="hidden" name="patient_id" value="{{ patient.id }}">
+                {% if appointment %}
+                <input type="hidden" name="appointment_id" value="{{ appointment.id }}">
                 {% endif %}
-            </div>
-        </div>
+                {% endif %}
 
-        <a href="{{ url_for('medical_records.index') }}"
-            class="inline-flex items-center px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors duration-200">
-            <i class="bi bi-arrow-left mr-2"></i>Cancel
-        </a>
+                <!-- Chief Complaint -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+                    <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4">Chief Complaint</h2>
+                    <div>
+                        <label for="chief_complaint" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Primary reason for visit <span class="text-red-500">*</span>
+                        </label>
+                        <textarea name="chief_complaint" id="chief_complaint" rows="3" required
+                            placeholder="Patient's primary concern or reason for seeking medical attention..."
+                            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"></textarea>
+                    </div>
+                </div>
+
+                <!-- Vital Signs -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+                    <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4">Vital Signs</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div>
+                            <label for="temperature"
+                                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Temperature (°C)</label>
+                            <input type="number" name="temperature" id="temperature" step="0.1" min="35" max="42"
+                                placeholder="36.5"
+                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400">
+                        </div>
+
+                        <div>
+                            <label for="blood_pressure_systolic"
+                                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Blood Pressure</label>
+                            <div class="flex space-x-2">
+                                <input type="number" name="blood_pressure_systolic" id="blood_pressure_systolic"
+                                    placeholder="120" min="70" max="250"
+                                    class="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400">
+                                <span class="text-gray-500 self-center">/</span>
+                                <input type="number" name="blood_pressure_diastolic" id="blood_pressure_diastolic"
+                                    placeholder="80" min="40" max="150"
+                                    class="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label for="heart_rate"
+                                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Heart Rate (BPM)</label>
+                            <input type="number" name="heart_rate" id="heart_rate" min="40" max="200" placeholder="72"
+                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400">
+                        </div>
+
+                        <div>
+                            <label for="respiratory_rate"
+                                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Respiratory Rate</label>
+                            <input type="number" name="respiratory_rate" id="respiratory_rate" min="8" max="40" placeholder="16"
+                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400">
+                        </div>
+
+                        <div>
+                            <label for="weight" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Weight
+                                (kg)</label>
+                            <input type="number" name="weight" id="weight" step="0.1" min="1" max="300" placeholder="70.0"
+                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400">
+                        </div>
+
+                        <div>
+                            <label for="height" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Height
+                                (cm)</label>
+                            <input type="number" name="height" id="height" step="0.1" min="50" max="250" placeholder="170.0"
+                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400">
+                        </div>
+
+                        <div>
+                            <label for="oxygen_saturation"
+                                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">O2 Saturation
+                                (%)</label>
+                            <input type="number" name="oxygen_saturation" id="oxygen_saturation" step="0.1" min="70" max="100"
+                                placeholder="98.0"
+                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400">
+                        </div>
+
+                        <div>
+                            <label for="pain_scale" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Pain
+                                Scale (0-10)</label>
+                            <input type="number" name="pain_scale" id="pain_scale" min="0" max="10" placeholder="0"
+                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- History -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+                    <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4">Medical History</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label for="history_present_illness"
+                                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">History of Present
+                                Illness</label>
+                            <textarea name="history_present_illness" id="history_present_illness" rows="4"
+                                placeholder="Detailed description of current symptoms and their progression..."
+                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"></textarea>
+                        </div>
+
+                        <div>
+                            <label for="past_medical_history"
+                                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Past Medical
+                                History</label>
+                            <textarea name="past_medical_history" id="past_medical_history" rows="4"
+                                placeholder="Previous illnesses, surgeries, hospitalizations..."
+                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"></textarea>
+                        </div>
+
+                        <div>
+                            <label for="family_history"
+                                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Family History</label>
+                            <textarea name="family_history" id="family_history" rows="3"
+                                placeholder="Relevant family medical conditions..."
+                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"></textarea>
+                        </div>
+
+                        <div>
+                            <label for="social_history"
+                                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Social History</label>
+                            <textarea name="social_history" id="social_history" rows="3"
+                                placeholder="Smoking, alcohol use, occupation, lifestyle factors..."
+                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Physical Examination -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+                    <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4">Physical Examination</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label for="general_appearance"
+                                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">General
+                                Appearance</label>
+                            <textarea name="general_appearance" id="general_appearance" rows="3"
+                                placeholder="Overall appearance, alertness, distress level..."
+                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"></textarea>
+                        </div>
+
+                        <div>
+                            <label for="physical_examination"
+                                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Physical Examination
+                                Findings</label>
+                            <textarea name="physical_examination" id="physical_examination" rows="3"
+                                placeholder="Systematic physical examination findings..."
+                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Assessment and Plan -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+                    <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4">Assessment & Plan</h2>
+                    <div class="space-y-6">
+                        <div>
+                            <label for="assessment"
+                                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Clinical
+                                Assessment</label>
+                            <textarea name="assessment" id="assessment" rows="4"
+                                placeholder="Primary diagnosis and clinical impression..."
+                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"></textarea>
+                        </div>
+
+                        <div>
+                            <label for="differential_diagnosis"
+                                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Differential
+                                Diagnosis</label>
+                            <textarea name="differential_diagnosis" id="differential_diagnosis" rows="3"
+                                placeholder="Alternative diagnoses to consider..."
+                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"></textarea>
+                        </div>
+
+                        <div>
+                            <label for="treatment_plan"
+                                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Treatment Plan</label>
+                            <textarea name="treatment_plan" id="treatment_plan" rows="4"
+                                placeholder="Medications, procedures, lifestyle modifications..."
+                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"></textarea>
+                        </div>
+
+                        <div>
+                            <label for="follow_up_instructions"
+                                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Follow-up
+                                Instructions</label>
+                            <textarea name="follow_up_instructions" id="follow_up_instructions" rows="3"
+                                placeholder="Patient instructions, warning signs, next steps..."
+                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"></textarea>
+                        </div>
+
+                        <div class="flex items-center space-x-4">
+                            <label class="flex items-center">
+                                <input type="checkbox" name="next_appointment_recommended"
+                                    class="form-checkbox h-4 w-4 text-green-600">
+                                <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Recommend follow-up
+                                    appointment</span>
+                            </label>
+
+                            <div class="flex-1">
+                                <input type="text" name="next_appointment_timeframe" placeholder="e.g., 2 weeks, 1 month"
+                                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Form Actions -->
+                <div class="flex justify-end space-x-4">
+                    <button type="submit" name="complete_consultation" value="true"
+                        class="inline-flex items-center px-6 py-3 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition-colors duration-200">
+                        <i class="bi bi-check-circle mr-2"></i>
+                        Complete & Save
+                    </button>
+
+                    <button type="submit"
+                        class="inline-flex items-center px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors duration-200">
+                        <i class="bi bi-save mr-2"></i>
+                        Save as Draft
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
-
-    <form method="POST" class="space-y-8 opacity-0 animate-fade-in-left" style="animation-delay: 0.2s;">
-        <!-- Patient Selection -->
-        {% if not patient %}
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
-            <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4">Select Patient</h2>
-            <div>
-                <label for="patient_id"
-                    class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Patient</label>
-                <select name="patient_id" id="patient_id" required
-                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
-                    <option value="">Select a patient...</option>
-                    {% for p in patients %}
-                    <option value="{{ p.id }}">{{ p.display_name }} ({{ p.email }})</option>
-                    {% endfor %}
-                </select>
-            </div>
-        </div>
-        {% else %}
-        <input type="hidden" name="patient_id" value="{{ patient.id }}">
-        {% if appointment %}
-        <input type="hidden" name="appointment_id" value="{{ appointment.id }}">
-        {% endif %}
-        {% endif %}
-
-        <!-- Chief Complaint -->
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
-            <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4">Chief Complaint</h2>
-            <div>
-                <label for="chief_complaint" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Primary reason for visit <span class="text-red-500">*</span>
-                </label>
-                <textarea name="chief_complaint" id="chief_complaint" rows="3" required
-                    placeholder="Patient's primary concern or reason for seeking medical attention..."
-                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"></textarea>
-            </div>
-        </div>
-
-        <!-- Vital Signs -->
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
-            <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4">Vital Signs</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div>
-                    <label for="temperature"
-                        class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Temperature (°C)</label>
-                    <input type="number" name="temperature" id="temperature" step="0.1" min="35" max="42"
-                        placeholder="36.5"
-                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400">
-                </div>
-
-                <div>
-                    <label for="blood_pressure_systolic"
-                        class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Blood Pressure</label>
-                    <div class="flex space-x-2">
-                        <input type="number" name="blood_pressure_systolic" id="blood_pressure_systolic"
-                            placeholder="120" min="70" max="250"
-                            class="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400">
-                        <span class="text-gray-500 self-center">/</span>
-                        <input type="number" name="blood_pressure_diastolic" id="blood_pressure_diastolic"
-                            placeholder="80" min="40" max="150"
-                            class="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400">
-                    </div>
-                </div>
-
-                <div>
-                    <label for="heart_rate"
-                        class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Heart Rate (BPM)</label>
-                    <input type="number" name="heart_rate" id="heart_rate" min="40" max="200" placeholder="72"
-                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400">
-                </div>
-
-                <div>
-                    <label for="respiratory_rate"
-                        class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Respiratory Rate</label>
-                    <input type="number" name="respiratory_rate" id="respiratory_rate" min="8" max="40" placeholder="16"
-                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400">
-                </div>
-
-                <div>
-                    <label for="weight" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Weight
-                        (kg)</label>
-                    <input type="number" name="weight" id="weight" step="0.1" min="1" max="300" placeholder="70.0"
-                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400">
-                </div>
-
-                <div>
-                    <label for="height" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Height
-                        (cm)</label>
-                    <input type="number" name="height" id="height" step="0.1" min="50" max="250" placeholder="170.0"
-                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400">
-                </div>
-
-                <div>
-                    <label for="oxygen_saturation"
-                        class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">O2 Saturation
-                        (%)</label>
-                    <input type="number" name="oxygen_saturation" id="oxygen_saturation" step="0.1" min="70" max="100"
-                        placeholder="98.0"
-                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400">
-                </div>
-
-                <div>
-                    <label for="pain_scale" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Pain
-                        Scale (0-10)</label>
-                    <input type="number" name="pain_scale" id="pain_scale" min="0" max="10" placeholder="0"
-                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400">
-                </div>
-            </div>
-        </div>
-
-        <!-- History -->
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
-            <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4">Medical History</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                    <label for="history_present_illness"
-                        class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">History of Present
-                        Illness</label>
-                    <textarea name="history_present_illness" id="history_present_illness" rows="4"
-                        placeholder="Detailed description of current symptoms and their progression..."
-                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"></textarea>
-                </div>
-
-                <div>
-                    <label for="past_medical_history"
-                        class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Past Medical
-                        History</label>
-                    <textarea name="past_medical_history" id="past_medical_history" rows="4"
-                        placeholder="Previous illnesses, surgeries, hospitalizations..."
-                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"></textarea>
-                </div>
-
-                <div>
-                    <label for="family_history"
-                        class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Family History</label>
-                    <textarea name="family_history" id="family_history" rows="3"
-                        placeholder="Relevant family medical conditions..."
-                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"></textarea>
-                </div>
-
-                <div>
-                    <label for="social_history"
-                        class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Social History</label>
-                    <textarea name="social_history" id="social_history" rows="3"
-                        placeholder="Smoking, alcohol use, occupation, lifestyle factors..."
-                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"></textarea>
-                </div>
-            </div>
-        </div>
-
-        <!-- Physical Examination -->
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
-            <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4">Physical Examination</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                    <label for="general_appearance"
-                        class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">General
-                        Appearance</label>
-                    <textarea name="general_appearance" id="general_appearance" rows="3"
-                        placeholder="Overall appearance, alertness, distress level..."
-                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"></textarea>
-                </div>
-
-                <div>
-                    <label for="physical_examination"
-                        class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Physical Examination
-                        Findings</label>
-                    <textarea name="physical_examination" id="physical_examination" rows="3"
-                        placeholder="Systematic physical examination findings..."
-                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"></textarea>
-                </div>
-            </div>
-        </div>
-
-        <!-- Assessment and Plan -->
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
-            <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4">Assessment & Plan</h2>
-            <div class="space-y-6">
-                <div>
-                    <label for="assessment"
-                        class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Clinical
-                        Assessment</label>
-                    <textarea name="assessment" id="assessment" rows="4"
-                        placeholder="Primary diagnosis and clinical impression..."
-                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"></textarea>
-                </div>
-
-                <div>
-                    <label for="differential_diagnosis"
-                        class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Differential
-                        Diagnosis</label>
-                    <textarea name="differential_diagnosis" id="differential_diagnosis" rows="3"
-                        placeholder="Alternative diagnoses to consider..."
-                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"></textarea>
-                </div>
-
-                <div>
-                    <label for="treatment_plan"
-                        class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Treatment Plan</label>
-                    <textarea name="treatment_plan" id="treatment_plan" rows="4"
-                        placeholder="Medications, procedures, lifestyle modifications..."
-                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"></textarea>
-                </div>
-
-                <div>
-                    <label for="follow_up_instructions"
-                        class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Follow-up
-                        Instructions</label>
-                    <textarea name="follow_up_instructions" id="follow_up_instructions" rows="3"
-                        placeholder="Patient instructions, warning signs, next steps..."
-                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"></textarea>
-                </div>
-
-                <div class="flex items-center space-x-4">
-                    <label class="flex items-center">
-                        <input type="checkbox" name="next_appointment_recommended"
-                            class="form-checkbox h-4 w-4 text-green-600">
-                        <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Recommend follow-up
-                            appointment</span>
-                    </label>
-
-                    <div class="flex-1">
-                        <input type="text" name="next_appointment_timeframe" placeholder="e.g., 2 weeks, 1 month"
-                            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400">
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Form Actions -->
-        <div class="flex justify-end space-x-4">
-            <button type="submit" name="complete_consultation" value="true"
-                class="inline-flex items-center px-6 py-3 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition-colors duration-200">
-                <i class="bi bi-check-circle mr-2"></i>
-                Complete & Save
-            </button>
-
-            <button type="submit"
-                class="inline-flex items-center px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors duration-200">
-                <i class="bi bi-save mr-2"></i>
-                Save as Draft
-            </button>
-        </div>
-    </form>
 </div>
+{% endblock %}
+
+{% block include_footer %}
+<!-- Footer excluded for full-screen medical dashboard interface -->
 {% endblock %}

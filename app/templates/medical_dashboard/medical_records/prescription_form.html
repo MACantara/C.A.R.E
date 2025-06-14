@@ -2,223 +2,241 @@
 
 {% block title %}New Prescription - C.A.R.E. System{% endblock %}
 
+{% block include_navbar %}
+<!-- Navbar excluded for full-screen medical dashboard interface -->
+{% endblock %}
+
 {% block content %}
-<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-    <!-- Header -->
-    <div class="flex items-center justify-between mb-8 opacity-0 animate-fade-in-up">
-        <div class="flex items-center">
-            <div class="h-12 w-12 flex items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30 mr-4">
-                <i class="bi bi-prescription2 text-blue-600 dark:text-blue-400 text-xl"></i>
+<div class="min-h-screen bg-gray-50 dark:bg-gray-900 flex" 
+     data-user-timezone="{{ user_timezone }}"
+     data-current-time="{{ current_time_local.isoformat() }}">
+    
+    <!-- Include Sidebar -->
+    {% include 'medical_dashboard/components/sidebar.html' %}
+
+    <!-- Main Content Area -->
+    <div class="flex-1 flex flex-col min-h-screen max-h-screen">
+        <!-- Header -->
+        <div class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex-shrink-0">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                    <div class="h-12 w-12 flex items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30 mr-4">
+                        <i class="bi bi-prescription2 text-blue-600 dark:text-blue-400 text-xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-3xl font-bold text-gray-900 dark:text-white">New Prescription</h1>
+                        {% if patient %}
+                        <p class="text-gray-600 dark:text-gray-400">For {{ patient.display_name }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <a href="{{ url_for('medical_records.index') }}"
+                    class="inline-flex items-center px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors duration-200">
+                    <i class="bi bi-arrow-left mr-2"></i>Cancel
+                </a>
             </div>
-            <div>
-                <h1 class="text-3xl font-bold text-gray-900 dark:text-white">New Prescription</h1>
-                {% if patient %}
-                <p class="text-gray-600 dark:text-gray-400">For {{ patient.display_name }}</p>
+        </div>
+
+        <!-- Content -->
+        <div class="flex-1 p-6 overflow-y-auto max-h-0">
+            <form method="POST" class="space-y-8 opacity-0 animate-fade-in-left" style="animation-delay: 0.2s;">
+                <!-- Patient Selection -->
+                {% if not patient %}
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+                    <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4">Select Patient</h2>
+                    <div>
+                        <label for="patient_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Patient
+                            <span class="text-red-500">*</span></label>
+                        <select name="patient_id" id="patient_id" required
+                            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                            <option value="">Select a patient...</option>
+                            {% for p in patients %}
+                            <option value="{{ p.id }}">{{ p.display_name }} ({{ p.email }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                {% else %}
+                <input type="hidden" name="patient_id" value="{{ patient.id }}">
+                {% if consultation %}
+                <input type="hidden" name="consultation_id" value="{{ consultation.id }}">
                 {% endif %}
-            </div>
-        </div>
+                {% endif %}
 
-        <a href="{{ url_for('medical_records.index') }}"
-            class="inline-flex items-center px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors duration-200">
-            <i class="bi bi-arrow-left mr-2"></i>Cancel
-        </a>
+                <!-- Medication Information -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+                    <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4">Medication Details</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label for="medication_name"
+                                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                Brand/Trade Name <span class="text-red-500">*</span>
+                            </label>
+                            <input type="text" name="medication_name" id="medication_name" required
+                                placeholder="e.g., Amoxicillin, Paracetamol"
+                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400">
+                        </div>
+
+                        <div>
+                            <label for="generic_name"
+                                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Generic Name</label>
+                            <input type="text" name="generic_name" id="generic_name" placeholder="Generic equivalent"
+                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dosage and Instructions -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+                    <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4">Dosage & Administration</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div>
+                            <label for="dosage" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                Dosage <span class="text-red-500">*</span>
+                            </label>
+                            <input type="text" name="dosage" id="dosage" required placeholder="e.g., 500mg, 10ml"
+                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400">
+                        </div>
+
+                        <div>
+                            <label for="frequency" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                Frequency <span class="text-red-500">*</span>
+                            </label>
+                            <select name="frequency" id="frequency" required
+                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                                <option value="">Select frequency...</option>
+                                <option value="Once daily">Once daily</option>
+                                <option value="Twice daily">Twice daily</option>
+                                <option value="Three times daily">Three times daily</option>
+                                <option value="Four times daily">Four times daily</option>
+                                <option value="Every 4 hours">Every 4 hours</option>
+                                <option value="Every 6 hours">Every 6 hours</option>
+                                <option value="Every 8 hours">Every 8 hours</option>
+                                <option value="Every 12 hours">Every 12 hours</option>
+                                <option value="As needed">As needed</option>
+                                <option value="Before meals">Before meals</option>
+                                <option value="After meals">After meals</option>
+                                <option value="At bedtime">At bedtime</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label for="duration" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                Duration <span class="text-red-500">*</span>
+                            </label>
+                            <input type="text" name="duration" id="duration" required placeholder="e.g., 7 days, 2 weeks"
+                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400">
+                        </div>
+                    </div>
+
+                    <div class="mt-6">
+                        <label for="quantity" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Quantity
+                            to Dispense</label>
+                        <input type="text" name="quantity" id="quantity" placeholder="e.g., 30 tablets, 100ml bottle"
+                            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400">
+                    </div>
+                </div>
+
+                <!-- Clinical Information -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+                    <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4">Clinical Information</h2>
+                    <div class="space-y-6">
+                        <div>
+                            <label for="indication"
+                                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Indication (Reason for
+                                Prescription)</label>
+                            <input type="text" name="indication" id="indication"
+                                placeholder="e.g., Bacterial infection, Pain relief"
+                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400">
+                        </div>
+
+                        <div>
+                            <label for="instructions"
+                                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Patient
+                                Instructions</label>
+                            <textarea name="instructions" id="instructions" rows="4"
+                                placeholder="Detailed instructions for the patient on how to take the medication..."
+                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"></textarea>
+                        </div>
+
+                        <div>
+                            <label for="warnings"
+                                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Warnings &
+                                Precautions</label>
+                            <textarea name="warnings" id="warnings" rows="3"
+                                placeholder="Important warnings, side effects, or precautions for the patient..."
+                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Prescription Dates -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+                    <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4">Prescription Dates</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label for="start_date"
+                                class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Start Date</label>
+                            <input type="date" name="start_date" id="start_date" value="{{ date.today() }}"
+                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                        </div>
+
+                        <div>
+                            <label for="end_date" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">End
+                                Date (Optional)</label>
+                            <input type="date" name="end_date" id="end_date"
+                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Common Medications Quick Select -->
+                <div class="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-6 border border-blue-200 dark:border-blue-800">
+                    <h3 class="text-lg font-semibold text-blue-900 dark:text-blue-100 mb-4">
+                        <i class="bi bi-lightning mr-2"></i>Quick Select Common Medications
+                    </h3>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                        <button type="button"
+                            class="quick-med-btn px-3 py-2 text-sm bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors duration-200"
+                            data-med="Paracetamol" data-dosage="500mg" data-frequency="Three times daily">
+                            Paracetamol 500mg
+                        </button>
+                        <button type="button"
+                            class="quick-med-btn px-3 py-2 text-sm bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors duration-200"
+                            data-med="Amoxicillin" data-dosage="250mg" data-frequency="Three times daily">
+                            Amoxicillin 250mg
+                        </button>
+                        <button type="button"
+                            class="quick-med-btn px-3 py-2 text-sm bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors duration-200"
+                            data-med="Ibuprofen" data-dosage="400mg" data-frequency="Three times daily">
+                            Ibuprofen 400mg
+                        </button>
+                        <button type="button"
+                            class="quick-med-btn px-3 py-2 text-sm bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors duration-200"
+                            data-med="Cetirizine" data-dosage="10mg" data-frequency="Once daily">
+                            Cetirizine 10mg
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Form Actions -->
+                <div class="flex justify-end space-x-4">
+                    <a href="{{ url_for('medical_records.index') }}"
+                        class="inline-flex items-center px-6 py-3 bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-300 font-medium rounded-lg hover:bg-gray-400 dark:hover:bg-gray-500 transition-colors duration-200">
+                        <i class="bi bi-x-circle mr-2"></i>
+                        Cancel
+                    </a>
+
+                    <button type="submit"
+                        class="inline-flex items-center px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors duration-200">
+                        <i class="bi bi-prescription2 mr-2"></i>
+                        Create Prescription
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
-
-    <form method="POST" class="space-y-8 opacity-0 animate-fade-in-left" style="animation-delay: 0.2s;">
-        <!-- Patient Selection -->
-        {% if not patient %}
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
-            <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4">Select Patient</h2>
-            <div>
-                <label for="patient_id" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Patient
-                    <span class="text-red-500">*</span></label>
-                <select name="patient_id" id="patient_id" required
-                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
-                    <option value="">Select a patient...</option>
-                    {% for p in patients %}
-                    <option value="{{ p.id }}">{{ p.display_name }} ({{ p.email }})</option>
-                    {% endfor %}
-                </select>
-            </div>
-        </div>
-        {% else %}
-        <input type="hidden" name="patient_id" value="{{ patient.id }}">
-        {% if consultation %}
-        <input type="hidden" name="consultation_id" value="{{ consultation.id }}">
-        {% endif %}
-        {% endif %}
-
-        <!-- Medication Information -->
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
-            <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4">Medication Details</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                    <label for="medication_name"
-                        class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Brand/Trade Name <span class="text-red-500">*</span>
-                    </label>
-                    <input type="text" name="medication_name" id="medication_name" required
-                        placeholder="e.g., Amoxicillin, Paracetamol"
-                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400">
-                </div>
-
-                <div>
-                    <label for="generic_name"
-                        class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Generic Name</label>
-                    <input type="text" name="generic_name" id="generic_name" placeholder="Generic equivalent"
-                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400">
-                </div>
-            </div>
-        </div>
-
-        <!-- Dosage and Instructions -->
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
-            <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4">Dosage & Administration</h2>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div>
-                    <label for="dosage" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Dosage <span class="text-red-500">*</span>
-                    </label>
-                    <input type="text" name="dosage" id="dosage" required placeholder="e.g., 500mg, 10ml"
-                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400">
-                </div>
-
-                <div>
-                    <label for="frequency" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Frequency <span class="text-red-500">*</span>
-                    </label>
-                    <select name="frequency" id="frequency" required
-                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
-                        <option value="">Select frequency...</option>
-                        <option value="Once daily">Once daily</option>
-                        <option value="Twice daily">Twice daily</option>
-                        <option value="Three times daily">Three times daily</option>
-                        <option value="Four times daily">Four times daily</option>
-                        <option value="Every 4 hours">Every 4 hours</option>
-                        <option value="Every 6 hours">Every 6 hours</option>
-                        <option value="Every 8 hours">Every 8 hours</option>
-                        <option value="Every 12 hours">Every 12 hours</option>
-                        <option value="As needed">As needed</option>
-                        <option value="Before meals">Before meals</option>
-                        <option value="After meals">After meals</option>
-                        <option value="At bedtime">At bedtime</option>
-                    </select>
-                </div>
-
-                <div>
-                    <label for="duration" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Duration <span class="text-red-500">*</span>
-                    </label>
-                    <input type="text" name="duration" id="duration" required placeholder="e.g., 7 days, 2 weeks"
-                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400">
-                </div>
-            </div>
-
-            <div class="mt-6">
-                <label for="quantity" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Quantity
-                    to Dispense</label>
-                <input type="text" name="quantity" id="quantity" placeholder="e.g., 30 tablets, 100ml bottle"
-                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400">
-            </div>
-        </div>
-
-        <!-- Clinical Information -->
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
-            <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4">Clinical Information</h2>
-            <div class="space-y-6">
-                <div>
-                    <label for="indication"
-                        class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Indication (Reason for
-                        Prescription)</label>
-                    <input type="text" name="indication" id="indication"
-                        placeholder="e.g., Bacterial infection, Pain relief"
-                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400">
-                </div>
-
-                <div>
-                    <label for="instructions"
-                        class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Patient
-                        Instructions</label>
-                    <textarea name="instructions" id="instructions" rows="4"
-                        placeholder="Detailed instructions for the patient on how to take the medication..."
-                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"></textarea>
-                </div>
-
-                <div>
-                    <label for="warnings"
-                        class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Warnings &
-                        Precautions</label>
-                    <textarea name="warnings" id="warnings" rows="3"
-                        placeholder="Important warnings, side effects, or precautions for the patient..."
-                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"></textarea>
-                </div>
-            </div>
-        </div>
-
-        <!-- Prescription Dates -->
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
-            <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4">Prescription Dates</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                    <label for="start_date"
-                        class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Start Date</label>
-                    <input type="date" name="start_date" id="start_date" value="{{ date.today() }}"
-                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
-                </div>
-
-                <div>
-                    <label for="end_date" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">End
-                        Date (Optional)</label>
-                    <input type="date" name="end_date" id="end_date"
-                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
-                </div>
-            </div>
-        </div>
-
-        <!-- Common Medications Quick Select -->
-        <div class="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-6 border border-blue-200 dark:border-blue-800">
-            <h3 class="text-lg font-semibold text-blue-900 dark:text-blue-100 mb-4">
-                <i class="bi bi-lightning mr-2"></i>Quick Select Common Medications
-            </h3>
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-                <button type="button"
-                    class="quick-med-btn px-3 py-2 text-sm bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors duration-200"
-                    data-med="Paracetamol" data-dosage="500mg" data-frequency="Three times daily">
-                    Paracetamol 500mg
-                </button>
-                <button type="button"
-                    class="quick-med-btn px-3 py-2 text-sm bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors duration-200"
-                    data-med="Amoxicillin" data-dosage="250mg" data-frequency="Three times daily">
-                    Amoxicillin 250mg
-                </button>
-                <button type="button"
-                    class="quick-med-btn px-3 py-2 text-sm bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors duration-200"
-                    data-med="Ibuprofen" data-dosage="400mg" data-frequency="Three times daily">
-                    Ibuprofen 400mg
-                </button>
-                <button type="button"
-                    class="quick-med-btn px-3 py-2 text-sm bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors duration-200"
-                    data-med="Cetirizine" data-dosage="10mg" data-frequency="Once daily">
-                    Cetirizine 10mg
-                </button>
-            </div>
-        </div>
-
-        <!-- Form Actions -->
-        <div class="flex justify-end space-x-4">
-            <a href="{{ url_for('medical_records.index') }}"
-                class="inline-flex items-center px-6 py-3 bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-300 font-medium rounded-lg hover:bg-gray-400 dark:hover:bg-gray-500 transition-colors duration-200">
-                <i class="bi bi-x-circle mr-2"></i>
-                Cancel
-            </a>
-
-            <button type="submit"
-                class="inline-flex items-center px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors duration-200">
-                <i class="bi bi-prescription2 mr-2"></i>
-                Create Prescription
-            </button>
-        </div>
-    </form>
 </div>
 
 <script>
@@ -274,4 +292,8 @@
         startDateInput.addEventListener('change', calculateEndDate);
     });
 </script>
+{% endblock %}
+
+{% block include_footer %}
+<!-- Footer excluded for full-screen medical dashboard interface -->
 {% endblock %}
