@@ -52,6 +52,7 @@
                 </div>
                 {% endif %}
 
+                <!-- TODO: Remove this healthcare management group due to centralized medical dashboard -->
                 <!-- Healthcare Management Group -->
                 {% if current_user.is_authenticated and current_user.role in ['doctor', 'staff'] %}
                 <div class="relative group">
@@ -84,6 +85,7 @@
                     </div>
                 </div>
 
+                <!-- TODO: Remove this Medical Records & Reports Groupgroup due to centralized medical dashboard -->
                 <!-- Medical Records & Reports Group -->
                 <div class="relative group">
                     <button
@@ -108,6 +110,7 @@
                     </div>
                 </div>
 
+                <!-- TODO: Move this to the right of company group and utilize an icon instead -->
                 <!-- Messages (standalone) -->
                 <a href="{{ url_for('messages.inbox') }}"
                     class="relative text-gray-600 dark:text-gray-300 hover:text-cyan-600 dark:hover:text-cyan-400 transition-all duration-300 font-medium px-3 py-2 rounded-lg flex items-center">
