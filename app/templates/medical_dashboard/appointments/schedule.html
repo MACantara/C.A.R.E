@@ -264,48 +264,48 @@ document.getElementById('dateFilter').addEventListener('change', function() {
 
 function startAppointment(appointmentId) {
     if (confirm('Start this appointment?')) {
-        fetch(`/appointments/api/update-status/${appointmentId}`, {
+        // Create form data
+        const formData = new FormData();
+        formData.append('status', 'in_progress');
+        
+        fetch(`/appointments/${appointmentId}/update-status`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ status: 'in_progress' })
+            body: formData
         })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
+        .then(response => {
+            if (response.ok) {
                 location.reload();
             } else {
-                alert('Error starting appointment');
+                throw new Error('HTTP error! status: ' + response.status);
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            alert('Error starting appointment');
+            alert('Error starting appointment. Please try again.');
         });
     }
 }
 
 function completeAppointment(appointmentId) {
     if (confirm('Mark this appointment as completed?')) {
-        fetch(`/appointments/api/update-status/${appointmentId}`, {
+        // Create form data
+        const formData = new FormData();
+        formData.append('status', 'completed');
+        
+        fetch(`/appointments/${appointmentId}/update-status`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ status: 'completed' })
+            body: formData
         })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
+        .then(response => {
+            if (response.ok) {
                 location.reload();
             } else {
-                alert('Error completing appointment');
+                throw new Error('HTTP error! status: ' + response.status);
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            alert('Error completing appointment');
+            alert('Error completing appointment. Please try again.');
         });
     }
 }
