@@ -220,6 +220,9 @@ def doctor_schedule():
         flash("Access denied.", "error")
         return redirect(url_for("appointments.index"))
 
+    # Import here to avoid circular import
+    from app.routes.medical_dashboard import get_sidebar_stats
+
     # Get date from query params or default to today
     date_str = request.args.get("date")
     current_time = get_current_time()
@@ -271,6 +274,9 @@ def doctor_schedule():
         else []
     )
 
+    # Get sidebar stats for medical dashboard template
+    stats = get_sidebar_stats()
+
     return render_template(
         "medical_dashboard/appointments/schedule.html",
         appointments=appointments,
@@ -280,6 +286,7 @@ def doctor_schedule():
         user_timezone=get_user_timezone().zone,
         current_time_local=current_time,
         localize_datetime=localize_datetime,
+        stats=stats,
     )
 
 
