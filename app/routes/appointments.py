@@ -512,7 +512,7 @@ def update_appointment_status(appointment_id):
             db.session.commit()
             flash("Appointment started successfully.", "success")
             # Redirect to consultation form when starting an appointment
-            return redirect(url_for('medical_records.new_consultation', appointment_id=appointment.id))
+            return redirect(url_for('consultations.new_consultation', appointment_id=appointment.id))
         elif new_status == AppointmentStatus.COMPLETED.value:
             appointment.complete()
         elif new_status == AppointmentStatus.NO_SHOW.value:
