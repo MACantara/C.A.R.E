@@ -247,7 +247,13 @@
         </div>
     </div>
 </div>
+{% endblock %}
 
+{% block include_footer %}
+<!-- Footer excluded for full-screen medical dashboard interface -->
+{% endblock %}
+
+{% block extra_js %}
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         // Sample prescription data generator
@@ -404,8 +410,4 @@
         startDateInput.addEventListener('change', calculateEndDate);
     });
 </script>
-{% endblock %}
-
-{% block include_footer %}
-<!-- Footer excluded for full-screen medical dashboard interface -->
 {% endblock %}
