@@ -322,36 +322,57 @@ def doctor_schedule():
         else []
     )
 
-    # Separate today's appointments for the main display
+    # Organize appointments based on filter
     today = current_time.date()
-    todays_appointments = [apt for apt in appointments if apt.appointment_date.date() == today]
     
-    # Get upcoming appointments (next 5 after today)
-    upcoming_appointments = [
-        apt for apt in appointments 
-        if apt.appointment_date.date() > today and apt.status in [AppointmentStatus.SCHEDULED, AppointmentStatus.CONFIRMED]
-    ][:5]
+    if filter_type == "today":
+        # For today filter, show today's appointments in main section
+        filtered_appointments = [apt for apt in appointments if apt.appointment_date.date() == today]
+        # Show upcoming appointments (next 5 after today) in separate section
+        upcoming_appointments = [
+            apt for apt in appointments 
+            if apt.appointment_date.date() > today and apt.status in [AppointmentStatus.SCHEDULED, AppointmentStatus.CONFIRMED]
+        ][:5]
+    else:
+        # For other filters, show all filtered appointments in main section
+        filtered_appointments = appointments
+        # Don't show separate upcoming section for filtered views
+        upcoming_appointments = []
+    
+    # Calculate stats for cards
+    todays_appointments_count = len([apt for apt in appointments if apt.appointment_date.date() == today])
+    completed_today_count = len([apt for apt in appointments if apt.appointment_date.date() == today and apt.status == AppointmentStatus.COMPLETED])
+    
+    # For upcoming count, only count if showing today
+    if filter_type == "today":
+        upcoming_count = len([apt for apt in appointments if apt.appointment_date.date() > today and apt.status in [AppointmentStatus.SCHEDULED, AppointmentStatus.CONFIRMED]])
+    else:
+        upcoming_count = 0
     
     # Get weekly appointments for stats
     week_start = today
     week_end = today + timedelta(days=7)
-    weekly_appointments = [
+    weekly_appointments_count = len([
         apt for apt in appointments
         if week_start <= apt.appointment_date.date() <= week_end
-    ]
+    ])
 
     # Get sidebar stats for medical dashboard template
     stats = get_sidebar_stats()
 
     return render_template(
         "medical_dashboard/appointments/schedule.html",
-        todays_appointments=todays_appointments,
-        upcoming_appointments=upcoming_appointments,
-        weekly_appointments=weekly_appointments,
+        filtered_appointments=filtered_appointments,  # Main appointments to display
+        upcoming_appointments=upcoming_appointments,  # Only shown for "today" filter
+        todays_appointments_count=todays_appointments_count,
+        completed_today_count=completed_today_count,
+        upcoming_count=upcoming_count,
+        weekly_appointments_count=weekly_appointments_count,
+        filter_type=filter_type,
         doctor=doctor,
         doctors=all_doctors,
-        user_timezone=user_tz.zone,  # Pass the string name for display
-        user_tz=user_tz,  # Pass the timezone object for localize_datetime
+        user_timezone=user_tz.zone,
+        user_tz=user_tz,
         current_time_local=current_time,
         localize_datetime=localize_datetime,
         stats=stats,

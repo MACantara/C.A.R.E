@@ -59,7 +59,7 @@
                         </div>
                         <div>
                             <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Today's Appointments</p>
-                            <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ todays_appointments|length }}</p>
+                            <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ todays_appointments_count }}</p>
                         </div>
                     </div>
                 </div>
@@ -70,8 +70,8 @@
                             <i class="bi bi-check-circle text-green-600 dark:text-green-400 text-xl"></i>
                         </div>
                         <div>
-                            <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Completed</p>
-                            <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ todays_appointments|selectattr('status.value', 'equalto', 'completed')|list|length }}</p>
+                            <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Completed Today</p>
+                            <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ completed_today_count }}</p>
                         </div>
                     </div>
                 </div>
@@ -82,8 +82,12 @@
                             <i class="bi bi-clock text-yellow-600 dark:text-yellow-400 text-xl"></i>
                         </div>
                         <div>
-                            <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Upcoming</p>
-                            <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ upcoming_appointments|length }}</p>
+                            <p class="text-sm font-medium text-gray-600 dark:text-gray-400">
+                                {% if filter_type == 'today' %}Upcoming{% else %}Filtered{% endif %}
+                            </p>
+                            <p class="text-2xl font-bold text-gray-900 dark:text-white">
+                                {% if filter_type == 'today' %}{{ upcoming_count }}{% else %}{{ filtered_appointments|length }}{% endif %}
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -95,34 +99,34 @@
                         </div>
                         <div>
                             <p class="text-sm font-medium text-gray-600 dark:text-gray-400">This Week</p>
-                            <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ weekly_appointments|length }}</p>
+                            <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ weekly_appointments_count }}</p>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Today's Schedule -->
+            <!-- Main Schedule Section -->
             <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden mb-8 opacity-0 animate-fade-in-up"
                 style="animation-delay: 0.4s;">
                 <div class="px-6 py-4 bg-indigo-50 dark:bg-indigo-900/20 border-b border-indigo-200 dark:border-indigo-800">
                     <h3 class="text-lg font-semibold text-indigo-800 dark:text-indigo-200">
-                        {% if request.args.get('filter') == 'today' or not request.args.get('filter') %}
+                        {% if filter_type == 'today' %}
                         Today's Schedule
-                        {% elif request.args.get('filter') == 'tomorrow' %}
+                        {% elif filter_type == 'tomorrow' %}
                         Tomorrow's Schedule
-                        {% elif request.args.get('filter') == 'week' %}
+                        {% elif filter_type == 'week' %}
                         This Week's Schedule
-                        {% elif request.args.get('filter') == 'month' %}
+                        {% elif filter_type == 'month' %}
                         This Month's Schedule
                         {% else %}
-                        Schedule
+                        All Appointments
                         {% endif %}
                     </h3>
                 </div>
 
                 <div class="divide-y divide-gray-200 dark:divide-gray-700">
-                    {% if todays_appointments %}
-                    {% for appointment in todays_appointments %}
+                    {% if filtered_appointments %}
+                    {% for appointment in filtered_appointments %}
                     <div class="p-6 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200">
                         <div class="flex items-center justify-between">
                             <div class="flex items-center space-x-4">
@@ -132,6 +136,9 @@
                                 <div>
                                     <h4 class="text-lg font-semibold text-gray-900 dark:text-white">{{ appointment.patient.display_name }}</h4>
                                     <p class="text-sm text-gray-600 dark:text-gray-400">
+                                        {% if filter_type != 'today' %}
+                                        <span class="font-medium">{{ localize_datetime(appointment.appointment_date, user_tz).strftime('%B %d') }} • </span>
+                                        {% endif %}
                                         {{ appointment.appointment_type.value.replace('_', ' ').title() }}
                                         {% if appointment.chief_complaint %}
                                         • {{ appointment.chief_complaint[:50] }}{% if appointment.chief_complaint|length > 50 %}...{% endif %}
@@ -185,13 +192,13 @@
                         <i class="bi bi-calendar-x text-gray-400 dark:text-gray-500 text-4xl mb-4"></i>
                         <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">No Appointments</h3>
                         <p class="text-gray-600 dark:text-gray-400">
-                            {% if request.args.get('filter') == 'today' or not request.args.get('filter') %}
+                            {% if filter_type == 'today' %}
                             You have no appointments scheduled for today.
-                            {% elif request.args.get('filter') == 'tomorrow' %}
+                            {% elif filter_type == 'tomorrow' %}
                             You have no appointments scheduled for tomorrow.
-                            {% elif request.args.get('filter') == 'week' %}
+                            {% elif filter_type == 'week' %}
                             You have no appointments scheduled for this week.
-                            {% elif request.args.get('filter') == 'month' %}
+                            {% elif filter_type == 'month' %}
                             You have no appointments scheduled for this month.
                             {% else %}
                             No appointments found for the selected period.
@@ -202,8 +209,8 @@
                 </div>
             </div>
 
-            <!-- Upcoming Appointments -->
-            {% if upcoming_appointments %}
+            <!-- Upcoming Appointments (only shown for today filter) -->
+            {% if upcoming_appointments and filter_type == 'today' %}
             <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden opacity-0 animate-fade-in-up"
                 style="animation-delay: 0.6s;">
                 <div class="px-6 py-4 bg-purple-50 dark:bg-purple-900/20 border-b border-purple-200 dark:border-purple-800">
@@ -211,7 +218,7 @@
                 </div>
 
                 <div class="divide-y divide-gray-200 dark:divide-gray-700">
-                    {% for appointment in upcoming_appointments[:5] %}
+                    {% for appointment in upcoming_appointments %}
                     <div class="p-4 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200">
                         <div class="flex items-center justify-between">
                             <div class="flex items-center space-x-3">
