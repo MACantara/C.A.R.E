@@ -10,7 +10,7 @@ from flask import (
 )
 from flask_login import login_required, current_user
 from datetime import datetime, date
-from app import db
+from app import db, get_user_timezone, localize_datetime, get_current_time
 from app.models.medical_record import (
     MedicalRecord,
     Consultation,
@@ -23,6 +23,7 @@ from app.models.medical_record import (
 )
 from app.models.user import User
 from app.models.appointment import Appointment
+from app.routes.medical_dashboard import get_sidebar_stats
 from sqlalchemy import or_, and_, desc, func
 from functools import wraps
 
@@ -74,6 +75,13 @@ def doctor_required(f):
 @healthcare_professional_required
 def index():
     """Medical records dashboard."""
+    # Get user's timezone for displaying timestamps
+    user_timezone = get_user_timezone()
+    current_time_local = get_current_time(user_timezone)
+
+    # Get sidebar statistics using the shared function
+    stats = get_sidebar_stats()
+
     # Get recent records
     recent_records = (
         MedicalRecord.query.order_by(desc(MedicalRecord.created_at)).limit(10).all()
@@ -105,6 +113,8 @@ def index():
         recent_records=recent_records,
         recent_consultations=recent_consultations,
         stats=stats,
+        user_timezone=user_timezone,
+        current_time_local=current_time_local,
     )
 
 
@@ -112,6 +122,13 @@ def index():
 @healthcare_professional_required
 def patients():
     """List all patients with search functionality."""
+    # Get user's timezone
+    user_timezone = get_user_timezone()
+    current_time_local = get_current_time(user_timezone)
+
+    # Get sidebar statistics
+    stats = get_sidebar_stats()
+
     page = request.args.get("page", 1, type=int)
     search = request.args.get("search", "").strip()
 
@@ -133,7 +150,12 @@ def patients():
     )
 
     return render_template(
-        "medical_dashboard/medical_records/patients.html", patients=patients_pagination, search=search
+        "medical_dashboard/medical_records/patients.html",
+        patients=patients_pagination,
+        search=search,
+        user_timezone=user_timezone,
+        current_time_local=current_time_local,
+        stats=stats,
     )
 
 
@@ -141,6 +163,13 @@ def patients():
 @healthcare_professional_required
 def patient_records(patient_id):
     """View all records for a specific patient."""
+    # Get user's timezone
+    user_timezone = get_user_timezone()
+    current_time_local = get_current_time(user_timezone)
+
+    # Get sidebar statistics
+    stats = get_sidebar_stats()
+
     patient = User.query.filter_by(id=patient_id, role="patient").first_or_404()
 
     # Get all medical records
@@ -183,6 +212,9 @@ def patient_records(patient_id):
         prescriptions=prescriptions,
         allergies=allergies,
         vital_signs=vital_signs,
+        user_timezone=user_timezone,
+        current_time_local=current_time_local,
+        stats=stats,
     )
 
 
@@ -190,6 +222,13 @@ def patient_records(patient_id):
 @doctor_required
 def new_consultation():
     """Create new consultation form."""
+    # Get user's timezone
+    user_timezone = get_user_timezone()
+    current_time_local = get_current_time(user_timezone)
+
+    # Get sidebar statistics
+    stats = get_sidebar_stats()
+
     patient_id = request.args.get("patient_id")
     appointment_id = request.args.get("appointment_id")
 
@@ -216,6 +255,9 @@ def new_consultation():
         patient=patient,
         appointment=appointment,
         patients=patients,
+        user_timezone=user_timezone,
+        current_time_local=current_time_local,
+        stats=stats,
     )
 
 
@@ -353,6 +395,13 @@ def create_consultation():
 @doctor_required
 def new_prescription():
     """Create new prescription form."""
+    # Get user's timezone
+    user_timezone = get_user_timezone()
+    current_time_local = get_current_time(user_timezone)
+
+    # Get sidebar statistics
+    stats = get_sidebar_stats()
+
     patient_id = request.args.get("patient_id")
     consultation_id = request.args.get("consultation_id")
 
@@ -367,7 +416,7 @@ def new_prescription():
         if consultation:
             patient = consultation.patient
 
-    # Get all patients for selection
+    # Get all patients for selection if no specific patient
     patients = (
         User.query.filter_by(role="patient", active=True)
         .order_by(User.last_name, User.first_name)
@@ -379,6 +428,9 @@ def new_prescription():
         patient=patient,
         consultation=consultation,
         patients=patients,
+        user_timezone=user_timezone,
+        current_time_local=current_time_local,
+        stats=stats,
     )
 
 
@@ -449,6 +501,13 @@ def create_prescription():
 @healthcare_professional_required
 def search_records():
     """Search medical records."""
+    # Get user's timezone
+    user_timezone = get_user_timezone()
+    current_time_local = get_current_time(user_timezone)
+
+    # Get sidebar statistics
+    stats = get_sidebar_stats()
+
     query = request.args.get("q", "").strip()
     record_type = request.args.get("type", "")
     patient_name = request.args.get("patient", "").strip()
@@ -519,6 +578,9 @@ def search_records():
         patient_name=patient_name,
         date_from=date_from,
         date_to=date_to,
+        user_timezone=user_timezone,
+        current_time_local=current_time_local,
+        stats=stats,
     )
 
 
