@@ -250,7 +250,7 @@
                 <!-- Quick actions -->
                 <div class="flex flex-col space-y-1">
                     <a href="{{ url_for('main.home') }}"
-                        class="p-1 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-200"
+                        class="flex justify-center p-1 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-200"
                         title="Home">
                         <i class="bi bi-house text-sm"></i>
                     </a>
@@ -260,7 +260,7 @@
                     {% set size = 'sm' %}
                     {% set position = 'top-right' %}
                     {% set show_chevron = false %}
-                    {% set button_classes = 'text-gray-400 hover:text-purple-600 dark:hover:text-purple-400' %}
+                    {% set button_classes = 'text-gray-400 hover:text-purple-600 dark:hover:text-purple-400 flex justify-center' %}
                     {% include 'partials/theme-dropdown.html' %}
                 </div>
                 
