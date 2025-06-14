@@ -225,17 +225,27 @@ def doctor_schedule():
         flash("Access denied.", "error")
         return redirect(url_for("appointments.index"))
 
-    # Get date from query params or default to today
-    date_str = request.args.get("date")
+    # Get filter from query params
+    filter_type = request.args.get("filter", "today")
     current_time = get_current_time()
-
-    if date_str:
-        try:
-            view_date = datetime.strptime(date_str, "%Y-%m-%d").date()
-        except ValueError:
-            view_date = current_time.date()
-    else:
-        view_date = current_time.date()
+    user_tz = get_user_timezone()  # This returns a timezone object, not a string
+    
+    # Calculate date range based on filter
+    if filter_type == "today":
+        start_date = current_time.date()
+        end_date = start_date
+    elif filter_type == "tomorrow":
+        start_date = current_time.date() + timedelta(days=1)
+        end_date = start_date
+    elif filter_type == "week":
+        start_date = current_time.date()
+        end_date = start_date + timedelta(days=7)
+    elif filter_type == "month":
+        start_date = current_time.date()
+        end_date = start_date + timedelta(days=30)
+    else:  # "all"
+        start_date = None
+        end_date = None
 
     # For staff, they might view other doctors' schedules
     doctor_id = request.args.get("doctor_id")
@@ -249,24 +259,60 @@ def doctor_schedule():
 
     if not doctor:
         # Staff viewing general schedule
-        appointments = (
-            Appointment.query.filter(
-                db.func.date(Appointment.appointment_date) == view_date
+        if start_date and end_date:
+            if start_date == end_date:
+                appointments = (
+                    Appointment.query.filter(
+                        db.func.date(Appointment.appointment_date) == start_date
+                    )
+                    .order_by(Appointment.appointment_date)
+                    .all()
+                )
+            else:
+                appointments = (
+                    Appointment.query.filter(
+                        Appointment.appointment_date >= datetime.combine(start_date, datetime.min.time()),
+                        Appointment.appointment_date <= datetime.combine(end_date, datetime.max.time())
+                    )
+                    .order_by(Appointment.appointment_date)
+                    .all()
+                )
+        else:
+            appointments = (
+                Appointment.query.order_by(Appointment.appointment_date.desc())
+                .limit(50)
+                .all()
             )
-            .order_by(Appointment.appointment_date)
-            .all()
-        )
         doctors = User.query.filter_by(role="doctor", active=True).all()
     else:
         # Specific doctor's schedule
-        appointments = (
-            Appointment.query.filter(
-                Appointment.doctor_id == doctor.id,
-                db.func.date(Appointment.appointment_date) == view_date,
+        if start_date and end_date:
+            if start_date == end_date:
+                appointments = (
+                    Appointment.query.filter(
+                        Appointment.doctor_id == doctor.id,
+                        db.func.date(Appointment.appointment_date) == start_date,
+                    )
+                    .order_by(Appointment.appointment_date)
+                    .all()
+                )
+            else:
+                appointments = (
+                    Appointment.query.filter(
+                        Appointment.doctor_id == doctor.id,
+                        Appointment.appointment_date >= datetime.combine(start_date, datetime.min.time()),
+                        Appointment.appointment_date <= datetime.combine(end_date, datetime.max.time())
+                    )
+                    .order_by(Appointment.appointment_date)
+                    .all()
+                )
+        else:
+            appointments = (
+                Appointment.query.filter(Appointment.doctor_id == doctor.id)
+                .order_by(Appointment.appointment_date.desc())
+                .limit(50)
+                .all()
             )
-            .order_by(Appointment.appointment_date)
-            .all()
-        )
         doctors = [doctor]
 
     # Get all doctors for staff dropdown
@@ -276,16 +322,36 @@ def doctor_schedule():
         else []
     )
 
+    # Separate today's appointments for the main display
+    today = current_time.date()
+    todays_appointments = [apt for apt in appointments if apt.appointment_date.date() == today]
+    
+    # Get upcoming appointments (next 5 after today)
+    upcoming_appointments = [
+        apt for apt in appointments 
+        if apt.appointment_date.date() > today and apt.status in [AppointmentStatus.SCHEDULED, AppointmentStatus.CONFIRMED]
+    ][:5]
+    
+    # Get weekly appointments for stats
+    week_start = today
+    week_end = today + timedelta(days=7)
+    weekly_appointments = [
+        apt for apt in appointments
+        if week_start <= apt.appointment_date.date() <= week_end
+    ]
+
     # Get sidebar stats for medical dashboard template
     stats = get_sidebar_stats()
 
     return render_template(
         "medical_dashboard/appointments/schedule.html",
-        appointments=appointments,
-        view_date=view_date,
+        todays_appointments=todays_appointments,
+        upcoming_appointments=upcoming_appointments,
+        weekly_appointments=weekly_appointments,
         doctor=doctor,
         doctors=all_doctors,
-        user_timezone=get_user_timezone().zone,
+        user_timezone=user_tz.zone,  # Pass the string name for display
+        user_tz=user_tz,  # Pass the timezone object for localize_datetime
         current_time_local=current_time,
         localize_datetime=localize_datetime,
         stats=stats,
