@@ -279,18 +279,27 @@
                 </div>
 
                 <!-- Form Actions -->
-                <div class="flex justify-end space-x-4">
-                    <button type="submit" name="complete_consultation" value="true"
-                        class="inline-flex items-center px-6 py-3 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition-colors duration-200">
-                        <i class="bi bi-check-circle mr-2"></i>
-                        Complete & Save
+                <div class="flex justify-between items-center">
+                    <!-- Sample Data Button for Testing -->
+                    <button type="button" id="generateSampleData"
+                        class="inline-flex items-center px-4 py-2 bg-yellow-500 text-white font-medium rounded-lg hover:bg-yellow-600 transition-colors duration-200">
+                        <i class="bi bi-lightning mr-2"></i>
+                        Generate Sample Data
                     </button>
+                    
+                    <div class="flex space-x-4">
+                        <button type="submit" name="complete_consultation" value="true"
+                            class="inline-flex items-center px-6 py-3 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition-colors duration-200">
+                            <i class="bi bi-check-circle mr-2"></i>
+                            Complete & Save
+                        </button>
 
-                    <button type="submit"
-                        class="inline-flex items-center px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors duration-200">
-                        <i class="bi bi-save mr-2"></i>
-                        Save as Draft
-                    </button>
+                        <button type="submit"
+                            class="inline-flex items-center px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors duration-200">
+                            <i class="bi bi-save mr-2"></i>
+                            Save as Draft
+                        </button>
+                    </div>
                 </div>
             </form>
         </div>
@@ -301,3 +310,115 @@
 {% block include_footer %}
 <!-- Footer excluded for full-screen medical dashboard interface -->
 {% endblock %}
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Sample data generator for testing
+    const generateSampleDataBtn = document.getElementById('generateSampleData');
+    
+    if (generateSampleDataBtn) {
+        generateSampleDataBtn.addEventListener('click', function() {
+            if (confirm('This will fill the form with sample data for testing. Continue?')) {
+                generateSampleConsultationData();
+            }
+        });
+    }
+    
+    function generateSampleConsultationData() {
+        const sampleData = [
+            {
+                // Sample 1: Common cold
+                chief_complaint: "Patient complains of runny nose, sneezing, and mild headache for the past 3 days.",
+                history_present_illness: "Patient developed rhinorrhea and sneezing 3 days ago. No fever, but reports mild frontal headache. Symptoms worse in the morning. No cough or sore throat.",
+                past_medical_history: "No significant past medical history. Up to date with vaccinations.",
+                family_history: "Father has hypertension. Mother has diabetes type 2.",
+                social_history: "Non-smoker, occasional alcohol use on weekends. Works as a teacher.",
+                general_appearance: "Patient appears well, alert and oriented. No acute distress noted.",
+                physical_examination: "HEENT: Nasal congestion with clear discharge. Throat non-erythematous. Chest: Clear to auscultation bilaterally. Heart: Regular rate and rhythm.",
+                assessment: "Upper respiratory tract infection (common cold). Viral etiology most likely.",
+                differential_diagnosis: "Allergic rhinitis, early bacterial sinusitis, influenza.",
+                treatment_plan: "Symptomatic treatment with rest, fluids, and over-the-counter decongestants. Saline nasal rinses recommended.",
+                follow_up_instructions: "Return if symptoms worsen or persist beyond 10 days. Seek immediate care if fever develops.",
+                temperature: "36.8",
+                blood_pressure_systolic: "118",
+                blood_pressure_diastolic: "76",
+                heart_rate: "72",
+                respiratory_rate: "16",
+                weight: "68.5",
+                height: "165.0",
+                oxygen_saturation: "98.5",
+                pain_scale: "2"
+            },
+            {
+                // Sample 2: Hypertension follow-up
+                chief_complaint: "Follow-up visit for hypertension management. Patient reports good adherence to medications.",
+                history_present_illness: "Patient diagnosed with hypertension 6 months ago. Currently on lisinopril 10mg daily. Reports good medication compliance. No side effects noted.",
+                past_medical_history: "Hypertension diagnosed 6 months ago. No other significant medical conditions.",
+                family_history: "Strong family history of cardiovascular disease. Father had MI at age 55.",
+                social_history: "Former smoker, quit 1 year ago. Drinks 2-3 glasses of wine per week. Regular exercise 3x/week.",
+                general_appearance: "Well-appearing middle-aged adult in no acute distress.",
+                physical_examination: "CV: Regular rate and rhythm, no murmurs. Lungs: Clear bilaterally. Extremities: No edema.",
+                assessment: "Hypertension, well-controlled on current medication regimen.",
+                differential_diagnosis: "Secondary hypertension, medication non-compliance, white coat hypertension.",
+                treatment_plan: "Continue current lisinopril 10mg daily. Maintain low-sodium diet and regular exercise.",
+                follow_up_instructions: "Return in 3 months for BP check and medication review. Home BP monitoring recommended.",
+                temperature: "36.5",
+                blood_pressure_systolic: "128",
+                blood_pressure_diastolic: "82",
+                heart_rate: "68",
+                respiratory_rate: "14",
+                weight: "75.2",
+                height: "172.0",
+                oxygen_saturation: "99.0",
+                pain_scale: "0"
+            },
+            {
+                // Sample 3: Acute gastroenteritis
+                chief_complaint: "Patient presents with nausea, vomiting, and diarrhea for 2 days.",
+                history_present_illness: "Sudden onset of nausea and vomiting 2 days ago, followed by watery diarrhea. 4-5 episodes of vomiting yesterday, 6-7 loose stools today. Mild abdominal cramping.",
+                past_medical_history: "Generally healthy. No chronic medical conditions.",
+                family_history: "Non-contributory.",
+                social_history: "Recently ate at a new restaurant 3 days ago. Lives with family, no one else ill.",
+                general_appearance: "Appears mildly dehydrated but alert and cooperative.",
+                physical_examination: "Abdomen: Soft, mild tenderness in epigastrium and periumbilical area. Bowel sounds hyperactive. No rebound or guarding.",
+                assessment: "Acute gastroenteritis, likely viral or food-borne illness.",
+                differential_diagnosis: "Bacterial gastroenteritis, food poisoning, inflammatory bowel disease.",
+                treatment_plan: "Supportive care with oral rehydration. BRAT diet when tolerated. Probiotics recommended.",
+                follow_up_instructions: "Return if symptoms persist >7 days, signs of dehydration, or bloody stools develop.",
+                temperature: "37.2",
+                blood_pressure_systolic: "110",
+                blood_pressure_diastolic: "70",
+                heart_rate: "88",
+                respiratory_rate: "18",
+                weight: "62.0",
+                height: "158.0",
+                oxygen_saturation: "98.0",
+                pain_scale: "4"
+            }
+        ];
+        
+        // Randomly select one of the sample datasets
+        const randomSample = sampleData[Math.floor(Math.random() * sampleData.length)];
+        
+        // Fill form fields
+        Object.keys(randomSample).forEach(key => {
+            const field = document.getElementById(key) || document.querySelector(`[name="${key}"]`);
+            if (field) {
+                field.value = randomSample[key];
+                // Trigger change event to update any dependent fields
+                field.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+        });
+        
+        // Show success message
+        const message = document.createElement('div');
+        message.className = 'fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg z-50';
+        message.textContent = 'Sample data generated successfully!';
+        document.body.appendChild(message);
+        
+        setTimeout(() => {
+            message.remove();
+        }, 3000);
+    }
+});
+</script>

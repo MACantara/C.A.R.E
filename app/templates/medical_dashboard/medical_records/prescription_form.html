@@ -221,18 +221,27 @@
                 </div>
 
                 <!-- Form Actions -->
-                <div class="flex justify-end space-x-4">
-                    <a href="{{ url_for('medical_records.index') }}"
-                        class="inline-flex items-center px-6 py-3 bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-300 font-medium rounded-lg hover:bg-gray-400 dark:hover:bg-gray-500 transition-colors duration-200">
-                        <i class="bi bi-x-circle mr-2"></i>
-                        Cancel
-                    </a>
-
-                    <button type="submit"
-                        class="inline-flex items-center px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors duration-200">
-                        <i class="bi bi-prescription2 mr-2"></i>
-                        Create Prescription
+                <div class="flex justify-between items-center">
+                    <!-- Sample Data Button for Testing -->
+                    <button type="button" id="generateSamplePrescription"
+                        class="inline-flex items-center px-4 py-2 bg-yellow-500 text-white font-medium rounded-lg hover:bg-yellow-600 transition-colors duration-200">
+                        <i class="bi bi-lightning mr-2"></i>
+                        Generate Sample Prescription
                     </button>
+                    
+                    <div class="flex space-x-4">
+                        <a href="{{ url_for('medical_records.index') }}"
+                            class="inline-flex items-center px-6 py-3 bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-300 font-medium rounded-lg hover:bg-gray-400 dark:hover:bg-gray-500 transition-colors duration-200">
+                            <i class="bi bi-x-circle mr-2"></i>
+                            Cancel
+                        </a>
+
+                        <button type="submit"
+                            class="inline-flex items-center px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors duration-200">
+                            <i class="bi bi-prescription2 mr-2"></i>
+                            Create Prescription
+                        </button>
+                    </div>
                 </div>
             </form>
         </div>
@@ -241,6 +250,109 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {
+        // Sample prescription data generator
+        const generateSampleBtn = document.getElementById('generateSamplePrescription');
+        
+        if (generateSampleBtn) {
+            generateSampleBtn.addEventListener('click', function() {
+                if (confirm('This will fill the form with sample prescription data for testing. Continue?')) {
+                    generateSamplePrescriptionData();
+                }
+            });
+        }
+        
+        function generateSamplePrescriptionData() {
+            const samplePrescriptions = [
+                {
+                    medication_name: "Amoxicillin",
+                    generic_name: "Amoxicillin trihydrate",
+                    dosage: "500mg",
+                    frequency: "Three times daily",
+                    duration: "7 days",
+                    quantity: "21 capsules",
+                    indication: "Bacterial respiratory tract infection",
+                    instructions: "Take with food to reduce stomach upset. Complete the full course even if feeling better.",
+                    warnings: "May cause diarrhea or stomach upset. Contact doctor if severe diarrhea or allergic reaction occurs."
+                },
+                {
+                    medication_name: "Lisinopril",
+                    generic_name: "Lisinopril",
+                    dosage: "10mg",
+                    frequency: "Once daily",
+                    duration: "30 days",
+                    quantity: "30 tablets",
+                    indication: "Hypertension management",
+                    instructions: "Take at the same time each day, preferably in the morning. Do not stop suddenly.",
+                    warnings: "May cause dizziness, especially when standing up. Avoid potassium supplements."
+                },
+                {
+                    medication_name: "Ibuprofen",
+                    generic_name: "Ibuprofen",
+                    dosage: "400mg",
+                    frequency: "Three times daily",
+                    duration: "5 days",
+                    quantity: "15 tablets",
+                    indication: "Pain and inflammation relief",
+                    instructions: "Take with food or milk. Do not exceed recommended dose.",
+                    warnings: "May cause stomach irritation. Avoid if allergic to NSAIDs or have stomach ulcers."
+                },
+                {
+                    medication_name: "Metformin",
+                    generic_name: "Metformin hydrochloride",
+                    dosage: "500mg",
+                    frequency: "Twice daily",
+                    duration: "30 days",
+                    quantity: "60 tablets",
+                    indication: "Type 2 diabetes management",
+                    instructions: "Take with meals to reduce gastrointestinal side effects.",
+                    warnings: "May cause nausea or diarrhea initially. Monitor blood sugar levels regularly."
+                },
+                {
+                    medication_name: "Omeprazole",
+                    generic_name: "Omeprazole",
+                    dosage: "20mg",
+                    frequency: "Once daily",
+                    duration: "14 days",
+                    quantity: "14 capsules",
+                    indication: "Gastroesophageal reflux disease (GERD)",
+                    instructions: "Take 30 minutes before breakfast on an empty stomach.",
+                    warnings: "Long-term use may affect magnesium and B12 absorption."
+                }
+            ];
+            
+            // Randomly select a sample prescription
+            const randomPrescription = samplePrescriptions[Math.floor(Math.random() * samplePrescriptions.length)];
+            
+            // Fill form fields
+            Object.keys(randomPrescription).forEach(key => {
+                const field = document.getElementById(key) || document.querySelector(`[name="${key}"]`);
+                if (field) {
+                    field.value = randomPrescription[key];
+                    field.dispatchEvent(new Event('change', { bubbles: true }));
+                }
+            });
+            
+            // Set current date as start date
+            const startDateField = document.getElementById('start_date');
+            if (startDateField) {
+                const today = new Date();
+                startDateField.value = today.toISOString().split('T')[0];
+            }
+            
+            // Calculate and set end date based on duration
+            calculateEndDate();
+            
+            // Show success message
+            const message = document.createElement('div');
+            message.className = 'fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg z-50';
+            message.textContent = 'Sample prescription data generated successfully!';
+            document.body.appendChild(message);
+            
+            setTimeout(() => {
+                message.remove();
+            }, 3000);
+        }
+
         // Quick medication selection
         const quickMedButtons = document.querySelectorAll('.quick-med-btn');
         quickMedButtons.forEach(button => {
