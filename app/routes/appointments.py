@@ -10,7 +10,7 @@ from flask import (
 )
 from flask_login import login_required, current_user
 from datetime import datetime, timedelta, date
-from app import db
+from app import db, get_current_time, localize_datetime, get_user_timezone
 from app.models.appointment import Appointment, AppointmentStatus, AppointmentType
 from app.models.user import User
 from app.utils.email_utils import (
@@ -88,8 +88,9 @@ def book_appointment_post():
             appointment_datetime_str, "%Y-%m-%d %H:%M"
         )
 
-        # Check if appointment is in the future
-        if appointment_datetime <= datetime.now():
+        # Check if appointment is in the future (using timezone-aware current time)
+        current_time = get_current_time()
+        if appointment_datetime <= current_time.replace(tzinfo=None):
             errors.append("Appointment must be scheduled for a future date and time.")
 
         # Check if appointment is within business hours (9 AM - 5 PM)
@@ -116,7 +117,12 @@ def book_appointment_post():
         for error in errors:
             flash(error, "error")
         doctors = User.query.filter_by(role="doctor", active=True).all()
-        return render_template("appointments/book.html", doctors=doctors)
+        return render_template(
+            "appointments/book.html",
+            doctors=doctors,
+            user_timezone=get_user_timezone().zone,
+            current_time_local=get_current_time(),
+        )
 
     try:
         # Create appointment
@@ -141,8 +147,10 @@ def book_appointment_post():
         except Exception as e:
             current_app.logger.error(f"Failed to send appointment confirmation: {e}")
 
+        # Localize appointment time for display
+        localized_time = localize_datetime(appointment_datetime)
         flash(
-            f"Appointment booked successfully with Dr. {doctor.display_name} on {appointment_datetime.strftime('%B %d, %Y at %I:%M %p')}.",
+            f"Appointment booked successfully with Dr. {doctor.display_name} on {localized_time.strftime('%B %d, %Y at %I:%M %p %Z')}.",
             "success",
         )
         return redirect(url_for("appointments.patient_appointments"))
@@ -152,7 +160,12 @@ def book_appointment_post():
         current_app.logger.error(f"Error booking appointment: {e}")
         flash("Error booking appointment. Please try again.", "error")
         doctors = User.query.filter_by(role="doctor", active=True).all()
-        return render_template("appointments/book.html", doctors=doctors)
+        return render_template(
+            "appointments/book.html",
+            doctors=doctors,
+            user_timezone=get_user_timezone().zone,
+            current_time_local=get_current_time(),
+        )
 
 
 @appointments_bp.route("/my-appointments")
@@ -165,6 +178,7 @@ def patient_appointments():
 
     page = request.args.get("page", 1, type=int)
     status_filter = request.args.get("status", "all")
+    current_time = get_current_time()
 
     # Build query
     query = Appointment.query.filter_by(patient_id=current_user.id)
@@ -172,13 +186,15 @@ def patient_appointments():
     if status_filter != "all":
         if status_filter == "upcoming":
             query = query.filter(
-                Appointment.appointment_date >= datetime.now(),
+                Appointment.appointment_date >= current_time.replace(tzinfo=None),
                 Appointment.status.in_(
                     [AppointmentStatus.SCHEDULED, AppointmentStatus.CONFIRMED]
                 ),
             )
         elif status_filter == "past":
-            query = query.filter(Appointment.appointment_date < datetime.now())
+            query = query.filter(
+                Appointment.appointment_date < current_time.replace(tzinfo=None)
+            )
         else:
             query = query.filter(Appointment.status == AppointmentStatus(status_filter))
 
@@ -190,6 +206,9 @@ def patient_appointments():
         "appointments/patient_list.html",
         appointments=appointments,
         status_filter=status_filter,
+        user_timezone=get_user_timezone().zone,
+        current_time_local=current_time,
+        localize_datetime=localize_datetime,
     )
 
 
@@ -203,13 +222,15 @@ def doctor_schedule():
 
     # Get date from query params or default to today
     date_str = request.args.get("date")
+    current_time = get_current_time()
+
     if date_str:
         try:
             view_date = datetime.strptime(date_str, "%Y-%m-%d").date()
         except ValueError:
-            view_date = date.today()
+            view_date = current_time.date()
     else:
-        view_date = date.today()
+        view_date = current_time.date()
 
     # For staff, they might view other doctors' schedules
     doctor_id = request.args.get("doctor_id")
@@ -256,6 +277,9 @@ def doctor_schedule():
         view_date=view_date,
         doctor=doctor,
         doctors=all_doctors,
+        user_timezone=get_user_timezone().zone,
+        current_time_local=current_time,
+        localize_datetime=localize_datetime,
     )
 
 
@@ -272,9 +296,10 @@ def get_available_slots():
 
     try:
         appointment_date = datetime.strptime(date_str, "%Y-%m-%d").date()
+        current_time = get_current_time()
 
         # Don't allow booking in the past
-        if appointment_date < date.today():
+        if appointment_date < current_time.date():
             return jsonify({"slots": []})
 
         available_slots = Appointment.get_available_slots(
@@ -383,7 +408,7 @@ def update_appointment_status(appointment_id):
 
     try:
         appointment.status = AppointmentStatus(new_status)
-        appointment.updated_at = datetime.utcnow()
+        appointment.updated_at = get_current_time().replace(tzinfo=None)
 
         # Set additional timestamps based on status
         if new_status == AppointmentStatus.IN_PROGRESS.value:
@@ -449,4 +474,7 @@ def admin_view():
         doctor_filter=doctor_filter,
         status_filter=status_filter,
         date_filter=date_filter,
+        user_timezone=get_user_timezone().zone,
+        current_time_local=get_current_time(),
+        localize_datetime=localize_datetime,
     )
