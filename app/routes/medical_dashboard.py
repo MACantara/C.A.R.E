@@ -2,7 +2,8 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash,
 from flask_login import login_required, current_user
 from datetime import datetime, timedelta
 import pytz
-from app import db, get_user_timezone, localize_datetime, get_current_time
+from app import db
+from app.utils.timezone_utils import get_user_timezone, localize_datetime, get_current_time
 from app.models.user import User
 from app.models.appointment import Appointment, AppointmentStatus
 from app.models.medical_record import MedicalRecord, Consultation

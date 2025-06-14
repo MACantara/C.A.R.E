@@ -11,7 +11,8 @@ from flask import (
 )
 from flask_login import login_required, current_user
 from datetime import datetime, date, timedelta
-from app import db, get_user_timezone, localize_datetime, get_current_time
+from app import db
+from app.utils.timezone_utils import get_user_timezone, localize_datetime, get_current_time
 from app.models.user import User
 from app.services.analytics_service import AnalyticsService
 from app.utils.sidebar_utils import get_sidebar_stats

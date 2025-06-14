@@ -16,41 +16,8 @@ mail = Mail()
 login_manager = LoginManager()
 socketio = SocketIO()
 
-# TODO: Create a shared timezone utility under utils folder
-# TODO: Update the imports of the files using the shared timezone utility functions
-def get_user_timezone():
-    """Get user's timezone from session or default to Philippines timezone."""
-    user_timezone = session.get("user_timezone", "Asia/Manila")
-    try:
-        return pytz.timezone(user_timezone)
-    except pytz.exceptions.UnknownTimeZoneError:
-        return pytz.timezone("Asia/Manila")
-
-
-def localize_datetime(dt, timezone=None):
-    """Convert UTC datetime to user's timezone."""
-    if dt is None:
-        return None
-
-    if timezone is None:
-        timezone = get_user_timezone()
-
-    # If datetime is naive, assume it's UTC
-    if dt.tzinfo is None:
-        dt = pytz.utc.localize(dt)
-
-    return dt.astimezone(timezone)
-
-
-def get_current_time(timezone=None):
-    """Get current time in user's timezone."""
-    if timezone is None:
-        timezone = get_user_timezone()
-
-    utc_now = datetime.utcnow()
-    utc_dt = pytz.utc.localize(utc_now)
-    return utc_dt.astimezone(timezone)
-
+# Import timezone utilities
+from app.utils.timezone_utils import get_user_timezone, localize_datetime, get_current_time
 
 def create_app(config_name=None):
     app = Flask(__name__)

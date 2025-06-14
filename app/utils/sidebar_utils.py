@@ -1,7 +1,8 @@
 from datetime import datetime, timedelta
 from flask_login import current_user
 from sqlalchemy import desc, func, and_, or_
-from app import db, get_user_timezone, get_current_time
+from app import db
+from app.utils.timezone_utils import get_user_timezone, get_current_time
 from app.models.user import User
 from app.models.appointment import Appointment, AppointmentStatus
 from app.models.medical_record import MedicalRecord, Consultation
