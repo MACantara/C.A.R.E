@@ -2,431 +2,239 @@
 
 {% block title %}Queue Management - C.A.R.E. System{% endblock %}
 
+{% block include_navbar %}
+<!-- Navbar excluded for full-screen medical dashboard interface -->
+{% endblock %}
+
 {% block content %}
-<div class="min-h-screen bg-gray-50 dark:bg-gray-900 py-8" data-user-timezone="{{ user_timezone }}"
-    data-current-time="{{ current_time_local.isoformat() }}">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+<div class="min-h-screen bg-gray-50 dark:bg-gray-900 flex" 
+     data-user-timezone="{{ user_timezone }}"
+     data-current-time="{{ current_time_local.isoformat() }}">
+    
+    <!-- Include Sidebar -->
+    {% include 'medical_dashboard/components/sidebar.html' %}
+
+    <!-- Main Content Area -->
+    <div class="flex-1 flex flex-col min-h-screen max-h-screen">
         <!-- Header -->
-        <div class="mb-8">
+        <div class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex-shrink-0">
             <div class="flex items-center justify-between">
-                <div>
-                    <h1 class="text-3xl font-bold text-gray-900 dark:text-white">
-                        <i class="bi bi-people text-blue-600 mr-3"></i>
-                        Patient Queue Management
-                    </h1>
-                    <p class="mt-2 text-gray-600 dark:text-gray-400">
-                        Real-time patient queue monitoring and management
-                    </p>
-                </div>
-                <!-- Timezone indicator -->
-                <div class="px-3 py-2 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
-                    <div class="flex items-center text-sm text-gray-600 dark:text-gray-400">
-                        <i class="bi bi-clock mr-2"></i>
-                        <span id="timezone-display">{{ user_timezone }}</span>
-                        <span class="mx-2">•</span>
-                        <span id="current-time-display">{{ current_time_local.strftime('%H:%M:%S') }}</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Queue Statistics -->
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
                 <div class="flex items-center">
-                    <div class="p-3 bg-blue-100 dark:bg-blue-900 rounded-lg">
-                        <i class="bi bi-clock text-blue-600 dark:text-blue-400 text-xl"></i>
+                    <div class="h-12 w-12 flex items-center justify-center rounded-full bg-orange-100 dark:bg-orange-900/30 mr-4">
+                        <i class="bi bi-people text-orange-600 dark:text-orange-400 text-xl"></i>
                     </div>
-                    <div class="ml-4">
-                        <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Waiting</h3>
-                        <p class="text-2xl font-bold text-gray-900 dark:text-white" id="waiting-count">0</p>
-                    </div>
-                </div>
-            </div>
-
-            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
-                <div class="flex items-center">
-                    <div class="p-3 bg-yellow-100 dark:bg-yellow-900 rounded-lg">
-                        <i class="bi bi-play-circle text-yellow-600 dark:text-yellow-400 text-xl"></i>
-                    </div>
-                    <div class="ml-4">
-                        <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">In Progress</h3>
-                        <p class="text-2xl font-bold text-gray-900 dark:text-white" id="progress-count">0</p>
+                    <div>
+                        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Queue Management</h1>
+                        <p class="text-gray-600 dark:text-gray-400">Monitor and manage patient queues</p>
                     </div>
                 </div>
-            </div>
 
-            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
-                <div class="flex items-center">
-                    <div class="p-3 bg-red-100 dark:bg-red-900 rounded-lg">
-                        <i class="bi bi-exclamation-triangle text-red-600 dark:text-red-400 text-xl"></i>
-                    </div>
-                    <div class="ml-4">
-                        <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Delayed</h3>
-                        <p class="text-2xl font-bold text-gray-900 dark:text-white" id="delayed-count">0</p>
-                    </div>
-                </div>
-            </div>
-
-            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
-                <div class="flex items-center">
-                    <div class="p-3 bg-green-100 dark:bg-green-900 rounded-lg">
-                        <i class="bi bi-check-circle text-green-600 dark:text-green-400 text-xl"></i>
-                    </div>
-                    <div class="ml-4">
-                        <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Avg Wait</h3>
-                        <p class="text-2xl font-bold text-gray-900 dark:text-white" id="avg-wait">0m</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Queue Table -->
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
-            <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-                <div class="flex items-center justify-between">
-                    <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Current Queue</h2>
-                    <div class="flex items-center space-x-2">
-                        <span class="text-sm text-gray-500 dark:text-gray-400">Last updated:</span>
-                        <span class="text-sm font-medium text-gray-900 dark:text-white" id="last-updated">--</span>
-                        <button onclick="refreshQueue()"
-                            class="ml-2 p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
-                            <i class="bi bi-arrow-clockwise"></i>
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                    <thead class="bg-gray-50 dark:bg-gray-700">
-                        <tr>
-                            <th
-                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                                Queue #</th>
-                            <th
-                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                                Patient</th>
-                            <th
-                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                                Doctor</th>
-                            <th
-                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                                Appointment Time</th>
-                            <th
-                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                                Status</th>
-                            <th
-                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                                Wait Time</th>
-                            <th
-                                class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                                Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700"
-                        id="queue-tbody">
-                        <!-- Queue entries will be populated here -->
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Status Update Modal -->
-<div id="statusModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden">
-    <div class="flex items-center justify-center min-h-screen p-4">
-        <div class="bg-white dark:bg-gray-800 rounded-lg max-w-md w-full p-6">
-            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Update Queue Status</h3>
-            <form id="statusForm">
-                <input type="hidden" id="queueId" name="queue_id">
-
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Status</label>
-                    <select id="statusSelect" name="status"
-                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md">
-                        <option value="waiting">Waiting</option>
-                        <option value="in_progress">In Progress</option>
-                        <option value="completed">Completed</option>
-                        <option value="delayed">Delayed</option>
-                        <option value="no_show">No Show</option>
-                    </select>
-                </div>
-
-                <div class="mb-4" id="delayReasonDiv" style="display: none;">
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Delay Reason</label>
-                    <textarea id="delayReason" name="delay_reason" rows="3"
-                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md"></textarea>
-                </div>
-
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Notes</label>
-                    <textarea id="notes" name="notes" rows="2"
-                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md"></textarea>
-                </div>
-
-                <div class="flex justify-end space-x-3">
-                    <button type="button" onclick="closeStatusModal()"
-                        class="px-4 py-2 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700">
-                        Cancel
+                <!-- Header Actions -->
+                <div class="flex items-center space-x-3">
+                    <button id="refreshQueue"
+                        class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200">
+                        <i class="bi bi-arrow-clockwise mr-2"></i>Refresh
                     </button>
-                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
-                        Update Status
-                    </button>
+                    <a href="{{ url_for('medical_dashboard.dashboard') }}"
+                        class="inline-flex items-center px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors duration-200">
+                        <i class="bi bi-arrow-left mr-2"></i>Back to Dashboard
+                    </a>
                 </div>
-            </form>
+            </div>
+        </div>
+
+        <!-- Content -->
+        <div class="flex-1 p-6 overflow-y-auto max-h-screen">
+            <!-- Queue Statistics -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8 opacity-0 animate-fade-in-up"
+                style="animation-delay: 0.2s;">
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-100 dark:border-gray-700">
+                    <div class="flex items-center">
+                        <div class="w-12 h-12 bg-yellow-100 dark:bg-yellow-900/30 rounded-lg flex items-center justify-center mr-4">
+                            <i class="bi bi-clock text-yellow-600 dark:text-yellow-400 text-xl"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Waiting</p>
+                            <p class="text-2xl font-bold text-gray-900 dark:text-white" id="waitingCount">{{ queue_entries|selectattr('status.value', 'equalto', 'waiting')|list|length }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-100 dark:border-gray-700">
+                    <div class="flex items-center">
+                        <div class="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center mr-4">
+                            <i class="bi bi-play-circle text-blue-600 dark:text-blue-400 text-xl"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-600 dark:text-gray-400">In Progress</p>
+                            <p class="text-2xl font-bold text-gray-900 dark:text-white" id="inProgressCount">{{ queue_entries|selectattr('status.value', 'equalto', 'in_progress')|list|length }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-100 dark:border-gray-700">
+                    <div class="flex items-center">
+                        <div class="w-12 h-12 bg-red-100 dark:bg-red-900/30 rounded-lg flex items-center justify-center mr-4">
+                            <i class="bi bi-exclamation-triangle text-red-600 dark:text-red-400 text-xl"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Delayed</p>
+                            <p class="text-2xl font-bold text-gray-900 dark:text-white" id="delayedCount">{{ queue_entries|selectattr('status.value', 'equalto', 'delayed')|list|length }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-100 dark:border-gray-700">
+                    <div class="flex items-center">
+                        <div class="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center mr-4">
+                            <i class="bi bi-check-circle text-green-600 dark:text-green-400 text-xl"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Completed</p>
+                            <p class="text-2xl font-bold text-gray-900 dark:text-white" id="completedCount">{{ queue_entries|selectattr('status.value', 'equalto', 'completed')|list|length }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Queue List -->
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden opacity-0 animate-fade-in-up"
+                style="animation-delay: 0.4s;">
+                <div class="px-6 py-4 bg-orange-50 dark:bg-orange-900/20 border-b border-orange-200 dark:border-orange-800">
+                    <h3 class="text-lg font-semibold text-orange-800 dark:text-orange-200">Current Queue</h3>
+                </div>
+
+                <div id="queueList" class="divide-y divide-gray-200 dark:divide-gray-700">
+                    {% if queue_entries %}
+                    {% for entry in queue_entries %}
+                    <div class="p-6 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200" data-queue-id="{{ entry.id }}">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-4">
+                                <div class="w-12 h-12 bg-gradient-to-r from-blue-500 to-teal-600 rounded-full flex items-center justify-center text-white font-bold text-lg">
+                                    {{ entry.queue_number }}
+                                </div>
+                                <div>
+                                    <h4 class="text-lg font-semibold text-gray-900 dark:text-white">{{ entry.appointment.patient.display_name }}</h4>
+                                    <p class="text-sm text-gray-600 dark:text-gray-400">
+                                        Dr. {{ entry.appointment.doctor.display_name }} • 
+                                        {% if entry.appointment.appointment_date %}
+                                        {{ localize_datetime(entry.appointment.appointment_date, user_timezone).strftime('%I:%M %p') }}
+                                        {% endif %}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center space-x-3">
+                                <span class="px-3 py-1 text-sm font-medium rounded-full
+                                    {% if entry.status.value == 'waiting' %}bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400
+                                    {% elif entry.status.value == 'in_progress' %}bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400
+                                    {% elif entry.status.value == 'delayed' %}bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400
+                                    {% elif entry.status.value == 'completed' %}bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400
+                                    {% else %}bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400{% endif %}">
+                                    {{ entry.status.value.replace('_', ' ').title() }}
+                                </span>
+
+                                {% if current_user.role in ['doctor', 'staff'] %}
+                                <div class="flex space-x-2">
+                                    {% if entry.status.value == 'waiting' %}
+                                    <button onclick="updateQueueStatus({{ entry.id }}, 'in_progress')"
+                                        class="px-3 py-1 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors duration-200">
+                                        Start
+                                    </button>
+                                    {% elif entry.status.value == 'in_progress' %}
+                                    <button onclick="updateQueueStatus({{ entry.id }}, 'completed')"
+                                        class="px-3 py-1 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 transition-colors duration-200">
+                                        Complete
+                                    </button>
+                                    <button onclick="updateQueueStatus({{ entry.id }}, 'delayed')"
+                                        class="px-3 py-1 bg-red-600 text-white text-sm rounded-lg hover:bg-red-700 transition-colors duration-200">
+                                        Delay
+                                    </button>
+                                    {% endif %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        {% if entry.estimated_wait_time %}
+                        <div class="mt-3 text-sm text-gray-600 dark:text-gray-400">
+                            <i class="bi bi-clock mr-1"></i>
+                            Estimated wait: {{ entry.estimated_wait_time }} minutes
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                    {% else %}
+                    <div class="text-center py-12">
+                        <i class="bi bi-people text-gray-400 dark:text-gray-500 text-4xl mb-4"></i>
+                        <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">No Queue Entries</h3>
+                        <p class="text-gray-600 dark:text-gray-400">No patients in queue for today.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
         </div>
     </div>
 </div>
 
 <script>
-    let queueData = [];
-    let refreshInterval;
-    let userTimezone;
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-refresh queue every 30 seconds
+    setInterval(refreshQueue, 30000);
 
-    // Initialize page
-    document.addEventListener('DOMContentLoaded', function () {
-        userTimezone = document.querySelector('[data-user-timezone]')?.dataset.userTimezone || 'Asia/Manila';
-        loadQueue();
-        startAutoRefresh();
-        setupEventListeners();
-        updateTimeDisplay();
-        // Update time every second
-        setInterval(updateTimeDisplay, 1000);
-    });
+    // Manual refresh button
+    document.getElementById('refreshQueue').addEventListener('click', refreshQueue);
+});
 
-    function updateTimeDisplay() {
-        const timeDisplay = document.getElementById('current-time-display');
-        const timezoneDisplay = document.getElementById('timezone-display');
-
-        if (timeDisplay && window.timezoneManager) {
-            const now = new Date();
-            const timeString = now.toLocaleTimeString('en-US', {
-                timeZone: userTimezone,
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit',
-                hour12: false
-            });
-
-            timeDisplay.textContent = timeString;
-
-            if (timezoneDisplay) {
-                const shortName = userTimezone.split('/').pop().replace('_', ' ');
-                timezoneDisplay.textContent = shortName;
-            }
-        }
-    }
-
-    function loadQueue() {
-        fetch('/queue/api/current')
-            .then(response => response.json())
-            .then(data => {
-                queueData = data.queue_entries;
-                updateQueueTable();
-                updateStatistics(data.statistics);
-                updateLastUpdated(data.last_updated, data.timezone);
-            })
-            .catch(error => {
-                console.error('Error loading queue:', error);
-            });
-    }
-
-    function updateQueueTable() {
-        const tbody = document.getElementById('queue-tbody');
-        tbody.innerHTML = '';
-
-        if (queueData.length === 0) {
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td colspan="7" class="px-6 py-8 text-center text-gray-500 dark:text-gray-400">
-                    <i class="bi bi-inbox text-2xl mb-2"></i>
-                    <p>No patients in queue</p>
-                </td>
-            `;
-            tbody.appendChild(row);
-            return;
-        }
-
-        queueData.forEach(entry => {
-            const row = createQueueRow(entry);
-            tbody.appendChild(row);
-        });
-    }
-
-    function createQueueRow(entry) {
-        const row = document.createElement('tr');
-        row.className = 'hover:bg-gray-50 dark:hover:bg-gray-700';
-
-        const statusColor = getStatusColor(entry.status);
-        const waitTime = entry.estimated_wait_time ? `${entry.estimated_wait_time}m` : '--';
-
-        // Format appointment time using timezone-aware formatting
-        const appointmentTime = entry.appointment_time_local || '--';
-
-        row.innerHTML = `
-            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
-                #${entry.queue_number}
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                ${entry.patient_name}
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                ${entry.doctor_name}
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white" title="${entry.appointment_time}">
-                ${appointmentTime}
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap">
-                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusColor}">
-                    ${entry.status.replace('_', ' ').toUpperCase()}
-                </span>
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                ${waitTime}
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                <button onclick="openStatusModal(${entry.id})" 
-                    class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300">
-                    Update
-                </button>
-            </td>
-        `;
-
-        return row;
-    }
-
-    function updateStatistics(stats) {
-        document.getElementById('waiting-count').textContent = stats.waiting_count || 0;
-        document.getElementById('progress-count').textContent = stats.in_progress_count || 0;
-        document.getElementById('delayed-count').textContent = stats.delayed_count || 0;
-        document.getElementById('avg-wait').textContent = `${stats.avg_wait_time || 0}m`;
-    }
-
-    function updateLastUpdated(timestamp, timezone) {
-        const lastUpdatedElement = document.getElementById('last-updated');
-        if (timestamp && window.timezoneManager) {
-            const formattedTime = window.timezoneManager.formatTimeToLocal(timestamp, {
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit',
-                hour12: false
-            });
-            lastUpdatedElement.textContent = formattedTime;
-        } else {
-            lastUpdatedElement.textContent = new Date().toLocaleTimeString();
-        }
-    }
-
-    function getStatusColor(status) {
-        const colors = {
-            'waiting': 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
-            'in_progress': 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
-            'delayed': 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
-            'completed': 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
-            'no_show': 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200'
-        };
-        return colors[status] || colors['waiting'];
-    }
-
-    function updateStatistics() {
-        const waiting = queueData.filter(e => e.status === 'waiting').length;
-        const inProgress = queueData.filter(e => e.status === 'in_progress').length;
-        const delayed = queueData.filter(e => e.status === 'delayed').length;
-
-        const totalWait = queueData.reduce((sum, e) => sum + (e.estimated_wait_time || 0), 0);
-        const avgWait = queueData.length > 0 ? Math.round(totalWait / queueData.length) : 0;
-
-        document.getElementById('waiting-count').textContent = waiting;
-        document.getElementById('progress-count').textContent = inProgress;
-        document.getElementById('delayed-count').textContent = delayed;
-        document.getElementById('avg-wait').textContent = `${avgWait}m`;
-    }
-
-    function updateLastUpdated(timestamp) {
-        const date = new Date(timestamp);
-        document.getElementById('last-updated').textContent = date.toLocaleTimeString();
-    }
-
-    function refreshQueue() {
-        loadQueue();
-    }
-
-    function startAutoRefresh() {
-        // Refresh every 30 seconds
-        refreshInterval = setInterval(loadQueue, 30000);
-    }
-
-    function setupEventListeners() {
-        // Status form submission
-        document.getElementById('statusForm').addEventListener('submit', function (e) {
-            e.preventDefault();
-            submitStatusUpdate();
-        });
-
-        // Show/hide delay reason field
-        document.getElementById('statusSelect').addEventListener('change', function () {
-            const delayDiv = document.getElementById('delayReasonDiv');
-            delayDiv.style.display = this.value === 'delayed' ? 'block' : 'none';
-        });
-    }
-
-    function openStatusModal(queueId) {
-        const entry = queueData.find(e => e.id === queueId);
-        if (!entry) return;
-
-        document.getElementById('queueId').value = queueId;
-        document.getElementById('statusSelect').value = entry.status;
-        document.getElementById('delayReason').value = entry.delay_reason || '';
-        document.getElementById('notes').value = entry.notes || '';
-
-        const delayDiv = document.getElementById('delayReasonDiv');
-        delayDiv.style.display = entry.status === 'delayed' ? 'block' : 'none';
-
-        document.getElementById('statusModal').classList.remove('hidden');
-    }
-
-    function closeStatusModal() {
-        document.getElementById('statusModal').classList.add('hidden');
-    }
-
-    function submitStatusUpdate() {
-        const formData = new FormData(document.getElementById('statusForm'));
-        const data = {
-            queue_id: formData.get('queue_id'),
-            status: formData.get('status'),
-            delay_reason: formData.get('delay_reason'),
-            notes: formData.get('notes')
-        };
-
-        fetch('/queue/api/update_status', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(data)
+function refreshQueue() {
+    fetch('{{ url_for("queue.api_current_queue") }}')
+        .then(response => response.json())
+        .then(data => {
+            updateQueueDisplay(data);
         })
-            .then(response => response.json())
-            .then(result => {
-                if (result.success) {
-                    closeStatusModal();
-                    loadQueue(); // Refresh the queue
-                } else {
-                    alert('Error updating status: ' + result.error);
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Error updating status');
-            });
-    }
+        .catch(error => {
+            console.error('Error refreshing queue:', error);
+        });
+}
 
-    // Clean up interval when page unloads
-    window.addEventListener('beforeunload', function () {
-        if (refreshInterval) {
-            clearInterval(refreshInterval);
+function updateQueueStatus(queueId, newStatus) {
+    const reason = newStatus === 'delayed' ? prompt('Delay reason:') : '';
+    
+    fetch('{{ url_for("queue.api_update_status") }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            queue_id: queueId,
+            status: newStatus,
+            delay_reason: reason
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            refreshQueue();
+        } else {
+            alert('Error updating status: ' + data.error);
         }
+    })
+    .catch(error => {
+        console.error('Error updating status:', error);
+        alert('Error updating status');
     });
+}
+
+function updateQueueDisplay(data) {
+    // Update statistics
+    document.getElementById('waitingCount').textContent = data.statistics.waiting_count;
+    document.getElementById('inProgressCount').textContent = data.statistics.in_progress_count;
+    document.getElementById('delayedCount').textContent = data.statistics.delayed_count;
+    document.getElementById('completedCount').textContent = data.statistics.total_count - data.statistics.waiting_count - data.statistics.in_progress_count - data.statistics.delayed_count;
+}
 </script>
+{% endblock %}
+
+{% block include_footer %}
+<!-- Footer excluded for full-screen medical dashboard interface -->
 {% endblock %}
