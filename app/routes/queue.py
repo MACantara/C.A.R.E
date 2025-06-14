@@ -119,7 +119,7 @@ def dashboard():
         )
 
     return render_template(
-        "queue/dashboard.html",
+        "medical_dashboard/appointments/queue/dashboard.html",
         queue_entries=queue_entries,
         current_time_local=current_time_local,
         user_timezone=user_timezone,

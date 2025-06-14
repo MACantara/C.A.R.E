@@ -251,7 +251,7 @@ def doctor_schedule():
     )
 
     return render_template(
-        "appointments/schedule.html",
+        "medical_dashboard/appointments/schedule.html",
         appointments=appointments,
         view_date=view_date,
         doctor=doctor,
