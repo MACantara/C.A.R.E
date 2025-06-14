@@ -16,7 +16,8 @@ mail = Mail()
 login_manager = LoginManager()
 socketio = SocketIO()
 
-
+# TODO: Create a shared timezone utility under utils folder
+# TODO: Update the imports of the files using the shared timezone utility functions
 def get_user_timezone():
     """Get user's timezone from session or default to Philippines timezone."""
     user_timezone = session.get("user_timezone", "Asia/Manila")
