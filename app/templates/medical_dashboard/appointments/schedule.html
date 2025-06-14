@@ -166,10 +166,6 @@
                                         class="px-3 py-1 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors duration-200">
                                         Start
                                     </button>
-                                    <a href="{{ url_for('medical_records.new_consultation', appointment_id=appointment.id) }}"
-                                        class="px-3 py-1 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 transition-colors duration-200">
-                                        Consult
-                                    </a>
                                 </div>
                                 {% elif appointment.status.value == 'in_progress' %}
                                 <div class="flex space-x-2">
