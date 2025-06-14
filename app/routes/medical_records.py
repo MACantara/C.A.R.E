@@ -236,6 +236,8 @@ def new_consultation():
 
     patient = None
     appointment = None
+    existing_consultation = None
+    existing_vital_signs = None
 
     if patient_id:
         patient = User.query.filter_by(id=patient_id, role="patient").first()
@@ -246,6 +248,18 @@ def new_consultation():
             patient = appointment.patient
             # Auto-fill the chief complaint from the appointment
             chief_complaint = appointment.chief_complaint or ""
+            
+            # Check for existing consultation (draft or completed)
+            existing_consultation = Consultation.query.filter_by(
+                appointment_id=appointment_id,
+                doctor_id=current_user.id
+            ).first()
+            
+            # If there's an existing consultation, get its vital signs too
+            if existing_consultation:
+                existing_vital_signs = VitalSigns.query.filter_by(
+                    consultation_id=existing_consultation.id
+                ).first()
 
     # Get all patients for selection
     patients = (
@@ -260,6 +274,8 @@ def new_consultation():
         appointment=appointment,
         patients=patients,
         chief_complaint=chief_complaint,
+        existing_consultation=existing_consultation,
+        existing_vital_signs=existing_vital_signs,
         user_timezone=user_timezone,
         current_time_local=current_time_local,
         stats=stats,
@@ -272,6 +288,7 @@ def create_consultation():
     """Create new consultation."""
     patient_id = request.form.get("patient_id")
     appointment_id = request.form.get("appointment_id") or None
+    consultation_id = request.form.get("consultation_id") or None  # For updating existing
 
     # Validation
     if not patient_id:
@@ -284,114 +301,187 @@ def create_consultation():
         return redirect(url_for("medical_records.new_consultation"))
 
     try:
-        consultation = Consultation(
-            patient_id=patient_id,
-            doctor_id=current_user.id,
-            appointment_id=appointment_id,
-            chief_complaint=request.form.get("chief_complaint", "").strip(),
-            history_present_illness=request.form.get(
-                "history_present_illness", ""
-            ).strip(),
-            past_medical_history=request.form.get("past_medical_history", "").strip(),
-            family_history=request.form.get("family_history", "").strip(),
-            social_history=request.form.get("social_history", "").strip(),
-            general_appearance=request.form.get("general_appearance", "").strip(),
-            physical_examination=request.form.get("physical_examination", "").strip(),
-            assessment=request.form.get("assessment", "").strip(),
-            differential_diagnosis=request.form.get(
-                "differential_diagnosis", ""
-            ).strip(),
-            treatment_plan=request.form.get("treatment_plan", "").strip(),
-            follow_up_instructions=request.form.get(
-                "follow_up_instructions", ""
-            ).strip(),
-            next_appointment_recommended=bool(
-                request.form.get("next_appointment_recommended")
-            ),
-            next_appointment_timeframe=request.form.get(
-                "next_appointment_timeframe", ""
-            ).strip(),
-            status=(
+        # Check if we're updating an existing consultation
+        if consultation_id:
+            consultation = Consultation.query.get(consultation_id)
+            if not consultation or consultation.doctor_id != current_user.id:
+                flash("Invalid consultation.", "error")
+                return redirect(url_for("medical_records.new_consultation"))
+            
+            # Update existing consultation
+            consultation.chief_complaint = request.form.get("chief_complaint", "").strip()
+            consultation.history_present_illness = request.form.get("history_present_illness", "").strip()
+            consultation.past_medical_history = request.form.get("past_medical_history", "").strip()
+            consultation.family_history = request.form.get("family_history", "").strip()
+            consultation.social_history = request.form.get("social_history", "").strip()
+            consultation.general_appearance = request.form.get("general_appearance", "").strip()
+            consultation.physical_examination = request.form.get("physical_examination", "").strip()
+            consultation.assessment = request.form.get("assessment", "").strip()
+            consultation.differential_diagnosis = request.form.get("differential_diagnosis", "").strip()
+            consultation.treatment_plan = request.form.get("treatment_plan", "").strip()
+            consultation.follow_up_instructions = request.form.get("follow_up_instructions", "").strip()
+            consultation.next_appointment_recommended = bool(request.form.get("next_appointment_recommended"))
+            consultation.next_appointment_timeframe = request.form.get("next_appointment_timeframe", "").strip()
+            consultation.status = (
                 ConsultationStatus.COMPLETED
                 if request.form.get("complete_consultation")
                 else ConsultationStatus.DRAFT
-            ),
-        )
+            )
+            consultation.updated_at = get_current_time().replace(tzinfo=None)
+        else:
+            # Create new consultation
+            consultation = Consultation(
+                patient_id=patient_id,
+                doctor_id=current_user.id,
+                appointment_id=appointment_id,
+                chief_complaint=request.form.get("chief_complaint", "").strip(),
+                history_present_illness=request.form.get("history_present_illness", "").strip(),
+                past_medical_history=request.form.get("past_medical_history", "").strip(),
+                family_history=request.form.get("family_history", "").strip(),
+                social_history=request.form.get("social_history", "").strip(),
+                general_appearance=request.form.get("general_appearance", "").strip(),
+                physical_examination=request.form.get("physical_examination", "").strip(),
+                assessment=request.form.get("assessment", "").strip(),
+                differential_diagnosis=request.form.get("differential_diagnosis", "").strip(),
+                treatment_plan=request.form.get("treatment_plan", "").strip(),
+                follow_up_instructions=request.form.get("follow_up_instructions", "").strip(),
+                next_appointment_recommended=bool(request.form.get("next_appointment_recommended")),
+                next_appointment_timeframe=request.form.get("next_appointment_timeframe", "").strip(),
+                status=(
+                    ConsultationStatus.COMPLETED
+                    if request.form.get("complete_consultation")
+                    else ConsultationStatus.DRAFT
+                ),
+            )
+            db.session.add(consultation)
 
-        db.session.add(consultation)
         db.session.commit()
 
-        # Record vital signs if provided
-        if any(
-            [
-                request.form.get("temperature"),
-                request.form.get("blood_pressure_systolic"),
-                request.form.get("heart_rate"),
-                request.form.get("weight"),
-            ]
-        ):
-            vital_signs = VitalSigns(
-                patient_id=patient_id,
-                recorded_by=current_user.id,
-                consultation_id=consultation.id,
-                temperature=(
+        # Handle vital signs - update existing or create new
+        if any([
+            request.form.get("temperature"),
+            request.form.get("blood_pressure_systolic"),
+            request.form.get("heart_rate"),
+            request.form.get("weight"),
+        ]):
+            # Check for existing vital signs
+            existing_vitals = VitalSigns.query.filter_by(consultation_id=consultation.id).first()
+            
+            if existing_vitals:
+                # Update existing vital signs
+                existing_vitals.temperature = (
                     float(request.form.get("temperature"))
                     if request.form.get("temperature")
                     else None
-                ),
-                blood_pressure_systolic=(
+                )
+                existing_vitals.blood_pressure_systolic = (
                     int(request.form.get("blood_pressure_systolic"))
                     if request.form.get("blood_pressure_systolic")
                     else None
-                ),
-                blood_pressure_diastolic=(
+                )
+                existing_vitals.blood_pressure_diastolic = (
                     int(request.form.get("blood_pressure_diastolic"))
                     if request.form.get("blood_pressure_diastolic")
                     else None
-                ),
-                heart_rate=(
+                )
+                existing_vitals.heart_rate = (
                     int(request.form.get("heart_rate"))
                     if request.form.get("heart_rate")
                     else None
-                ),
-                respiratory_rate=(
+                )
+                existing_vitals.respiratory_rate = (
                     int(request.form.get("respiratory_rate"))
                     if request.form.get("respiratory_rate")
                     else None
-                ),
-                oxygen_saturation=(
+                )
+                existing_vitals.oxygen_saturation = (
                     float(request.form.get("oxygen_saturation"))
                     if request.form.get("oxygen_saturation")
                     else None
-                ),
-                weight=(
+                )
+                existing_vitals.weight = (
                     float(request.form.get("weight"))
                     if request.form.get("weight")
                     else None
-                ),
-                height=(
+                )
+                existing_vitals.height = (
                     float(request.form.get("height"))
                     if request.form.get("height")
                     else None
-                ),
-                pain_scale=(
+                )
+                existing_vitals.pain_scale = (
                     int(request.form.get("pain_scale"))
                     if request.form.get("pain_scale")
                     else None
-                ),
-                notes=request.form.get("vital_notes", "").strip(),
-            )
-            db.session.add(vital_signs)
+                )
+                existing_vitals.notes = request.form.get("vital_notes", "").strip()
+                existing_vitals.recorded_date = get_current_time().replace(tzinfo=None)
+            else:
+                # Create new vital signs
+                vital_signs = VitalSigns(
+                    patient_id=patient_id,
+                    recorded_by=current_user.id,
+                    consultation_id=consultation.id,
+                    temperature=(
+                        float(request.form.get("temperature"))
+                        if request.form.get("temperature")
+                        else None
+                    ),
+                    blood_pressure_systolic=(
+                        int(request.form.get("blood_pressure_systolic"))
+                        if request.form.get("blood_pressure_systolic")
+                        else None
+                    ),
+                    blood_pressure_diastolic=(
+                        int(request.form.get("blood_pressure_diastolic"))
+                        if request.form.get("blood_pressure_diastolic")
+                        else None
+                    ),
+                    heart_rate=(
+                        int(request.form.get("heart_rate"))
+                        if request.form.get("heart_rate")
+                        else None
+                    ),
+                    respiratory_rate=(
+                        int(request.form.get("respiratory_rate"))
+                        if request.form.get("respiratory_rate")
+                        else None
+                    ),
+                    oxygen_saturation=(
+                        float(request.form.get("oxygen_saturation"))
+                        if request.form.get("oxygen_saturation")
+                        else None
+                    ),
+                    weight=(
+                        float(request.form.get("weight"))
+                        if request.form.get("weight")
+                        else None
+                    ),
+                    height=(
+                        float(request.form.get("height"))
+                        if request.form.get("height")
+                        else None
+                    ),
+                    pain_scale=(
+                        int(request.form.get("pain_scale"))
+                        if request.form.get("pain_scale")
+                        else None
+                    ),
+                    notes=request.form.get("vital_notes", "").strip(),
+                )
+                db.session.add(vital_signs)
+            
             db.session.commit()
 
-        flash(f"Consultation recorded for {patient.display_name}.", "success")
+        action = "updated" if consultation_id else "recorded"
+        flash(f"Consultation {action} for {patient.display_name}.", "success")
         return redirect(
             url_for("medical_records.patient_records", patient_id=patient_id)
         )
 
     except Exception as e:
         db.session.rollback()
-        current_app.logger.error(f"Error creating consultation: {e}")
+        current_app.logger.error(f"Error creating/updating consultation: {e}")
         flash("Error recording consultation. Please try again.", "error")
         return redirect(url_for("medical_records.new_consultation"))
 

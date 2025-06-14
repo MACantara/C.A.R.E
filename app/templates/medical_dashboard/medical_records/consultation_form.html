@@ -62,6 +62,9 @@
                 {% if appointment %}
                 <input type="hidden" name="appointment_id" value="{{ appointment.id }}">
                 {% endif %}
+                {% if existing_consultation %}
+                <input type="hidden" name="consultation_id" value="{{ existing_consultation.id }}">
+                {% endif %}
                 {% endif %}
 
                 <!-- Chief Complaint -->
@@ -73,11 +76,15 @@
                         </label>
                         <textarea name="chief_complaint" id="chief_complaint" rows="3" required
                             placeholder="Patient's primary concern or reason for seeking medical attention..."
-                            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400">{{ chief_complaint }}</textarea>
+                            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400">{{ existing_consultation.chief_complaint if existing_consultation else chief_complaint }}</textarea>
                         {% if appointment %}
                         <p class="text-xs text-green-600 dark:text-green-400 mt-1 flex items-center">
                             <i class="bi bi-info-circle mr-1"></i>
+                            {% if existing_consultation %}
+                            Loaded from existing draft consultation
+                            {% else %}
                             Auto-filled from appointment with {{ appointment.patient.display_name }}
+                            {% endif %}
                         </p>
                         {% else %}
                         <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
@@ -95,7 +102,7 @@
                             <label for="temperature"
                                 class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Temperature (°C)</label>
                             <input type="number" name="temperature" id="temperature" step="0.1" min="35" max="42"
-                                placeholder="36.5"
+                                placeholder="36.5" value="{{ existing_vital_signs.temperature if existing_vital_signs and existing_vital_signs.temperature else '' }}"
                                 class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400">
                         </div>
 
@@ -104,11 +111,11 @@
                                 class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Blood Pressure</label>
                             <div class="flex space-x-2">
                                 <input type="number" name="blood_pressure_systolic" id="blood_pressure_systolic"
-                                    placeholder="120" min="70" max="250"
+                                    placeholder="120" min="70" max="250" value="{{ existing_vital_signs.blood_pressure_systolic if existing_vital_signs and existing_vital_signs.blood_pressure_systolic else '' }}"
                                     class="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400">
                                 <span class="text-gray-500 self-center">/</span>
                                 <input type="number" name="blood_pressure_diastolic" id="blood_pressure_diastolic"
-                                    placeholder="80" min="40" max="150"
+                                    placeholder="80" min="40" max="150" value="{{ existing_vital_signs.blood_pressure_diastolic if existing_vital_signs and existing_vital_signs.blood_pressure_diastolic else '' }}"
                                     class="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400">
                             </div>
                         </div>
@@ -117,6 +124,7 @@
                             <label for="heart_rate"
                                 class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Heart Rate (BPM)</label>
                             <input type="number" name="heart_rate" id="heart_rate" min="40" max="200" placeholder="72"
+                                value="{{ existing_vital_signs.heart_rate if existing_vital_signs and existing_vital_signs.heart_rate else '' }}"
                                 class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400">
                         </div>
 
@@ -124,6 +132,7 @@
                             <label for="respiratory_rate"
                                 class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Respiratory Rate</label>
                             <input type="number" name="respiratory_rate" id="respiratory_rate" min="8" max="40" placeholder="16"
+                                value="{{ existing_vital_signs.respiratory_rate if existing_vital_signs and existing_vital_signs.respiratory_rate else '' }}"
                                 class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400">
                         </div>
 
@@ -131,6 +140,7 @@
                             <label for="weight" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Weight
                                 (kg)</label>
                             <input type="number" name="weight" id="weight" step="0.1" min="1" max="300" placeholder="70.0"
+                                value="{{ existing_vital_signs.weight if existing_vital_signs and existing_vital_signs.weight else '' }}"
                                 class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400">
                         </div>
 
@@ -138,6 +148,7 @@
                             <label for="height" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Height
                                 (cm)</label>
                             <input type="number" name="height" id="height" step="0.1" min="50" max="250" placeholder="170.0"
+                                value="{{ existing_vital_signs.height if existing_vital_signs and existing_vital_signs.height else '' }}"
                                 class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400">
                         </div>
 
@@ -146,7 +157,7 @@
                                 class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">O2 Saturation
                                 (%)</label>
                             <input type="number" name="oxygen_saturation" id="oxygen_saturation" step="0.1" min="70" max="100"
-                                placeholder="98.0"
+                                placeholder="98.0" value="{{ existing_vital_signs.oxygen_saturation if existing_vital_signs and existing_vital_signs.oxygen_saturation else '' }}"
                                 class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400">
                         </div>
 
@@ -154,6 +165,7 @@
                             <label for="pain_scale" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Pain
                                 Scale (0-10)</label>
                             <input type="number" name="pain_scale" id="pain_scale" min="0" max="10" placeholder="0"
+                                value="{{ existing_vital_signs.pain_scale if existing_vital_signs and existing_vital_signs.pain_scale is not none else '' }}"
                                 class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400">
                         </div>
                     </div>
@@ -169,7 +181,7 @@
                                 Illness</label>
                             <textarea name="history_present_illness" id="history_present_illness" rows="4"
                                 placeholder="Detailed description of current symptoms and their progression..."
-                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"></textarea>
+                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400">{{ existing_consultation.history_present_illness if existing_consultation else '' }}</textarea>
                         </div>
 
                         <div>
@@ -178,7 +190,7 @@
                                 History</label>
                             <textarea name="past_medical_history" id="past_medical_history" rows="4"
                                 placeholder="Previous illnesses, surgeries, hospitalizations..."
-                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"></textarea>
+                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400">{{ existing_consultation.past_medical_history if existing_consultation else '' }}</textarea>
                         </div>
 
                         <div>
@@ -186,7 +198,7 @@
                                 class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Family History</label>
                             <textarea name="family_history" id="family_history" rows="3"
                                 placeholder="Relevant family medical conditions..."
-                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"></textarea>
+                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400">{{ existing_consultation.family_history if existing_consultation else '' }}</textarea>
                         </div>
 
                         <div>
@@ -194,7 +206,7 @@
                                 class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Social History</label>
                             <textarea name="social_history" id="social_history" rows="3"
                                 placeholder="Smoking, alcohol use, occupation, lifestyle factors..."
-                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"></textarea>
+                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400">{{ existing_consultation.social_history if existing_consultation else '' }}</textarea>
                         </div>
                     </div>
                 </div>
@@ -209,7 +221,7 @@
                                 Appearance</label>
                             <textarea name="general_appearance" id="general_appearance" rows="3"
                                 placeholder="Overall appearance, alertness, distress level..."
-                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"></textarea>
+                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400">{{ existing_consultation.general_appearance if existing_consultation else '' }}</textarea>
                         </div>
 
                         <div>
@@ -218,7 +230,7 @@
                                 Findings</label>
                             <textarea name="physical_examination" id="physical_examination" rows="3"
                                 placeholder="Systematic physical examination findings..."
-                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"></textarea>
+                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400">{{ existing_consultation.physical_examination if existing_consultation else '' }}</textarea>
                         </div>
                     </div>
                 </div>
@@ -233,7 +245,7 @@
                                 Assessment</label>
                             <textarea name="assessment" id="assessment" rows="4"
                                 placeholder="Primary diagnosis and clinical impression..."
-                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"></textarea>
+                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400">{{ existing_consultation.assessment if existing_consultation else '' }}</textarea>
                         </div>
 
                         <div>
@@ -242,7 +254,7 @@
                                 Diagnosis</label>
                             <textarea name="differential_diagnosis" id="differential_diagnosis" rows="3"
                                 placeholder="Alternative diagnoses to consider..."
-                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"></textarea>
+                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400">{{ existing_consultation.differential_diagnosis if existing_consultation else '' }}</textarea>
                         </div>
 
                         <div>
@@ -250,7 +262,7 @@
                                 class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Treatment Plan</label>
                             <textarea name="treatment_plan" id="treatment_plan" rows="4"
                                 placeholder="Medications, procedures, lifestyle modifications..."
-                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"></textarea>
+                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400">{{ existing_consultation.treatment_plan if existing_consultation else '' }}</textarea>
                         </div>
 
                         <div>
@@ -259,12 +271,13 @@
                                 Instructions</label>
                             <textarea name="follow_up_instructions" id="follow_up_instructions" rows="3"
                                 placeholder="Patient instructions, warning signs, next steps..."
-                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"></textarea>
+                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400">{{ existing_consultation.follow_up_instructions if existing_consultation else '' }}</textarea>
                         </div>
 
                         <div class="flex items-center space-x-4">
                             <label class="flex items-center">
-                                <input type="checkbox" name="next_appointment_recommended"
+                                <input type="checkbox" name="next_appointment_recommended" 
+                                    {% if existing_consultation and existing_consultation.next_appointment_recommended %}checked{% endif %}
                                     class="form-checkbox h-4 w-4 text-green-600">
                                 <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Recommend follow-up
                                     appointment</span>
@@ -272,6 +285,7 @@
 
                             <div class="flex-1">
                                 <input type="text" name="next_appointment_timeframe" placeholder="e.g., 2 weeks, 1 month"
+                                    value="{{ existing_consultation.next_appointment_timeframe if existing_consultation else '' }}"
                                     class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400">
                             </div>
                         </div>
@@ -281,11 +295,18 @@
                 <!-- Form Actions -->
                 <div class="flex justify-between items-center">
                     <!-- Sample Data Button for Testing -->
+                    {% if not existing_consultation %}
                     <button type="button" id="generateSampleData"
                         class="inline-flex items-center px-4 py-2 bg-yellow-500 text-white font-medium rounded-lg hover:bg-yellow-600 transition-colors duration-200">
                         <i class="bi bi-lightning mr-2"></i>
                         Generate Sample Data
                     </button>
+                    {% else %}
+                    <div class="text-sm text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 px-3 py-2 rounded-lg border border-amber-200 dark:border-amber-800">
+                        <i class="bi bi-info-circle mr-1"></i>
+                        Editing existing {{ 'completed' if existing_consultation.status.value == 'completed' else 'draft' }} consultation
+                    </div>
+                    {% endif %}
                     
                     <div class="flex space-x-4">
                         <button type="submit" name="complete_consultation" value="true"
@@ -297,7 +318,7 @@
                         <button type="submit"
                             class="inline-flex items-center px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors duration-200">
                             <i class="bi bi-save mr-2"></i>
-                            Save as Draft
+                            {% if existing_consultation %}Update Draft{% else %}Save as Draft{% endif %}
                         </button>
                     </div>
                 </div>
