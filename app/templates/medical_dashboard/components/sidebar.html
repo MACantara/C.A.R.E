@@ -1,6 +1,19 @@
+<!-- Prevent FOUC - Check localStorage immediately -->
+<script>
+    (function() {
+        const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+        if (isCollapsed) {
+            document.documentElement.style.setProperty('--sidebar-initial-state', 'collapsed');
+        } else {
+            document.documentElement.style.setProperty('--sidebar-initial-state', 'expanded');
+        }
+    })();
+</script>
+
 <!-- Medical Dashboard Sidebar Navigation -->
 <div
-    class="w-80 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col flex-shrink-0 min-h-screen">
+    class="sidebar-full w-80 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col flex-shrink-0 min-h-screen sidebar-transition"
+    style="display: var(--sidebar-initial-state) == 'collapsed' ? 'none' : 'flex';">
     <!-- Sidebar Header -->
     <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
         <div class="flex items-center">
@@ -144,7 +157,8 @@
 
 <!-- Collapsed Sidebar (Hidden by default) -->
 <div id="collapsed-sidebar"
-    class="w-16 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col flex-shrink-0 min-h-screen hidden">
+    class="sidebar-collapsed w-16 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col flex-shrink-0 min-h-screen sidebar-transition"
+    style="display: var(--sidebar-initial-state) == 'collapsed' ? 'flex' : 'none';">
     <!-- Collapsed Header -->
     <div class="px-3 py-4 border-b border-gray-200 dark:border-gray-700 flex justify-center">
         <div class="w-10 h-10 bg-gradient-to-r from-blue-500 to-teal-600 rounded-lg flex items-center justify-center">
@@ -190,21 +204,39 @@
 </div>
 
 <script>
-    // Sidebar functionality
+    // Sidebar functionality with FOUC prevention
     function toggleSidebar() {
-        const fullSidebar = document.querySelector('.w-80');
+        const fullSidebar = document.querySelector('.sidebar-full');
         const collapsedSidebar = document.getElementById('collapsed-sidebar');
+        
+        // Add transition class
+        fullSidebar.classList.add('sidebar-transitioning');
+        collapsedSidebar.classList.add('sidebar-transitioning');
 
-        if (fullSidebar.classList.contains('hidden')) {
+        if (fullSidebar.style.display === 'none' || fullSidebar.classList.contains('hidden')) {
             // Show full sidebar
-            fullSidebar.classList.remove('hidden');
-            collapsedSidebar.classList.add('hidden');
+            fullSidebar.style.display = 'flex';
+            collapsedSidebar.style.display = 'none';
             localStorage.setItem('sidebarCollapsed', 'false');
+            
+            // Complete transition
+            setTimeout(() => {
+                fullSidebar.classList.remove('sidebar-transitioning');
+                fullSidebar.classList.add('sidebar-transition-complete');
+                collapsedSidebar.classList.remove('sidebar-transitioning');
+            }, 300);
         } else {
             // Show collapsed sidebar
-            fullSidebar.classList.add('hidden');
-            collapsedSidebar.classList.remove('hidden');
+            fullSidebar.style.display = 'none';
+            collapsedSidebar.style.display = 'flex';
             localStorage.setItem('sidebarCollapsed', 'true');
+            
+            // Complete transition
+            setTimeout(() => {
+                collapsedSidebar.classList.remove('sidebar-transitioning');
+                collapsedSidebar.classList.add('sidebar-transition-complete');
+                fullSidebar.classList.remove('sidebar-transitioning');
+            }, 300);
         }
     }
 
@@ -224,16 +256,24 @@
         }
     }
 
-    // Initialize sidebar
+    // Initialize sidebar without FOUC
     document.addEventListener('DOMContentLoaded', function () {
-        // Restore sidebar state from localStorage
+        const fullSidebar = document.querySelector('.sidebar-full');
+        const collapsedSidebar = document.getElementById('collapsed-sidebar');
         const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+        
+        // Apply initial state instantly
         if (isCollapsed) {
-            const fullSidebar = document.querySelector('.w-80');
-            const collapsedSidebar = document.getElementById('collapsed-sidebar');
-            fullSidebar.classList.add('hidden');
-            collapsedSidebar.classList.remove('hidden');
+            fullSidebar.style.display = 'none';
+            collapsedSidebar.style.display = 'flex';
+        } else {
+            fullSidebar.style.display = 'flex';
+            collapsedSidebar.style.display = 'none';
         }
+        
+        // Show sidebars after state is set
+        fullSidebar.classList.add('loaded');
+        collapsedSidebar.classList.add('loaded');
 
         // Update time every minute
         updateSidebarTime();

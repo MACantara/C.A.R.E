@@ -388,3 +388,67 @@ button[type="submit"]:disabled:hover {
 .message-time:hover {
     transform: scale(1.05);
 }
+
+/* ===================
+   SIDEBAR ANIMATIONS & FOUC PREVENTION
+   =================== */
+
+/* Prevent FOUC for sidebar */
+.sidebar-full,
+.sidebar-collapsed {
+    opacity: 0;
+    transition: opacity 0.3s ease, width 0.3s ease;
+}
+
+.sidebar-full.loaded,
+.sidebar-collapsed.loaded {
+    opacity: 1;
+}
+
+/* Sidebar transition animations */
+.sidebar-transition {
+    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                opacity 0.2s ease;
+}
+
+/* Sidebar width transitions */
+.sidebar-expand {
+    animation: sidebarExpand 0.3s ease-out forwards;
+}
+
+.sidebar-collapse {
+    animation: sidebarCollapse 0.3s ease-out forwards;
+}
+
+@keyframes sidebarExpand {
+    from {
+        width: 4rem;
+        opacity: 0.8;
+    }
+    to {
+        width: 20rem;
+        opacity: 1;
+    }
+}
+
+@keyframes sidebarCollapse {
+    from {
+        width: 20rem;
+        opacity: 1;
+    }
+    to {
+        width: 4rem;
+        opacity: 0.8;
+    }
+}
+
+/* Hide sidebar content during transition */
+.sidebar-transitioning .sidebar-content {
+    opacity: 0;
+    transition: opacity 0.1s ease;
+}
+
+.sidebar-transitioning.sidebar-transition-complete .sidebar-content {
+    opacity: 1;
+    transition: opacity 0.2s ease 0.1s;
+}
