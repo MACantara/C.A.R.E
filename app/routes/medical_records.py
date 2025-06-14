@@ -232,6 +232,7 @@ def new_consultation():
 
     patient_id = request.args.get("patient_id")
     appointment_id = request.args.get("appointment_id")
+    chief_complaint = ""
 
     patient = None
     appointment = None
@@ -243,6 +244,8 @@ def new_consultation():
         appointment = Appointment.query.get(appointment_id)
         if appointment:
             patient = appointment.patient
+            # Auto-fill the chief complaint from the appointment
+            chief_complaint = appointment.chief_complaint or ""
 
     # Get all patients for selection
     patients = (
@@ -256,6 +259,7 @@ def new_consultation():
         patient=patient,
         appointment=appointment,
         patients=patients,
+        chief_complaint=chief_complaint,
         user_timezone=user_timezone,
         current_time_local=current_time_local,
         stats=stats,
