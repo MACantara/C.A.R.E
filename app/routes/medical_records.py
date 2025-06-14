@@ -116,6 +116,7 @@ def index():
         stats=stats,
         user_timezone=user_timezone,
         current_time_local=current_time_local,
+        localize_datetime=localize_datetime,
     )
 
 
@@ -156,6 +157,7 @@ def patients():
         search=search,
         user_timezone=user_timezone,
         current_time_local=current_time_local,
+        localize_datetime=localize_datetime,
         stats=stats,
     )
 
@@ -215,6 +217,7 @@ def patient_records(patient_id):
         vital_signs=vital_signs,
         user_timezone=user_timezone,
         current_time_local=current_time_local,
+        localize_datetime=localize_datetime,
         stats=stats,
     )
 
@@ -257,6 +260,7 @@ def new_prescription():
         patients=patients,
         user_timezone=user_timezone,
         current_time_local=current_time_local,
+        localize_datetime=localize_datetime,
         stats=stats,
     )
 
@@ -407,6 +411,7 @@ def search_records():
         date_to=date_to,
         user_timezone=user_timezone,
         current_time_local=current_time_local,
+        localize_datetime=localize_datetime,
         stats=stats,
     )
 

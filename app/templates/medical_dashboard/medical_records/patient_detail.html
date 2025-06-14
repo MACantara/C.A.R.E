@@ -176,7 +176,7 @@
                             <div class="flex justify-between items-start mb-4">
                                 <div>
                                     <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
-                                        {{ consultation.consultation_date.strftime('%B %d, %Y at %I:%M %p') }}
+                                        {{ localize_datetime(consultation.consultation_date, user_timezone).strftime('%B %d, %Y at %I:%M %p %Z') }}
                                     </h3>
                                     <p class="text-sm text-gray-600 dark:text-gray-400">
                                         Dr. {{ consultation.doctor.display_name }}
@@ -251,7 +251,7 @@
                                         {{ prescription.status.value.replace('_', ' ').title() }}
                                     </span>
                                     <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                                        {{ prescription.prescribed_date.strftime('%B %d, %Y') }}
+                                        {{ localize_datetime(prescription.prescribed_date, user_timezone).strftime('%B %d, %Y') }}
                                     </p>
                                 </div>
                             </div>
@@ -335,7 +335,7 @@
                             class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-100 dark:border-gray-700">
                             <div class="flex justify-between items-start mb-4">
                                 <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
-                                    {{ vitals.recorded_date.strftime('%B %d, %Y at %I:%M %p') }}
+                                    {{ localize_datetime(vitals.recorded_date, user_timezone).strftime('%B %d, %Y at %I:%M %p %Z') }}
                                 </h3>
                                 <p class="text-sm text-gray-600 dark:text-gray-400">
                                     Recorded by {{ vitals.recorder.display_name }}
