@@ -509,6 +509,10 @@ def update_appointment_status(appointment_id):
         # Set additional timestamps based on status
         if new_status == AppointmentStatus.IN_PROGRESS.value:
             appointment.mark_in_progress()
+            db.session.commit()
+            flash("Appointment started successfully.", "success")
+            # Redirect to consultation form when starting an appointment
+            return redirect(url_for('medical_records.new_consultation', appointment_id=appointment.id))
         elif new_status == AppointmentStatus.COMPLETED.value:
             appointment.complete()
         elif new_status == AppointmentStatus.NO_SHOW.value:

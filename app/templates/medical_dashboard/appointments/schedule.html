@@ -259,25 +259,34 @@ document.getElementById('dateFilter').addEventListener('change', function() {
 });
 
 function startAppointment(appointmentId) {
-    if (confirm('Start this appointment?')) {
+    if (confirm('Start this appointment? This will take you to the consultation form.')) {
         // Create form data
         const formData = new FormData();
         formData.append('status', 'in_progress');
         
         fetch(`/appointments/${appointmentId}/update-status`, {
             method: 'POST',
-            body: formData
+            body: formData,
+            redirect: 'manual'  // Handle redirects manually
         })
         .then(response => {
             if (response.ok) {
-                location.reload();
+                // If the server returns a redirect (status 302), follow it
+                if (response.type === 'opaqueredirect' || response.redirected) {
+                    window.location.href = response.url || `/medical-records/consultation/new?appointment_id=${appointmentId}`;
+                } else {
+                    // If no redirect, go to consultation form directly
+                    window.location.href = `/medical-records/consultation/new?appointment_id=${appointmentId}`;
+                }
             } else {
                 throw new Error('HTTP error! status: ' + response.status);
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            alert('Error starting appointment. Please try again.');
+            // On error, try to go to consultation form anyway
+            console.log('Attempting to redirect to consultation form...');
+            window.location.href = `/medical-records/consultation/new?appointment_id=${appointmentId}`;
         });
     }
 }
