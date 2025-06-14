@@ -393,26 +393,26 @@ button[type="submit"]:disabled:hover {
    SIDEBAR ANIMATIONS & FOUC PREVENTION
    =================== */
 
-/* Prevent FOUC for sidebar */
-.sidebar-full,
-.sidebar-collapsed {
+/* Prevent FOUC for sidebar - simple approach */
+.sidebar-container {
     opacity: 0;
-    transition: opacity 0.3s ease, width 0.3s ease;
+    transition: opacity 0.2s ease;
 }
 
-.sidebar-full.loaded,
-.sidebar-collapsed.loaded {
+.sidebar-container.loaded {
     opacity: 1;
 }
 
-/* Sidebar transition animations */
-.sidebar-transition {
-    transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-                opacity 0.2s ease;
+/* Simple sidebar transitions */
+.sidebar-full,
+.sidebar-collapsed {
+    transition: opacity 0.2s ease;
 }
 
-/* Sidebar width transitions */
-.sidebar-expand {
+/* Remove jerky animations - keep it simple */
+.sidebar-transitioning {
+    pointer-events: none;
+}
     animation: sidebarExpand 0.3s ease-out forwards;
 }
 
