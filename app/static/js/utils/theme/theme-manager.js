@@ -133,8 +133,8 @@ export class ThemeManager {
      * @param {string} theme - Current theme
      */
     updateThemeButtons(theme) {
-        // Update toggle button icons
-        document.querySelectorAll('#theme-toggle, #theme-toggle-mobile').forEach(button => {
+        // Update toggle button icons - include sidebar buttons
+        document.querySelectorAll('#theme-toggle, #theme-toggle-mobile, #sidebar-theme-toggle, #collapsed-theme-toggle').forEach(button => {
             // Hide all theme icons first
             button.querySelectorAll('.theme-light, .theme-dark, .theme-system').forEach(icon => {
                 icon.classList.add('hidden');
@@ -163,6 +163,8 @@ export class ThemeManager {
     closeThemeDropdowns() {
         document.getElementById('theme-menu')?.classList.add('hidden');
         document.getElementById('theme-menu-mobile')?.classList.add('hidden');
+        document.getElementById('sidebar-theme-menu')?.classList.add('hidden');
+        document.getElementById('collapsed-theme-menu')?.classList.add('hidden');
     }
 
     /**
