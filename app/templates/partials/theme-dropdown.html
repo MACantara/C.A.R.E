@@ -1,0 +1,85 @@
+<!-- Theme Dropdown Component -->
+<!-- 
+    Parameters:
+    - dropdown_id: Unique ID for the dropdown (required)
+    - button_id: Unique ID for the button (required)
+    - size: 'sm', 'md', 'lg' (default: 'md')
+    - position: 'bottom-left', 'bottom-right', 'top-left', 'top-right' (default: 'bottom-right')
+    - button_classes: Additional classes for the button (optional)
+    - menu_classes: Additional classes for the menu (optional)
+    - show_chevron: Whether to show chevron icon (default: true)
+-->
+
+{% set size = size or 'md' %}
+{% set position = position or 'bottom-right' %}
+{% set show_chevron = show_chevron if show_chevron is defined else true %}
+
+{% if size == 'sm' %}
+    {% set icon_size = 'text-xs' %}
+    {% set button_padding = 'p-1' %}
+    {% set menu_width = 'w-28' %}
+    {% set menu_padding = 'py-1' %}
+    {% set item_padding = 'px-2 py-1.5' %}
+    {% set item_text_size = 'text-xs' %}
+    {% set icon_spacing = 'space-x-1.5' %}
+{% elif size == 'lg' %}
+    {% set icon_size = 'text-xl' %}
+    {% set button_padding = 'p-3' %}
+    {% set menu_width = 'w-52' %}
+    {% set menu_padding = 'py-2' %}
+    {% set item_padding = 'px-4 py-3' %}
+    {% set item_text_size = 'text-base' %}
+    {% set icon_spacing = 'space-x-3' %}
+{% else %}
+    {% set icon_size = 'text-sm' %}
+    {% set button_padding = 'p-2' %}
+    {% set menu_width = 'w-48' %}
+    {% set menu_padding = 'py-1' %}
+    {% set item_padding = 'px-4 py-2' %}
+    {% set item_text_size = 'text-sm' %}
+    {% set icon_spacing = 'space-x-2' %}
+{% endif %}
+
+{% if position == 'bottom-left' %}
+    {% set menu_position = 'absolute left-0 mt-2' %}
+{% elif position == 'top-left' %}
+    {% set menu_position = 'absolute left-0 bottom-full mb-2' %}
+{% elif position == 'top-right' %}
+    {% set menu_position = 'absolute right-0 bottom-full mb-2' %}
+{% else %}
+    {% set menu_position = 'absolute right-0 mt-2' %}
+{% endif %}
+
+<div class="relative">
+    <button id="{{ button_id }}"
+        class="{{ button_padding }} text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-300 hover:scale-110 transform rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center space-x-1 cursor-pointer {{ button_classes or '' }}"
+        aria-label="Select theme" title="Select theme" data-dropdown-toggle="{{ dropdown_id }}">
+        <i class="bi bi-sun-fill {{ icon_size }} theme-light"></i>
+        <i class="bi bi-moon-fill {{ icon_size }} theme-dark hidden"></i>
+        <i class="bi bi-circle-half {{ icon_size }} theme-system hidden"></i>
+        {% if show_chevron %}
+        <i class="bi bi-chevron-down text-sm"></i>
+        {% endif %}
+    </button>
+    
+    <div id="{{ dropdown_id }}"
+        class="hidden {{ menu_position }} {{ menu_width }} bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-50 {{ menu_classes or '' }}">
+        <div class="{{ menu_padding }}">
+            <button data-theme="light"
+                class="w-full text-left {{ item_padding }} {{ item_text_size }} text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center {{ icon_spacing }} cursor-pointer rounded-md transition-colors duration-200">
+                <i class="bi bi-sun-fill"></i>
+                <span>Light</span>
+            </button>
+            <button data-theme="dark"
+                class="w-full text-left {{ item_padding }} {{ item_text_size }} text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center {{ icon_spacing }} cursor-pointer rounded-md transition-colors duration-200">
+                <i class="bi bi-moon-fill"></i>
+                <span>Dark</span>
+            </button>
+            <button data-theme="system"
+                class="w-full text-left {{ item_padding }} {{ item_text_size }} text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center {{ icon_spacing }} cursor-pointer rounded-md transition-colors duration-200">
+                <i class="bi bi-circle-half"></i>
+                <span>System</span>
+            </button>
+        </div>
+    </div>
+</div>
