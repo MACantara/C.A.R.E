@@ -82,9 +82,12 @@
         // Initialize audio notification
         function initializeAudio() {
             try {
-                // Create audio element for notification sound
-                notificationAudio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmEcBTC8EvIwVRQKa1VgUh5QcJtjHAY/4VkQUm8uAAEQU+CG');
-                notificationAudio.volume = 0.3;
+                // Create audio element for notification sound using the MP3 file
+                notificationAudio = new Audio('{{ url_for("static", filename="audio/chat-message-notification.mp3") }}');
+                notificationAudio.volume = 0.4;
+                
+                // Preload the audio file
+                notificationAudio.preload = 'auto';
                 
                 // Test audio capability
                 const playPromise = notificationAudio.play();
