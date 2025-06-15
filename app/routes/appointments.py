@@ -575,4 +575,3 @@ def admin_view():
         current_time_local=get_current_time(),
         localize_datetime=localize_datetime,
     )
-    )
