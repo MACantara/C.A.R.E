@@ -1,19 +1,6 @@
 from app import db
 from datetime import datetime
 from enum import Enum
-from sqlalchemy import Index
-
-
-class RecordType(Enum):
-    CONSULTATION = "consultation"
-    DIAGNOSIS = "diagnosis"
-    PRESCRIPTION = "prescription"
-    LAB_RESULT = "lab_result"
-    IMAGING = "imaging"
-    SURGERY = "surgery"
-    VACCINATION = "vaccination"
-    ALLERGY = "allergy"
-    CHRONIC_CONDITION = "chronic_condition"
 
 
 class ConsultationStatus(Enum):
@@ -28,60 +15,6 @@ class PrescriptionStatus(Enum):
     COMPLETED = "completed"
     DISCONTINUED = "discontinued"
     EXPIRED = "expired"
-
-
-class MedicalRecord(db.Model):
-    __tablename__ = "medical_records"
-
-    id = db.Column(db.Integer, primary_key=True)
-
-    # Patient and doctor information
-    patient_id = db.Column(
-        db.Integer, db.ForeignKey("users.id"), nullable=False, index=True
-    )
-    doctor_id = db.Column(
-        db.Integer, db.ForeignKey("users.id"), nullable=False, index=True
-    )
-    appointment_id = db.Column(
-        db.Integer, db.ForeignKey("appointments.id"), nullable=True
-    )
-
-    # Record details
-    record_type = db.Column(db.Enum(RecordType), nullable=False, index=True)
-    title = db.Column(db.String(200), nullable=False)
-    description = db.Column(db.Text, nullable=True)
-    notes = db.Column(db.Text, nullable=True)
-
-    # Metadata
-    record_date = db.Column(
-        db.DateTime, default=datetime.utcnow, nullable=False, index=True
-    )
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = db.Column(
-        db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
-    )
-
-    # Relationships
-    patient = db.relationship(
-        "User", foreign_keys=[patient_id], backref="medical_records"
-    )
-    doctor = db.relationship(
-        "User", foreign_keys=[doctor_id], backref="created_records"
-    )
-    appointment = db.relationship("Appointment", backref="medical_records")
-
-
-# Add composite index for efficient queries
-Index(
-    "idx_medical_records_patient_date",
-    MedicalRecord.patient_id,
-    MedicalRecord.record_date.desc(),
-)
-Index(
-    "idx_medical_records_doctor_date",
-    MedicalRecord.doctor_id,
-    MedicalRecord.record_date.desc(),
-)
 
 
 class Consultation(db.Model):
