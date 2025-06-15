@@ -17,6 +17,7 @@ from app import db
 from app.utils.timezone_utils import get_current_time, localize_datetime, get_user_timezone
 from app.models.appointment import Appointment, AppointmentStatus, AppointmentType
 from app.models.user import User
+from app.models.medical_record import Consultation, Prescription, VitalSigns, Allergy
 from app.utils.email_utils import (
     send_appointment_confirmation,
     send_appointment_reminder,
