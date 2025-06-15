@@ -1,5 +1,5 @@
 <!-- TODO: After the consultation form is filled up, if the doctor deem it necessary, redirect to the prescription form. Otherwise, redirect to the medical records page. -->
-<!-- TODO: The complete & save button should update the consultation form status from draft to completed. -->
+
 
 {% extends "base.html" %}
 
@@ -307,21 +307,15 @@
                     {% else %}
                     <div class="text-sm text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 px-3 py-2 rounded-lg border border-amber-200 dark:border-amber-800">
                         <i class="bi bi-info-circle mr-1"></i>
-                        Editing existing {{ 'completed' if existing_consultation.status.value == 'completed' else 'draft' }} consultation
+                        Editing existing consultation
                     </div>
                     {% endif %}
                     
                     <div class="flex space-x-4">
-                        <button type="submit" name="complete_consultation" value="true"
+                        <button type="submit"
                             class="inline-flex items-center px-6 py-3 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition-colors duration-200">
                             <i class="bi bi-check-circle mr-2"></i>
-                            Complete & Save
-                        </button>
-
-                        <button type="submit"
-                            class="inline-flex items-center px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors duration-200">
-                            <i class="bi bi-save mr-2"></i>
-                            {% if existing_consultation %}Update Draft{% else %}Save as Draft{% endif %}
+                            {% if existing_consultation %}Update & Complete{% else %}Complete & Save{% endif %}
                         </button>
                     </div>
                 </div>

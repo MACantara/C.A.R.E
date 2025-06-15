@@ -143,11 +143,7 @@ def create_consultation():
             consultation.follow_up_instructions = request.form.get("follow_up_instructions", "").strip()
             consultation.next_appointment_recommended = bool(request.form.get("next_appointment_recommended"))
             consultation.next_appointment_timeframe = request.form.get("next_appointment_timeframe", "").strip()
-            consultation.status = (
-                ConsultationStatus.COMPLETED
-                if request.form.get("complete_consultation")
-                else ConsultationStatus.DRAFT
-            )
+            consultation.status = ConsultationStatus.COMPLETED
             consultation.updated_at = get_current_time().replace(tzinfo=None)
         else:
             # Create new consultation
@@ -168,11 +164,7 @@ def create_consultation():
                 follow_up_instructions=request.form.get("follow_up_instructions", "").strip(),
                 next_appointment_recommended=bool(request.form.get("next_appointment_recommended")),
                 next_appointment_timeframe=request.form.get("next_appointment_timeframe", "").strip(),
-                status=(
-                    ConsultationStatus.COMPLETED
-                    if request.form.get("complete_consultation")
-                    else ConsultationStatus.DRAFT
-                ),
+                status=ConsultationStatus.COMPLETED,
             )
             db.session.add(consultation)
 
@@ -294,7 +286,7 @@ def create_consultation():
             
             db.session.commit()
 
-        action = "updated" if consultation_id else "recorded"
+        action = "updated" if consultation_id else "completed"
         flash(f"Consultation {action} for {patient.display_name}.", "success")
         return redirect(
             url_for("medical_records.patient_records", patient_id=patient_id)
