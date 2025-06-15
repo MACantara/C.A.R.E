@@ -174,6 +174,72 @@
                     </div>
                 </div>
 
+                <!-- Allergies -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-xl font-bold text-gray-900 dark:text-white">Allergies</h2>
+                        <button type="button" id="add-allergy-btn" class="px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200">
+                            <i class="bi bi-plus-circle mr-1"></i>Add Allergy
+                        </button>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-2 font-medium text-sm text-gray-700 dark:text-gray-300">
+                        <div>Allergen</div>
+                        <div>Type</div>
+                        <div>Severity</div>
+                        <div>Reaction</div>
+                        <div>Notes</div>
+                    </div>
+                    
+                    <div id="allergies-container">
+                        {% if existing_allergies %}
+                            {% for allergy in existing_allergies %}
+                            <div class="allergy-row grid grid-cols-1 md:grid-cols-5 gap-4 {% if not loop.first %}border-t border-gray-200 dark:border-gray-700 pt-4 mt-4{% endif %}">
+                                <div>
+                                    <input type="text" name="allergen[]" placeholder="Allergen" value="{{ allergy.allergen }}"
+                                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                                </div>
+                                <div>
+                                    <select name="allergy_type[]"
+                                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                                        <option value="" {% if not allergy.allergy_type %}selected{% endif %}>Select Type</option>
+                                        <option value="drug" {% if allergy.allergy_type == 'drug' %}selected{% endif %}>Drug</option>
+                                        <option value="food" {% if allergy.allergy_type == 'food' %}selected{% endif %}>Food</option>
+                                        <option value="environmental" {% if allergy.allergy_type == 'environmental' %}selected{% endif %}>Environmental</option>
+                                        <option value="other" {% if allergy.allergy_type == 'other' %}selected{% endif %}>Other</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <select name="severity[]"
+                                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                                        <option value="" {% if not allergy.severity %}selected{% endif %}>Select Severity</option>
+                                        <option value="mild" {% if allergy.severity == 'mild' %}selected{% endif %}>Mild</option>
+                                        <option value="moderate" {% if allergy.severity == 'moderate' %}selected{% endif %}>Moderate</option>
+                                        <option value="severe" {% if allergy.severity == 'severe' %}selected{% endif %}>Severe</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <input type="text" name="reaction[]" placeholder="Reaction" value="{{ allergy.reaction }}"
+                                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                                </div>
+                                <div class="flex items-center">
+                                    <input type="text" name="allergy_notes[]" placeholder="Notes" value="{{ allergy.notes }}"
+                                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                                    <button type="button" class="remove-allergy-btn ml-2 text-red-500 hover:text-red-700">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+                    
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-4">
+                        <i class="bi bi-info-circle mr-1"></i>
+                        Record any known patient allergies, reactions, and severity
+                    </p>
+                </div>
+
                 <!-- History -->
                 <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
                     <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4">Medical History</h2>
@@ -369,6 +435,23 @@ document.addEventListener('DOMContentLoaded', function() {
                 heart_rate: apiData.vitals?.heart_rate?.toString() || '',
                 pain_scale: apiData.vitals?.pain_scale?.toString() || ''
             };
+            
+            // Handle allergies data from API
+            if (apiData.allergies && apiData.allergies.length > 0) {
+                // Clear existing allergies first
+                document.getElementById('allergies-container').innerHTML = '';
+                
+                // Add each allergy
+                apiData.allergies.forEach(allergy => {
+                    addNewAllergyRow(
+                        allergy.allergen,
+                        allergy.allergy_type,
+                        allergy.severity,
+                        allergy.reaction,
+                        allergy.notes
+                    );
+                });
+            }
         } else {
             // Fallback hardcoded sample data
             const hardcodedSamples = [
@@ -466,6 +549,66 @@ document.addEventListener('DOMContentLoaded', function() {
         setTimeout(() => {
             message.remove();
         }, 3000);
+    }
+    
+    // Helper function to add allergy rows
+    function addNewAllergyRow(allergen = '', type = '', severity = '', reaction = '', notes = '') {
+        const container = document.getElementById('allergies-container');
+        const rowCount = container.querySelectorAll('.allergy-row').length;
+        
+        const newRow = document.createElement('div');
+        newRow.className = 'allergy-row grid grid-cols-1 md:grid-cols-5 gap-4 border-t border-gray-200 dark:border-gray-700 pt-4 mt-4';
+        
+        newRow.innerHTML = `
+            <div>
+                <input type="text" name="allergen[]" placeholder="Allergen" value="${allergen}" 
+                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+            </div>
+            <div>
+                <select name="allergy_type[]" 
+                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                    <option value="" ${type === '' ? 'selected' : ''}>Select Type</option>
+                    <option value="drug" ${type === 'drug' ? 'selected' : ''}>Drug</option>
+                    <option value="food" ${type === 'food' ? 'selected' : ''}>Food</option>
+                    <option value="environmental" ${type === 'environmental' ? 'selected' : ''}>Environmental</option>
+                    <option value="other" ${type === 'other' ? 'selected' : ''}>Other</option>
+                </select>
+            </div>
+            <div>
+                <select name="severity[]" 
+                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                    <option value="" ${severity === '' ? 'selected' : ''}>Select Severity</option>
+                    <option value="mild" ${severity === 'mild' ? 'selected' : ''}>Mild</option>
+                    <option value="moderate" ${severity === 'moderate' ? 'selected' : ''}>Moderate</option>
+                    <option value="severe" ${severity === 'severe' ? 'selected' : ''}>Severe</option>
+                </select>
+            </div>
+            <div>
+                <input type="text" name="reaction[]" placeholder="Reaction" value="${reaction}" 
+                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+            </div>
+            <div class="flex items-center">
+                <input type="text" name="allergy_notes[]" placeholder="Notes" value="${notes}" 
+                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                <button type="button" class="remove-allergy-btn ml-2 text-red-500 hover:text-red-700">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </div>
+        `;
+        
+        container.appendChild(newRow);
+        
+        // Add event listener to remove button
+        newRow.querySelector('.remove-allergy-btn').addEventListener('click', function() {
+            container.removeChild(newRow);
+        });
+    }
+    
+    // Add button for adding new allergies
+    if (document.getElementById('add-allergy-btn')) {
+        document.getElementById('add-allergy-btn').addEventListener('click', function() {
+            addNewAllergyRow();
+        });
     }
 });
 </script>

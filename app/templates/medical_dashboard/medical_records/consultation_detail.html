@@ -179,6 +179,45 @@
                 </div>
                 {% endif %}
 
+                <!-- Allergies -->
+                {% if allergies %}
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-100 dark:border-gray-700 opacity-0 animate-fade-in-up" style="animation-delay: 0.45s;">
+                    <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-6">Allergies</h2>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                            <thead>
+                                <tr>
+                                    <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700 dark:text-gray-300">Allergen</th>
+                                    <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700 dark:text-gray-300">Type</th>
+                                    <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700 dark:text-gray-300">Severity</th>
+                                    <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700 dark:text-gray-300">Reaction</th>
+                                    <th class="px-4 py-2 text-left text-sm font-semibold text-gray-700 dark:text-gray-300">Notes</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
+                                {% for allergy in allergies %}
+                                <tr>
+                                    <td class="px-4 py-3 text-gray-900 dark:text-white">{{ allergy.allergen }}</td>
+                                    <td class="px-4 py-3 text-gray-900 dark:text-white">{{ allergy.allergy_type|title if allergy.allergy_type else '' }}</td>
+                                    <td class="px-4 py-3">
+                                        <span class="px-2 py-1 text-xs font-medium rounded-full
+                                            {% if allergy.severity == 'severe' %}bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400
+                                            {% elif allergy.severity == 'moderate' %}bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400
+                                            {% elif allergy.severity == 'mild' %}bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400
+                                            {% else %}bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400{% endif %}">
+                                            {{ allergy.severity|title if allergy.severity else 'Unknown' }}
+                                        </span>
+                                    </td>
+                                    <td class="px-4 py-3 text-gray-700 dark:text-gray-300">{{ allergy.reaction }}</td>
+                                    <td class="px-4 py-3 text-gray-700 dark:text-gray-300">{{ allergy.notes }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                {% endif %}
+
                 <!-- Physical Examination -->
                 {% if consultation.general_appearance or consultation.physical_examination %}
                 <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-100 dark:border-gray-700 opacity-0 animate-fade-in-up" style="animation-delay: 0.5s;">

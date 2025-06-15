@@ -520,11 +520,18 @@ def consultation_details(consultation_id):
         consultation_id=consultation_id
     ).order_by(desc(Prescription.prescribed_date)).all()
 
+    # Get allergies for this patient
+    allergies = Allergy.query.filter_by(
+        patient_id=consultation.patient_id,
+        is_active=True
+    ).all()
+
     return render_template(
         "medical_dashboard/medical_records/consultation_detail.html",
         consultation=consultation,
         vital_signs=vital_signs,
         related_prescriptions=related_prescriptions,
+        allergies=allergies,  # Add this
         user_timezone=user_timezone,
         current_time_local=current_time_local,
         localize_datetime=localize_datetime,

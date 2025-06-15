@@ -16,6 +16,7 @@ from app.models.medical_record import (
     Consultation,
     VitalSigns,
     ConsultationStatus,
+    Allergy,
 )
 from app.models.user import User
 from app.models.appointment import Appointment
@@ -59,9 +60,16 @@ def new_consultation():
     appointment = None
     existing_consultation = None
     existing_vital_signs = None
-
+    existing_allergies = None
+    
     if patient_id:
         patient = User.query.filter_by(id=patient_id, role="patient").first()
+        # Also get existing allergies for this patient
+        if patient:
+            existing_allergies = Allergy.query.filter_by(
+                patient_id=patient.id,
+                is_active=True
+            ).all()
 
     if appointment_id:
         appointment = Appointment.query.get(appointment_id)
@@ -97,6 +105,7 @@ def new_consultation():
         chief_complaint=chief_complaint,
         existing_consultation=existing_consultation,
         existing_vital_signs=existing_vital_signs,
+        existing_allergies=existing_allergies,  # Add this
         user_timezone=user_timezone,
         current_time_local=current_time_local,
         stats=stats,
@@ -285,13 +294,47 @@ def create_consultation():
                 db.session.add(vital_signs)
             
             db.session.commit()
+        
+        # Process allergies if provided
+        allergies_data = request.form.getlist('allergen[]')
+        if allergies_data:
+            allergy_types = request.form.getlist('allergy_type[]')
+            severities = request.form.getlist('severity[]')
+            reactions = request.form.getlist('reaction[]')
+            allergy_notes = request.form.getlist('allergy_notes[]')
+            
+            # Delete existing allergies if updating to avoid duplicates
+            if consultation_id:
+                existing_allergies = Allergy.query.filter_by(
+                    patient_id=patient_id,
+                    recorded_by=current_user.id
+                ).all()
+                for allergy in existing_allergies:
+                    db.session.delete(allergy)
+            
+            # Create new allergies
+            for i in range(len(allergies_data)):
+                if allergies_data[i].strip():
+                    allergy = Allergy(
+                        patient_id=patient_id,
+                        recorded_by=current_user.id,
+                        allergen=allergies_data[i].strip(),
+                        allergy_type=allergy_types[i].strip() if i < len(allergy_types) else None,
+                        severity=severities[i].strip() if i < len(severities) else None,
+                        reaction=reactions[i].strip() if i < len(reactions) else None,
+                        notes=allergy_notes[i].strip() if i < len(allergy_notes) else None,
+                        is_active=True
+                    )
+                    db.session.add(allergy)
+            
+            db.session.commit()
 
         action = "updated" if consultation_id else "completed"
         flash(f"Consultation {action} for {patient.display_name}.", "success")
         return redirect(
             url_for("medical_records.patient_records", patient_id=patient_id)
         )
-
+        
     except Exception as e:
         db.session.rollback()
         current_app.logger.error(f"Error creating/updating consultation: {e}")
@@ -317,7 +360,23 @@ def generate_sample_consultation():
                 "bp_diastolic": 76,
                 "heart_rate": 72,
                 "pain_scale": 2
-            }
+            },
+            "allergies": [
+                {
+                    "allergen": "Penicillin",
+                    "allergy_type": "drug",
+                    "severity": "severe",
+                    "reaction": "Hives, difficulty breathing",
+                    "notes": "First discovered at age 10"
+                },
+                {
+                    "allergen": "Pollen",
+                    "allergy_type": "environmental",
+                    "severity": "mild",
+                    "reaction": "Sneezing, watery eyes",
+                    "notes": "Seasonal - Spring and Fall"
+                }
+            ]
         },
         {
             "chief_complaint": "Follow-up visit for hypertension management. Patient reports good adherence to medications.",
@@ -330,7 +389,16 @@ def generate_sample_consultation():
                 "bp_diastolic": 82,
                 "heart_rate": 68,
                 "pain_scale": 0
-            }
+            },
+            "allergies": [
+                {
+                    "allergen": "Sulfa drugs",
+                    "allergy_type": "drug",
+                    "severity": "moderate",
+                    "reaction": "Skin rash, fever",
+                    "notes": "Avoid all sulfonamides"
+                }
+            ]
         },
         {
             "chief_complaint": "Patient presents with nausea, vomiting, and diarrhea for 2 days.",
@@ -343,7 +411,23 @@ def generate_sample_consultation():
                 "bp_diastolic": 70,
                 "heart_rate": 88,
                 "pain_scale": 4
-            }
+            },
+            "allergies": [
+                {
+                    "allergen": "Shellfish",
+                    "allergy_type": "food",
+                    "severity": "severe",
+                    "reaction": "Anaphylaxis",
+                    "notes": "Carries EpiPen"
+                },
+                {
+                    "allergen": "Ibuprofen",
+                    "allergy_type": "drug",
+                    "severity": "mild",
+                    "reaction": "Stomach upset, nausea",
+                    "notes": "Can take acetaminophen instead"
+                }
+            ]
         }
     ]
     
