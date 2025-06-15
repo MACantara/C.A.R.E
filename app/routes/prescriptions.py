@@ -131,7 +131,14 @@ def create_prescription():
         db.session.commit()
 
         patient = User.query.get(patient_id)
-        flash(f"Prescription created for {patient.display_name}.", "success")
+        
+        # Provide different success messages based on context
+        if consultation_id:
+            flash(f"Prescription created for {patient.display_name} following consultation.", "success")
+        else:
+            flash(f"Prescription created for {patient.display_name}.", "success")
+        
+        # Always redirect to patient records after prescription creation
         return redirect(
             url_for("medical_records.patient_records", patient_id=patient_id)
         )

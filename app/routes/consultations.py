@@ -119,6 +119,7 @@ def create_consultation():
     patient_id = request.form.get("patient_id")
     appointment_id = request.form.get("appointment_id") or None
     consultation_id = request.form.get("consultation_id") or None  # For updating existing
+    prescription_required = bool(request.form.get("prescription_required"))  # Check if prescription is needed
 
     # Validation
     if not patient_id:
@@ -331,9 +332,20 @@ def create_consultation():
 
         action = "updated" if consultation_id else "completed"
         flash(f"Consultation {action} for {patient.display_name}.", "success")
-        return redirect(
-            url_for("medical_records.patient_records", patient_id=patient_id)
-        )
+        
+        # Check if prescription is required and redirect accordingly
+        if prescription_required:
+            return redirect(
+                url_for(
+                    "prescriptions.new_prescription", 
+                    patient_id=patient_id,
+                    consultation_id=consultation.id
+                )
+            )
+        else:
+            return redirect(
+                url_for("medical_records.patient_records", patient_id=patient_id)
+            )
         
     except Exception as e:
         db.session.rollback()
