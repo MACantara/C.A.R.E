@@ -118,11 +118,6 @@ export class MessageRenderer {
                         }</p>
                     </div>
                 </div>
-                <div class="flex items-center space-x-2">
-                    <button onclick="messageSystem.showChatOptions()" class="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
-                        <i class="bi bi-three-dots-vertical"></i>
-                    </button>
-                </div>
             </div>
         `;
     }
