@@ -76,6 +76,50 @@
     // Global message count management for non-messaging pages
     (function() {
         let globalSocket = null;
+        let notificationAudio = null;
+        let isAudioEnabled = true;
+
+        // Initialize audio notification
+        function initializeAudio() {
+            try {
+                // Create audio element for notification sound
+                notificationAudio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmEcBTC8EvIwVRQKa1VgUh5QcJtjHAY/4VkQUm8uAAEQU+CG');
+                notificationAudio.volume = 0.3;
+                
+                // Test audio capability
+                const playPromise = notificationAudio.play();
+                if (playPromise !== undefined) {
+                    playPromise.then(() => {
+                        notificationAudio.pause();
+                        notificationAudio.currentTime = 0;
+                    }).catch(() => {
+                        // Audio play failed, disable notifications
+                        isAudioEnabled = false;
+                        console.log('Audio notifications disabled - user interaction required');
+                    });
+                }
+            } catch (error) {
+                console.log('Audio notifications not supported');
+                isAudioEnabled = false;
+            }
+        }
+
+        // Play notification sound
+        function playNotificationSound() {
+            if (!isAudioEnabled || !notificationAudio) return;
+            
+            try {
+                notificationAudio.currentTime = 0;
+                const playPromise = notificationAudio.play();
+                if (playPromise !== undefined) {
+                    playPromise.catch(() => {
+                        // Silently fail if audio can't play
+                    });
+                }
+            } catch (error) {
+                // Silently fail if audio can't play
+            }
+        }
 
         // Initialize global Socket.IO connection for message updates
         function initializeGlobalSocket() {
@@ -99,6 +143,9 @@
                 // Only update count if we're not on the messaging page
                 if (!window.messageSystem) {
                     globalSocket.emit('request_unread_count');
+                    
+                    // Play notification sound
+                    playNotificationSound();
                     
                     // Show toast notification for new messages
                     showMessageToast(data);
@@ -149,7 +196,7 @@
             if (window.location.pathname.startsWith('/messages')) return;
 
             const toast = document.createElement('div');
-            toast.className = 'fixed top-4 right-4 z-50 bg-blue-600 text-white p-4 rounded-lg shadow-lg max-w-sm opacity-0 transform translate-x-full transition-all duration-300';
+            toast.className = 'fixed top-4 right-4 z-50 bg-blue-600 text-white p-4 rounded-lg shadow-lg max-w-sm opacity-0 transform translate-x-full transition-all duration-300 cursor-pointer';
             toast.innerHTML = `
                 <div class="flex items-start">
                     <div class="flex-shrink-0">
@@ -158,8 +205,9 @@
                     <div class="ml-3 flex-1">
                         <p class="text-sm font-medium">${data.notification.title}</p>
                         <p class="text-xs opacity-90">${data.notification.body}</p>
+                        <p class="text-xs opacity-75 mt-1">Click to view messages</p>
                     </div>
-                    <button onclick="this.parentElement.parentElement.remove()" class="ml-2 text-white hover:text-gray-200">
+                    <button onclick="event.stopPropagation(); this.parentElement.parentElement.remove()" class="ml-2 text-white hover:text-gray-200">
                         <i class="bi bi-x text-lg"></i>
                     </button>
                 </div>
@@ -174,8 +222,10 @@
 
             // Auto-remove after 5 seconds
             setTimeout(() => {
-                toast.classList.add('opacity-0', 'translate-x-full');
-                setTimeout(() => toast.remove(), 300);
+                if (toast.parentElement) {
+                    toast.classList.add('opacity-0', 'translate-x-full');
+                    setTimeout(() => toast.remove(), 300);
+                }
             }, 5000);
 
             // Click to go to messages
@@ -192,10 +242,28 @@
                 .catch(error => console.error('Error fetching unread count:', error));
         }
 
+        // Enable audio notifications after user interaction
+        function enableAudioOnInteraction() {
+            if (!isAudioEnabled && notificationAudio) {
+                const playPromise = notificationAudio.play();
+                if (playPromise !== undefined) {
+                    playPromise.then(() => {
+                        notificationAudio.pause();
+                        notificationAudio.currentTime = 0;
+                        isAudioEnabled = true;
+                        console.log('Audio notifications enabled');
+                    }).catch(() => {
+                        // Still can't play audio
+                    });
+                }
+            }
+        }
+
         // Initialize when DOM is ready
         document.addEventListener('DOMContentLoaded', () => {
             // Don't initialize if we're on the messaging page (it has its own system)
             if (!document.querySelector('[data-current-user-id]')) {
+                initializeAudio();
                 initializeGlobalSocket();
 
                 // Fallback polling for unread count updates
@@ -204,6 +272,11 @@
                         fetchUnreadCountFallback();
                     }
                 }, 30000); // Every 30 seconds
+                
+                // Enable audio on first user interaction
+                ['click', 'touchstart', 'keydown'].forEach(eventType => {
+                    document.addEventListener(eventType, enableAudioOnInteraction, { once: true });
+                });
             }
         });
 
@@ -215,6 +288,10 @@
             } else {
                 fetchUnreadCountFallback();
             }
+        };
+        window.toggleMessageNotificationSound = () => {
+            isAudioEnabled = !isAudioEnabled;
+            return isAudioEnabled;
         };
     })();
     </script>

@@ -148,30 +148,44 @@ export class UIManager {
      * Show new message toast notification
      */
     showNewMessageToast(data) {
-        const toast = document.createElement("div");
-        toast.className =
-            "fixed bottom-20 right-6 bg-blue-600 text-white px-4 py-3 rounded-lg shadow-lg z-40 animate-slide-in-right cursor-pointer";
+        const toast = document.createElement('div');
+        toast.className = 'fixed top-4 right-4 z-50 bg-green-600 text-white p-4 rounded-lg shadow-lg max-w-sm opacity-0 transform translate-x-full transition-all duration-300 cursor-pointer';
         toast.innerHTML = `
-            <div class="flex items-center">
-                <i class="bi bi-chat-dots mr-2"></i>
-                <div>
-                    <p class="font-medium">New message</p>
-                    <p class="text-sm opacity-90">${data.notification.title}</p>
+            <div class="flex items-start">
+                <div class="flex-shrink-0">
+                    <i class="bi bi-chat-dots text-lg"></i>
                 </div>
+                <div class="ml-3 flex-1">
+                    <p class="text-sm font-medium">${data.notification.title}</p>
+                    <p class="text-xs opacity-90">${data.notification.body}</p>
+                    <p class="text-xs opacity-75 mt-1">Click to view conversation</p>
+                </div>
+                <button onclick="event.stopPropagation(); this.parentElement.parentElement.remove()" class="ml-2 text-white hover:text-gray-200">
+                    <i class="bi bi-x text-lg"></i>
+                </button>
             </div>
         `;
 
         document.body.appendChild(toast);
 
-        // Auto remove after 5 seconds
+        // Animate in
         setTimeout(() => {
-            toast.remove();
-        }, 5000);
+            toast.classList.remove('opacity-0', 'translate-x-full');
+        }, 100);
+
+        // Auto-remove after 4 seconds
+        setTimeout(() => {
+            if (toast.parentElement) {
+                toast.classList.add('opacity-0', 'translate-x-full');
+                setTimeout(() => toast.remove(), 300);
+            }
+        }, 4000);
 
         // Click to open conversation
-        toast.addEventListener("click", () => {
-            this.messageSystem.openChat(data.message.sender_id);
-            toast.remove();
+        toast.addEventListener('click', () => {
+            if (data.message && data.message.sender_id) {
+                this.messageSystem.openChat(data.message.sender_id);
+            }
         });
     }
 

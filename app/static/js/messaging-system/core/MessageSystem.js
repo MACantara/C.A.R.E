@@ -174,6 +174,9 @@ export class MessageSystem {
             this.conversationManager.markConversationAsRead(
                 this.currentChatUserId
             );
+        } else {
+            // Play notification sound for messages not from current chat
+            this.playNotificationSound();
         }
 
         // Update unread count badges in sidebar and navbar
@@ -182,6 +185,42 @@ export class MessageSystem {
         // Show notification for new message if not currently viewing that conversation
         if (this.currentChatUserId !== data.message.sender_id) {
             this.uiManager.showNewMessageToast(data);
+        }
+    }
+
+    /**
+     * Play notification sound for new messages
+     */
+    playNotificationSound() {
+        try {
+            // Create a simple notification sound using Web Audio API
+            if (typeof AudioContext !== 'undefined' || typeof webkitAudioContext !== 'undefined') {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+                oscillator.frequency.setValueAtTime(600, audioContext.currentTime + 0.1);
+                
+                gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+                
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.2);
+            } else {
+                // Fallback: use a simple audio element with data URL
+                const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmEcBTC8EvIwVRQKa1VgUh5QcJtjHAY/4VkQUm8uAAEQU+CG');
+                audio.volume = 0.3;
+                audio.play().catch(() => {
+                    // Silently fail if audio can't play
+                });
+            }
+        } catch (error) {
+            // Silently fail if audio is not supported
+            console.log('Audio notification not supported');
         }
     }
 
