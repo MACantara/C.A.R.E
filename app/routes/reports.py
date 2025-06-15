@@ -438,85 +438,194 @@ def export_report(report_type):
 
         # Create Excel workbook
         wb = Workbook()
+
+        if report_type == "appointments":
+            # Create appointments-focused report
+            ws1 = wb.active
+            ws1.title = "Appointment Metrics"
+            
+            # Add appointment metrics
+            appointment_metrics = AnalyticsService.generate_appointment_metrics(
+                start_date, end_date, doctor_id
+            )
+            
+            # Headers with styling for metrics
+            headers = ["Metric", "Value"]
+            for col, header in enumerate(headers, 1):
+                cell = ws1.cell(row=1, column=col, value=header)
+                cell.font = Font(bold=True, color="FFFFFF")
+                cell.fill = PatternFill(start_color="366092", end_color="366092", fill_type="solid")
+                cell.alignment = Alignment(horizontal="center")
+            
+            # Add appointment metrics data
+            metrics_data = [
+                ("Total Appointments", appointment_metrics.get('total_appointments', 0)),
+                ("Completed Appointments", appointment_metrics.get('completed_appointments', 0)),
+                ("Scheduled Appointments", appointment_metrics.get('scheduled_appointments', 0)),
+                ("Confirmed Appointments", appointment_metrics.get('confirmed_appointments', 0)),
+                ("Cancelled Appointments", appointment_metrics.get('cancelled_appointments', 0)),
+                ("Completion Rate (%)", appointment_metrics.get('completion_rate', 0)),
+                ("Cancellation Rate (%)", appointment_metrics.get('cancellation_rate', 0)),
+                ("Unique Patients", appointment_metrics.get('unique_patients', 0)),
+            ]
+            
+            for row, (metric, value) in enumerate(metrics_data, 2):
+                ws1.cell(row=row, column=1, value=metric)
+                ws1.cell(row=row, column=2, value=value)
+
+            # Create daily breakdown sheet
+            ws2 = wb.create_sheet("Daily Breakdown")
+            headers = ["Date", "Total Appointments", "Completed", "Cancelled", "Completion Rate (%)"]
+            for col, header in enumerate(headers, 1):
+                cell = ws2.cell(row=1, column=col, value=header)
+                cell.font = Font(bold=True, color="FFFFFF")
+                cell.fill = PatternFill(start_color="366092", end_color="366092", fill_type="solid")
+                cell.alignment = Alignment(horizontal="center")
+            
+            # Generate daily data
+            current_date = start_date
+            row = 2
+            while current_date <= end_date:
+                daily_summary = AnalyticsService.generate_daily_summary(current_date)
+                ws2.cell(row=row, column=1, value=current_date.strftime("%Y-%m-%d"))
+                ws2.cell(row=row, column=2, value=daily_summary.get("total_appointments", 0))
+                ws2.cell(row=row, column=3, value=daily_summary.get("completed_appointments", 0))
+                ws2.cell(row=row, column=4, value=daily_summary.get("cancelled_appointments", 0))
+                completion_rate = 0
+                if daily_summary.get("total_appointments", 0) > 0:
+                    completion_rate = round((daily_summary.get("completed_appointments", 0) / daily_summary.get("total_appointments", 0)) * 100, 2)
+                ws2.cell(row=row, column=5, value=completion_rate)
+                current_date += timedelta(days=1)
+                row += 1
+
+        elif report_type == "prescriptions":
+            # Create prescriptions-focused report
+            ws1 = wb.active
+            ws1.title = "Prescription Trends"
+            
+            prescription_trends = AnalyticsService.generate_prescription_trends(
+                start_date, end_date, doctor_id, limit=100
+            )
+            
+            # Headers for prescriptions
+            headers = ["Medication", "Total Prescriptions", "Unique Patients", "Average per Patient"]
+            for col, header in enumerate(headers, 1):
+                cell = ws1.cell(row=1, column=col, value=header)
+                cell.font = Font(bold=True, color="FFFFFF")
+                cell.fill = PatternFill(start_color="366092", end_color="366092", fill_type="solid")
+                cell.alignment = Alignment(horizontal="center")
+            
+            # Add prescription data
+            for row, med in enumerate(prescription_trends, 2):
+                ws1.cell(row=row, column=1, value=med.get('medication', ''))
+                ws1.cell(row=row, column=2, value=med.get('total_prescriptions', 0))
+                ws1.cell(row=row, column=3, value=med.get('unique_patients', 0))
+                avg_per_patient = 0
+                if med.get('unique_patients', 0) > 0:
+                    avg_per_patient = round(med.get('total_prescriptions', 0) / med.get('unique_patients', 0), 2)
+                ws1.cell(row=row, column=4, value=avg_per_patient)
+
+        elif report_type == "performance":
+            # Create performance-focused report
+            ws1 = wb.active
+            ws1.title = "Doctor Performance"
+            
+            doctor_performance = AnalyticsService.generate_doctor_performance(
+                start_date, end_date, doctor_id
+            )
+            
+            # Headers for doctor performance
+            headers = ["Doctor Name", "Total Appointments", "Completed", "Cancelled", "Completion Rate (%)", "Cancellation Rate (%)", "Unique Patients"]
+            for col, header in enumerate(headers, 1):
+                cell = ws1.cell(row=1, column=col, value=header)
+                cell.font = Font(bold=True, color="FFFFFF")
+                cell.fill = PatternFill(start_color="366092", end_color="366092", fill_type="solid")
+                cell.alignment = Alignment(horizontal="center")
+            
+            # Add doctor performance data
+            for row, doc in enumerate(doctor_performance, 2):
+                ws1.cell(row=row, column=1, value=doc.get('doctor_name', ''))
+                ws1.cell(row=row, column=2, value=doc.get('total_appointments', 0))
+                ws1.cell(row=row, column=3, value=doc.get('completed_appointments', 0))
+                ws1.cell(row=row, column=4, value=doc.get('cancelled_appointments', 0))
+                ws1.cell(row=row, column=5, value=doc.get('completion_rate', 0))
+                ws1.cell(row=row, column=6, value=doc.get('cancellation_rate', 0))
+                ws1.cell(row=row, column=7, value=doc.get('unique_patients', 0))
+
+        elif report_type == "comprehensive":
+            # Create comprehensive report with multiple sheets
+            # Appointments Summary
+            ws1 = wb.active
+            ws1.title = "Appointments Summary"
+            
+            appointment_metrics = AnalyticsService.generate_appointment_metrics(
+                start_date, end_date, doctor_id
+            )
+            
+            headers = ["Metric", "Value"]
+            for col, header in enumerate(headers, 1):
+                cell = ws1.cell(row=1, column=col, value=header)
+                cell.font = Font(bold=True, color="FFFFFF")
+                cell.fill = PatternFill(start_color="366092", end_color="366092", fill_type="solid")
+                cell.alignment = Alignment(horizontal="center")
+            
+            metrics_data = [
+                ("Total Appointments", appointment_metrics.get('total_appointments', 0)),
+                ("Completed Appointments", appointment_metrics.get('completed_appointments', 0)),
+                ("Cancelled Appointments", appointment_metrics.get('cancelled_appointments', 0)),
+                ("Completion Rate (%)", appointment_metrics.get('completion_rate', 0)),
+                ("Cancellation Rate (%)", appointment_metrics.get('cancellation_rate', 0)),
+                ("Unique Patients", appointment_metrics.get('unique_patients', 0)),
+            ]
+            
+            for row, (metric, value) in enumerate(metrics_data, 2):
+                ws1.cell(row=row, column=1, value=metric)
+                ws1.cell(row=row, column=2, value=value)
+            
+            # Prescriptions Sheet
+            ws2 = wb.create_sheet("Top Prescriptions")
+            prescription_trends = AnalyticsService.generate_prescription_trends(
+                start_date, end_date, doctor_id, limit=50
+            )
+            
+            headers = ["Medication", "Total Prescriptions", "Unique Patients"]
+            for col, header in enumerate(headers, 1):
+                cell = ws2.cell(row=1, column=col, value=header)
+                cell.font = Font(bold=True, color="FFFFFF")
+                cell.fill = PatternFill(start_color="366092", end_color="366092", fill_type="solid")
+                cell.alignment = Alignment(horizontal="center")
+            
+            for row, med in enumerate(prescription_trends, 2):
+                ws2.cell(row=row, column=1, value=med.get('medication', ''))
+                ws2.cell(row=row, column=2, value=med.get('total_prescriptions', 0))
+                ws2.cell(row=row, column=3, value=med.get('unique_patients', 0))
+            
+            # Doctor Performance Sheet
+            ws3 = wb.create_sheet("Doctor Performance")
+            doctor_performance = AnalyticsService.generate_doctor_performance(
+                start_date, end_date, doctor_id
+            )
+            
+            headers = ["Doctor Name", "Total Appointments", "Completed", "Completion Rate (%)", "Unique Patients"]
+            for col, header in enumerate(headers, 1):
+                cell = ws3.cell(row=1, column=col, value=header)
+                cell.font = Font(bold=True, color="FFFFFF")
+                cell.fill = PatternFill(start_color="366092", end_color="366092", fill_type="solid")
+                cell.alignment = Alignment(horizontal="center")
+            
+            for row, doc in enumerate(doctor_performance, 2):
+                ws3.cell(row=row, column=1, value=doc.get('doctor_name', ''))
+                ws3.cell(row=row, column=2, value=doc.get('total_appointments', 0))
+                ws3.cell(row=row, column=3, value=doc.get('completed_appointments', 0))
+                ws3.cell(row=row, column=4, value=doc.get('completion_rate', 0))
+                ws3.cell(row=row, column=5, value=doc.get('unique_patients', 0))
+
+        else:
+            flash(f"Unknown report type: {report_type}", "error")
+            return redirect(url_for("reports.dashboard"))
         
-        # Create appointments sheet
-        ws1 = wb.active
-        ws1.title = "Appointments"
-        
-        # Add appointment data
-        appointment_metrics = AnalyticsService.generate_appointment_metrics(
-            start_date, end_date, doctor_id
-        )
-        
-        # Headers with styling
-        headers = ["Metric", "Value"]
-        for col, header in enumerate(headers, 1):
-            cell = ws1.cell(row=1, column=col, value=header)
-            cell.font = Font(bold=True)
-            cell.fill = PatternFill(start_color="366092", end_color="366092", fill_type="solid")
-            cell.font = Font(bold=True, color="FFFFFF")
-            cell.alignment = Alignment(horizontal="center")
-        
-        # Add appointment metrics
-        metrics_data = [
-            ("Total Appointments", appointment_metrics.get('total_appointments', 0)),
-            ("Completed Appointments", appointment_metrics.get('completed_appointments', 0)),
-            ("Cancelled Appointments", appointment_metrics.get('cancelled_appointments', 0)),
-            ("Completion Rate (%)", appointment_metrics.get('completion_rate', 0)),
-            ("Cancellation Rate (%)", appointment_metrics.get('cancellation_rate', 0)),
-            ("Unique Patients", appointment_metrics.get('unique_patients', 0)),
-        ]
-        
-        for row, (metric, value) in enumerate(metrics_data, 2):
-            ws1.cell(row=row, column=1, value=metric)
-            ws1.cell(row=row, column=2, value=value)
-        
-        # Create prescriptions sheet
-        ws2 = wb.create_sheet("Prescriptions")
-        prescription_trends = AnalyticsService.generate_prescription_trends(
-            start_date, end_date, doctor_id, limit=50
-        )
-        
-        # Headers for prescriptions
-        headers = ["Medication", "Total Prescriptions", "Unique Patients"]
-        for col, header in enumerate(headers, 1):
-            cell = ws2.cell(row=1, column=col, value=header)
-            cell.font = Font(bold=True)
-            cell.fill = PatternFill(start_color="366092", end_color="366092", fill_type="solid")
-            cell.font = Font(bold=True, color="FFFFFF")
-            cell.alignment = Alignment(horizontal="center")
-        
-        # Add prescription data
-        for row, med in enumerate(prescription_trends, 2):
-            ws2.cell(row=row, column=1, value=med.get('medication', ''))
-            ws2.cell(row=row, column=2, value=med.get('total_prescriptions', 0))
-            ws2.cell(row=row, column=3, value=med.get('unique_patients', 0))
-        
-        # Create doctor performance sheet
-        ws3 = wb.create_sheet("Doctor Performance")
-        doctor_performance = AnalyticsService.generate_doctor_performance(
-            start_date, end_date, doctor_id
-        )
-        
-        # Headers for doctor performance
-        headers = ["Doctor Name", "Total Appointments", "Completed", "Completion Rate (%)", "Unique Patients"]
-        for col, header in enumerate(headers, 1):
-            cell = ws3.cell(row=1, column=col, value=header)
-            cell.font = Font(bold=True)
-            cell.fill = PatternFill(start_color="366092", end_color="366092", fill_type="solid")
-            cell.font = Font(bold=True, color="FFFFFF")
-            cell.alignment = Alignment(horizontal="center")
-        
-        # Add doctor performance data
-        for row, doc in enumerate(doctor_performance, 2):
-            ws3.cell(row=row, column=1, value=doc.get('doctor_name', ''))
-            ws3.cell(row=row, column=2, value=doc.get('total_appointments', 0))
-            ws3.cell(row=row, column=3, value=doc.get('completed_appointments', 0))
-            ws3.cell(row=row, column=4, value=doc.get('completion_rate', 0))
-            ws3.cell(row=row, column=5, value=doc.get('unique_patients', 0))
-        
-        # Auto-adjust column widths
-        for ws in [ws1, ws2, ws3]:
+        # Auto-adjust column widths for all sheets
+        for ws in wb.worksheets:
             for column in ws.columns:
                 max_length = 0
                 column_letter = column[0].column_letter
@@ -540,7 +649,7 @@ def export_report(report_type):
             f"attachment; filename={report_type}_report_{start_date}_{end_date}.xlsx"
         )
         return response
-    
+
     except Exception as e:
         current_app.logger.error(f"Error exporting report: {e}")
         flash("Error exporting report. Please try again.", "error")
