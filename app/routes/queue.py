@@ -37,7 +37,9 @@ def dashboard():
     # Get sidebar statistics using the shared function
     stats = get_sidebar_stats()
     
-    today_local = current_time_local.date()
+    # Get today's date range in UTC for database queries
+    today_start = datetime.combine(current_time_local.date(), datetime.min.time())
+    today_end = datetime.combine(current_time_local.date(), datetime.max.time())
 
     if current_user.role == "doctor":
         # Doctor sees only their queue
@@ -46,8 +48,8 @@ def dashboard():
             .filter(
                 and_(
                     Appointment.doctor_id == current_user.id,
-                    Appointment.appointment_date >= today_local,
-                    Appointment.appointment_date < today_local + timedelta(days=1),
+                    Appointment.appointment_date >= today_start,
+                    Appointment.appointment_date <= today_end,
                 )
             )
             .order_by(PatientQueue.queue_number)
@@ -59,8 +61,8 @@ def dashboard():
             PatientQueue.query.join(Appointment)
             .filter(
                 and_(
-                    Appointment.appointment_date >= today_local,
-                    Appointment.appointment_date < today_local + timedelta(days=1),
+                    Appointment.appointment_date >= today_start,
+                    Appointment.appointment_date <= today_end,
                 )
             )
             .order_by(PatientQueue.queue_number)
@@ -82,7 +84,10 @@ def api_current_queue():
     """API endpoint for real-time queue updates."""
     user_timezone = get_user_timezone()
     current_time_local = get_current_time(user_timezone)
-    today_local = current_time_local.date()
+    
+    # Get today's date range in UTC for database queries
+    today_start = datetime.combine(current_time_local.date(), datetime.min.time())
+    today_end = datetime.combine(current_time_local.date(), datetime.max.time())
 
     if current_user.role == "doctor":
         queue_entries = (
@@ -90,8 +95,8 @@ def api_current_queue():
             .filter(
                 and_(
                     Appointment.doctor_id == current_user.id,
-                    Appointment.appointment_date >= today_local,
-                    Appointment.appointment_date < today_local + timedelta(days=1),
+                    Appointment.appointment_date >= today_start,
+                    Appointment.appointment_date <= today_end,
                 )
             )
             .order_by(PatientQueue.queue_number)
@@ -102,8 +107,8 @@ def api_current_queue():
             PatientQueue.query.join(Appointment)
             .filter(
                 and_(
-                    Appointment.appointment_date >= today_local,
-                    Appointment.appointment_date < today_local + timedelta(days=1),
+                    Appointment.appointment_date >= today_start,
+                    Appointment.appointment_date <= today_end,
                 )
             )
             .order_by(PatientQueue.queue_number)
