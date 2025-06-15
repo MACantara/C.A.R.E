@@ -9,6 +9,7 @@ from .medical_record import (
     Allergy,
     VitalSigns,
 )
+from .message import InternalMessage
 
 __all__ = [
     "User",
@@ -21,4 +22,5 @@ __all__ = [
     "Prescription",
     "Allergy",
     "VitalSigns",
+    "InternalMessage",
 ]
