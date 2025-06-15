@@ -2,107 +2,146 @@
 
 {% block title %}Messages - C.A.R.E. System{% endblock %}
 
-{% block main_class %}flex-1 flex flex-col{% endblock %}
+{% block include_navbar %}
+<!-- Navbar excluded for full-screen medical dashboard interface -->
+{% endblock %}
 
 {% block content %}
-<div class="h-screen bg-gray-50 dark:bg-gray-900 flex flex-col" data-current-user-id="{{ current_user.id }}"
+<div class="min-h-screen bg-gray-50 dark:bg-gray-900 flex" data-current-user-id="{{ current_user.id }}"
     data-user-timezone="{{ user_timezone_name }}" data-current-time="{{ current_time.isoformat() }}">
-    <!-- Header -->
-    <div class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex-shrink-0">
-        <div class="flex items-center justify-between">
-            <div class="flex items-center">
-                <h1 class="text-2xl font-bold text-gray-900 dark:text-white flex items-center">
-                    <i class="bi bi-chat-dots text-blue-600 mr-3"></i>
-                    Messages
-                </h1>
-                <!-- Timezone indicator -->
-                <div
-                    class="ml-4 px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded text-xs text-gray-600 dark:text-gray-400">
-                    <i class="bi bi-clock mr-1"></i>
-                    <span id="timezone-display">{{ user_timezone_name }}</span>
-                    <span class="ml-1" id="current-time-display">{{ current_time.strftime('%H:%M') }}</span>
-                </div>
-            </div>
-            <button onclick="openComposeModal()"
-                class="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors">
-                <i class="bi bi-plus mr-2"></i>New Chat
-            </button>
-        </div>
-    </div>
+    
+    <!-- Include Sidebar -->
+    {% include 'medical_dashboard/components/sidebar.html' %}
 
-    <!-- Main Chat Interface -->
-    <div class="flex-1 flex overflow-hidden min-h-0">
-        <!-- Sidebar - Chat List (30%) -->
-        <div
-            class="w-80 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col flex-shrink-0">
-            <!-- Search -->
-            <div class="p-4 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
-                <div class="relative">
-                    <input type="text" id="chatSearch" placeholder="Search conversations..."
-                        class="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
-                    <i class="bi bi-search absolute left-3 top-2.5 text-gray-400"></i>
-                </div>
-            </div>
-
-            <!-- Chat List -->
-            <div class="flex-1 overflow-y-auto min-h-0" id="chatList">
-                <!-- Loading state -->
-                <div id="chatListLoading" class="p-4 text-center text-gray-500 dark:text-gray-400">
-                    <i class="bi bi-chat-dots animate-pulse text-2xl mb-2"></i>
-                    <p>Loading conversations...</p>
+    <!-- Main Content Area -->
+    <div class="flex-1 flex flex-col min-h-screen max-h-screen">
+        <!-- Header -->
+        <div class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex-shrink-0">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                    <div class="h-12 w-12 flex items-center justify-center rounded-full bg-cyan-100 dark:bg-cyan-900/30 mr-4">
+                        <i class="bi bi-chat-dots text-cyan-600 dark:text-cyan-400 text-xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Messages</h1>
+                        <p class="text-gray-600 dark:text-gray-400">Internal communication system</p>
+                    </div>
                 </div>
 
-                <!-- Chat items will be populated here -->
-                <div id="chatItems" class="hidden"></div>
+                <!-- Header Actions -->
+                <div class="flex items-center space-x-4">
+                    <!-- Timezone Display -->
+                    <div class="px-3 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg">
+                        <div class="flex items-center text-sm text-gray-600 dark:text-gray-400">
+                            <i class="bi bi-clock mr-2"></i>
+                            <span id="timezone-display">{{ user_timezone_name }}</span>
+                            <span class="mx-2">•</span>
+                            <span id="current-time-display">{{ current_time.strftime('%H:%M') }}</span>
+                        </div>
+                    </div>
 
-                <!-- Empty state -->
-                <div id="chatListEmpty" class="p-8 text-center text-gray-500 dark:text-gray-400 hidden">
-                    <i class="bi bi-chat-square text-4xl mb-4"></i>
-                    <h3 class="font-medium mb-2">No conversations yet</h3>
-                    <p class="text-sm">Start a new conversation to begin messaging</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Main Chat Area (70%) -->
-        <div class="flex-1 flex flex-col min-h-0 min-w-0">
-            <!-- Welcome/Empty State -->
-            <div id="chatWelcome" class="flex-1 flex items-center justify-center bg-gray-50 dark:bg-gray-900">
-                <div class="text-center">
-                    <i class="bi bi-chat-square-dots text-6xl text-gray-300 dark:text-gray-600 mb-4"></i>
-                    <h2 class="text-xl font-medium text-gray-900 dark:text-white mb-2">Welcome to Messages</h2>
-                    <p class="text-gray-500 dark:text-gray-400 mb-6">Select a conversation to start chatting</p>
+                    <!-- New Chat Button -->
                     <button onclick="openComposeModal()"
-                        class="inline-flex items-center px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors">
-                        <i class="bi bi-plus mr-2"></i>Start New Conversation
+                        class="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors">
+                        <i class="bi bi-plus mr-2"></i>New Chat
                     </button>
                 </div>
             </div>
+        </div>
 
-            <!-- Chat View (Hidden by default) -->
-            <div id="chatView" class="flex-1 flex flex-col min-h-0 hidden">
-                <!-- Chat Header -->
-                <div id="chatHeader"
-                    class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex-shrink-0">
-                    <!-- Content populated by JavaScript -->
+        <!-- Breadcrumb Navigation -->
+        <div class="bg-gray-50 dark:bg-gray-900 px-6 py-3 border-b border-gray-200 dark:border-gray-700">
+            <nav class="flex" aria-label="Breadcrumb">
+                <ol class="inline-flex items-center space-x-1 md:space-x-3">
+                    <li class="inline-flex items-center">
+                        <a href="{{ url_for('medical_dashboard.dashboard') }}" class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600 dark:text-gray-400 dark:hover:text-white">
+                            <i class="bi bi-house-door mr-2"></i>
+                            Medical Dashboard
+                        </a>
+                    </li>
+                    <li aria-current="page">
+                        <div class="flex items-center">
+                            <i class="bi bi-chevron-right text-gray-400 mx-1"></i>
+                            <span class="ml-1 text-sm font-medium text-gray-500 md:ml-2 dark:text-gray-400">Messages</span>
+                        </div>
+                    </li>
+                </ol>
+            </nav>
+        </div>
+
+        <!-- Main Chat Interface -->
+        <div class="flex-1 flex overflow-hidden min-h-0">
+            <!-- Sidebar - Chat List (30%) -->
+            <div class="w-80 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col flex-shrink-0">
+                <!-- Search -->
+                <div class="p-4 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
+                    <div class="relative">
+                        <input type="text" id="chatSearch" placeholder="Search conversations..."
+                            class="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
+                        <i class="bi bi-search absolute left-3 top-2.5 text-gray-400"></i>
+                    </div>
                 </div>
 
-                <!-- Messages Area -->
-                <div id="messagesArea" class="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50 dark:bg-gray-900 min-h-0">
-                    <!-- Messages populated by JavaScript -->
-                </div>
+                <!-- Chat List -->
+                <div class="flex-1 overflow-y-auto min-h-0" id="chatList">
+                    <!-- Loading state -->
+                    <div id="chatListLoading" class="p-4 text-center text-gray-500 dark:text-gray-400">
+                        <i class="bi bi-chat-dots animate-pulse text-2xl mb-2"></i>
+                        <p>Loading conversations...</p>
+                    </div>
 
-                <!-- Message Input -->
-                <div class="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-4 flex-shrink-0">
-                    <div class="flex items-center space-x-3">
-                        <textarea id="messageInput" placeholder="Type a message..."
-                            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white resize-none leading-tight"
-                            rows="1" style="min-height: 40px; max-height: 120px; line-height: 1.25;"></textarea>
-                        <button id="sendButton" onclick="sendMessage()"
-                            class="flex items-center justify-center w-10 h-10 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed flex-shrink-0"
-                            disabled>
-                            <i class="bi bi-send text-sm"></i>
+                    <!-- Chat items will be populated here -->
+                    <div id="chatItems" class="hidden"></div>
+
+                    <!-- Empty state -->
+                    <div id="chatListEmpty" class="p-8 text-center text-gray-500 dark:text-gray-400 hidden">
+                        <i class="bi bi-chat-square text-4xl mb-4"></i>
+                        <h3 class="font-medium mb-2">No conversations yet</h3>
+                        <p class="text-sm">Start a new conversation to begin messaging</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Chat Area (70%) -->
+            <div class="flex-1 flex flex-col min-h-0 min-w-0">
+                <!-- Welcome/Empty State -->
+                <div id="chatWelcome" class="flex-1 flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+                    <div class="text-center opacity-0 animate-fade-in-up" style="animation-delay: 0.2s;">
+                        <i class="bi bi-chat-square-dots text-6xl text-gray-300 dark:text-gray-600 mb-4"></i>
+                        <h2 class="text-xl font-medium text-gray-900 dark:text-white mb-2">Welcome to Messages</h2>
+                        <p class="text-gray-500 dark:text-gray-400 mb-6">Select a conversation to start chatting</p>
+                        <button onclick="openComposeModal()"
+                            class="inline-flex items-center px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors">
+                            <i class="bi bi-plus mr-2"></i>Start New Conversation
                         </button>
+                    </div>
+                </div>
+
+                <!-- Chat View (Hidden by default) -->
+                <div id="chatView" class="flex-1 flex flex-col min-h-0 hidden">
+                    <!-- Chat Header -->
+                    <div id="chatHeader"
+                        class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex-shrink-0">
+                        <!-- Content populated by JavaScript -->
+                    </div>
+
+                    <!-- Messages Area -->
+                    <div id="messagesArea" class="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50 dark:bg-gray-900 min-h-0">
+                        <!-- Messages populated by JavaScript -->
+                    </div>
+
+                    <!-- Message Input -->
+                    <div class="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-4 flex-shrink-0">
+                        <div class="flex items-center space-x-3">
+                            <textarea id="messageInput" placeholder="Type a message..."
+                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white resize-none leading-tight"
+                                rows="1" style="min-height: 40px; max-height: 120px; line-height: 1.25;"></textarea>
+                            <button id="sendButton" onclick="sendMessage()"
+                                class="flex items-center justify-center w-10 h-10 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed flex-shrink-0"
+                                disabled>
+                                <i class="bi bi-send text-sm"></i>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -180,11 +219,29 @@
 {% endblock %}
 
 {% block include_footer %}
-<!-- Footer excluded for full-screen messaging interface -->
+<!-- Footer excluded for full-screen medical dashboard interface -->
 {% endblock %}
 
 {% block extra_css %}
-<!-- No additional CSS needed - animations moved to main.css -->
+<style>
+    /* Custom scrollbar styling to match dashboard */
+    .overflow-y-auto::-webkit-scrollbar {
+        width: 4px;
+    }
+
+    .overflow-y-auto::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .overflow-y-auto::-webkit-scrollbar-thumb {
+        background: rgba(156, 163, 175, 0.3);
+        border-radius: 2px;
+    }
+
+    .overflow-y-auto::-webkit-scrollbar-thumb:hover {
+        background: rgba(156, 163, 175, 0.5);
+    }
+</style>
 {% endblock %}
 
 {% block extra_js %}
