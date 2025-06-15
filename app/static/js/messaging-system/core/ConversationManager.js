@@ -132,9 +132,14 @@ export class ConversationManager {
      */
     async markConversationAsRead(userId) {
         try {
-            await fetch(`/messages/api/mark_conversation_read/${userId}`, {
+            const response = await fetch(`/messages/api/mark_conversation_read/${userId}`, {
                 method: "POST",
             });
+            
+            if (response.ok) {
+                // Update unread count after marking messages as read
+                this.messageSystem.updateUnreadCountBadges();
+            }
         } catch (error) {
             console.error("Error marking conversation as read:", error);
         }
@@ -157,6 +162,7 @@ export class ConversationManager {
 
             if (data.success) {
                 this.loadConversations();
+                // Don't update unread count here as it's handled by Socket.IO events
                 return {
                     success: true,
                     recipientId: parseInt(messageData.recipient_id),

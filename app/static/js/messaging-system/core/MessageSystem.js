@@ -176,10 +176,8 @@ export class MessageSystem {
             );
         }
 
-        // Update chat bubble
-        if (typeof updateChatBubble === "function") {
-            updateChatBubble();
-        }
+        // Update unread count badges in sidebar and navbar
+        this.updateUnreadCountBadges();
 
         // Show notification for new message if not currently viewing that conversation
         if (this.currentChatUserId !== data.message.sender_id) {
@@ -188,22 +186,61 @@ export class MessageSystem {
     }
 
     /**
-     * Handle typing indicators
+     * Update unread count badges across the interface
      */
-    handleTypingIndicator(data) {
-        if (this.currentChatUserId === data.user_id) {
-            this.uiManager.showTypingIndicator(data.user_name, data.typing);
+    updateUnreadCountBadges() {
+        // Request updated count from server via Socket.IO
+        if (this.socketManager.socket) {
+            this.socketManager.socket.emit('request_unread_count');
+        } else {
+            // Fallback to REST API if Socket.IO not available
+            this.fetchUnreadCountFallback();
         }
     }
 
     /**
-     * Handle message delivery confirmation
+     * Fallback method to get unread count via REST API
      */
-    handleMessageDelivered(data) {
-        this.messageStatusManager.updateMessageStatus(
-            data.message_id,
-            "delivered"
-        );
+    async fetchUnreadCountFallback() {
+        try {
+            const response = await fetch('/messages/api/unread_count');
+            const data = await response.json();
+            this.displayUnreadCount(data.count || 0);
+        } catch (error) {
+            console.error('Error fetching unread count:', error);
+        }
+    }
+
+    /**
+     * Display unread count in all badge locations
+     */
+    displayUnreadCount(count) {
+        const badges = [
+            'message-badge',           // navbar
+            'unread-messages-count',   // sidebar full
+            'collapsed-unread-count',  // sidebar collapsed
+            'mobile-message-badge'     // mobile navbar
+        ];
+        
+        badges.forEach(badgeId => {
+            const badge = document.getElementById(badgeId);
+            if (badge) {
+                if (count > 0) {
+                    // Different count limits for different badge sizes
+                    let displayCount;
+                    if (badgeId === 'collapsed-unread-count') {
+                        displayCount = count > 9 ? '9+' : count;
+                    } else {
+                        displayCount = count > 99 ? '99+' : count;
+                    }
+                    
+                    badge.textContent = displayCount;
+                    badge.classList.remove('hidden');
+                } else {
+                    badge.classList.add('hidden');
+                }
+            }
+        });
     }
 
     /**
@@ -211,6 +248,8 @@ export class MessageSystem {
      */
     handleMessageRead(data) {
         this.messageStatusManager.updateMessageStatus(data.message_id, "read");
+        // Update unread count when messages are marked as read
+        this.updateUnreadCountBadges();
     }
 
     /**

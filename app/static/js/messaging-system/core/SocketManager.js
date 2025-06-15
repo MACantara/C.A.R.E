@@ -20,6 +20,8 @@ export class SocketManager {
         this.socket.on("connect", () => {
             console.log("Connected to messaging system");
             this.socket.emit("join_user_room");
+            // Request initial unread count on connection
+            this.socket.emit("request_unread_count");
         });
 
         this.socket.on("new_message", (data) => {
@@ -38,9 +40,26 @@ export class SocketManager {
             this.messageSystem.handleMessageRead(data);
         });
 
+        // Handle unread count updates
+        this.socket.on("unread_count_update", (data) => {
+            this.messageSystem.displayUnreadCount(data.count || 0);
+        });
+
         this.socket.on("disconnect", () => {
             console.log("Disconnected from messaging system");
         });
+
+        // Make socket available globally for other parts of the system
+        window.socket = this.socket;
+    }
+
+    /**
+     * Request unread count update
+     */
+    requestUnreadCount() {
+        if (this.socket) {
+            this.socket.emit("request_unread_count");
+        }
     }
 
     /**
