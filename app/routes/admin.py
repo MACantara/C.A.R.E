@@ -15,6 +15,7 @@ from app.models.user import User
 from app.models.login_attempt import LoginAttempt
 from app.models.email_verification import EmailVerification
 from app.models.contact import Contact
+from app.models.appointment import Appointment, AppointmentStatus
 from datetime import datetime, timedelta
 from sqlalchemy import desc, func
 from functools import wraps
@@ -362,3 +363,54 @@ def cleanup_logs():
         flash("Error during cleanup process.", "error")
 
     return redirect(url_for("admin.dashboard"))
+
+
+@admin_bp.route("/appointments")
+@admin_required
+def appointments():
+    """Admin view of all appointments."""
+    page = request.args.get("page", 1, type=int)
+    doctor_filter = request.args.get("doctor")
+    status_filter = request.args.get("status")
+    date_filter = request.args.get("date")
+
+    # Build query
+    query = Appointment.query
+
+    if doctor_filter:
+        query = query.filter(Appointment.doctor_id == doctor_filter)
+
+    if status_filter and status_filter != "all":
+        query = query.filter(Appointment.status == AppointmentStatus(status_filter))
+
+    if date_filter:
+        try:
+            filter_date = datetime.strptime(date_filter, "%Y-%m-%d").date()
+            query = query.filter(
+                db.func.date(Appointment.appointment_date) == filter_date
+            )
+        except ValueError:
+            pass
+
+    appointments = query.order_by(Appointment.appointment_date.desc()).paginate(
+        page=page, per_page=20, error_out=False
+    )
+
+    # Get all doctors for filter dropdown
+    doctors = User.query.filter_by(role="doctor", active=True).all()
+
+    # Get user's timezone
+    user_timezone = get_user_timezone()
+    current_time_local = get_current_time()
+
+    return render_template(
+        "admin/appointments-admin-list.html",
+        appointments=appointments,
+        doctors=doctors,
+        doctor_filter=doctor_filter,
+        status_filter=status_filter,
+        date_filter=date_filter,
+        user_timezone=user_timezone.zone,
+        current_time_local=current_time_local,
+        localize_datetime=localize_datetime,
+    )
