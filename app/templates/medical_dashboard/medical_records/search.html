@@ -76,13 +76,10 @@
                             <select name="type" id="type"
                                 class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white">
                                 <option value="">All Types</option>
-                                <option value="consultation" {{ 'selected' if record_type=='consultation' }}>Consultation
+                                <option value="consultation" {{ 'selected' if search_type=='consultation' }}>Consultation
                                 </option>
-                                <option value="prescription" {{ 'selected' if record_type=='prescription' }}>Prescription
+                                <option value="prescription" {{ 'selected' if search_type=='prescription' }}>Prescription
                                 </option>
-                                <option value="diagnosis" {{ 'selected' if record_type=='diagnosis' }}>Diagnosis</option>
-                                <option value="lab_result" {{ 'selected' if record_type=='lab_result' }}>Lab Result</option>
-                                <option value="vaccination" {{ 'selected' if record_type=='vaccination' }}>Vaccination</option>
                             </select>
                         </div>
 
@@ -117,7 +114,8 @@
                     <div class="flex items-center justify-between">
                         <h2 class="text-lg font-semibold text-purple-800 dark:text-purple-200">
                             Search Results
-                            {% if results %}({{ results|length }} found){% endif %}
+                            {% set total_results = (results.consultations|length) + (results.prescriptions|length) %}
+                            {% if total_results > 0 %}({{ total_results }} found){% endif %}
                         </h2>
                         {% if query or patient_name or date_from or date_to %}
                         <a href="{{ url_for('medical_records.search_records') }}"
@@ -128,57 +126,119 @@
                     </div>
                 </div>
 
-                {% if results %}
+                {% if results.consultations or results.prescriptions %}
                 <div class="divide-y divide-gray-200 dark:divide-gray-700">
-                    {% for record in results %}
-                    <div class="p-6 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200">
-                        <div class="flex items-center justify-between mb-3">
-                            <div class="flex items-center space-x-3">
-                                <div
-                                    class="w-10 h-10 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
-                                    <i class="bi bi-file-medical text-purple-600 dark:text-purple-400"></i>
+                    <!-- Consultations Results -->
+                    {% if results.consultations %}
+                    <div class="p-6">
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                            <i class="bi bi-person-check text-green-600 dark:text-green-400 mr-2"></i>
+                            Consultations ({{ results.consultations|length }})
+                        </h3>
+                        <div class="space-y-4">
+                            {% for consultation in results.consultations %}
+                            <div class="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors duration-200">
+                                <div class="flex items-center justify-between mb-3">
+                                    <div class="flex items-center space-x-3">
+                                        <div
+                                            class="w-10 h-10 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+                                            <i class="bi bi-person-check text-green-600 dark:text-green-400"></i>
+                                        </div>
+                                        <div>
+                                            <h4 class="text-lg font-semibold text-gray-900 dark:text-white">{{ consultation.patient.display_name }}</h4>
+                                            <p class="text-sm text-gray-600 dark:text-gray-400">
+                                                {{ consultation.consultation_date.strftime('%B %d, %Y at %I:%M %p') }}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center space-x-3">
+                                        <span class="px-3 py-1 text-sm font-medium rounded-full
+                                            {% if consultation.status.value == 'completed' %}bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400
+                                            {% elif consultation.status.value == 'draft' %}bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400
+                                            {% else %}bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400{% endif %}">
+                                        {{ consultation.status.value.title() }}
+                                        </span>
+                                        <a href="{{ url_for('medical_records.patient_records', patient_id=consultation.patient_id) }}"
+                                            class="inline-flex items-center px-3 py-2 bg-purple-600 text-white text-sm rounded-lg hover:bg-purple-700 transition-colors duration-200">
+                                            <i class="bi bi-eye mr-1"></i>
+                                            View Patient
+                                        </a>
+                                    </div>
                                 </div>
-                                <div>
-                                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white">{{ record.title }}</h3>
-                                    <p class="text-sm text-gray-600 dark:text-gray-400">
-                                        {{ record.patient.display_name }} • {{ record.record_date.strftime('%B %d, %Y') }}
+
+                                <div class="ml-13">
+                                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">Chief Complaint:</p>
+                                    <p class="text-gray-700 dark:text-gray-300 text-sm mb-2">
+                                        {{ consultation.chief_complaint[:200] }}{% if consultation.chief_complaint|length > 200 %}...{% endif %}
                                     </p>
+                                    
+                                    {% if consultation.assessment %}
+                                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">Assessment:</p>
+                                    <p class="text-gray-700 dark:text-gray-300 text-sm">
+                                        {{ consultation.assessment[:150] }}{% if consultation.assessment|length > 150 %}...{% endif %}
+                                    </p>
+                                    {% endif %}
                                 </div>
                             </div>
-                            <div class="flex items-center space-x-3">
-                                <span class="px-3 py-1 text-sm font-medium rounded-full
-                                    {% if record.record_type.value == 'consultation' %}bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400
-                                    {% elif record.record_type.value == 'prescription' %}bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400
-                                    {% elif record.record_type.value == 'diagnosis' %}bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400
-                                    {% else %}bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400{% endif %}">
-                                {{ record.record_type.value.replace('_', ' ').title() }}
-                                </span>
-                                <a href="{{ url_for('medical_records.patient_records', patient_id=record.patient_id) }}"
-                                    class="inline-flex items-center px-3 py-2 bg-purple-600 text-white text-sm rounded-lg hover:bg-purple-700 transition-colors duration-200">
-                                    <i class="bi bi-eye mr-1"></i>
-                                    View Patient
-                                </a>
-                            </div>
+                            {% endfor %}
                         </div>
-
-                        {% if record.description %}
-                        <div class="ml-13">
-                            <p class="text-gray-700 dark:text-gray-300 text-sm">
-                                {{ record.description[:200] }}{% if record.description|length > 200 %}...{% endif %}
-                            </p>
-                        </div>
-                        {% endif %}
-
-                        {% if record.diagnosis %}
-                        <div class="ml-13 mt-2">
-                            <span class="text-xs font-medium text-gray-600 dark:text-gray-400">Diagnosis:</span>
-                            <p class="text-gray-700 dark:text-gray-300 text-sm">
-                                {{ record.diagnosis[:150] }}{% if record.diagnosis|length > 150 %}...{% endif %}
-                            </p>
-                        </div>
-                        {% endif %}
                     </div>
-                    {% endfor %}
+                    {% endif %}
+
+                    <!-- Prescriptions Results -->
+                    {% if results.prescriptions %}
+                    <div class="p-6">
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                            <i class="bi bi-capsule text-blue-600 dark:text-blue-400 mr-2"></i>
+                            Prescriptions ({{ results.prescriptions|length }})
+                        </h3>
+                        <div class="space-y-4">
+                            {% for prescription in results.prescriptions %}
+                            <div class="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors duration-200">
+                                <div class="flex items-center justify-between mb-3">
+                                    <div class="flex items-center space-x-3">
+                                        <div
+                                            class="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                                            <i class="bi bi-capsule text-blue-600 dark:text-blue-400"></i>
+                                        </div>
+                                        <div>
+                                            <h4 class="text-lg font-semibold text-gray-900 dark:text-white">{{ prescription.patient.display_name }}</h4>
+                                            <p class="text-sm text-gray-600 dark:text-gray-400">
+                                                Prescribed: {{ prescription.prescribed_date.strftime('%B %d, %Y') }}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center space-x-3">
+                                        <span class="px-3 py-1 text-sm font-medium rounded-full
+                                            {% if prescription.status.value == 'active' %}bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400
+                                            {% elif prescription.status.value == 'discontinued' %}bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400
+                                            {% else %}bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400{% endif %}">
+                                        {{ prescription.status.value.title() }}
+                                        </span>
+                                        <a href="{{ url_for('medical_records.patient_records', patient_id=prescription.patient_id) }}"
+                                            class="inline-flex items-center px-3 py-2 bg-purple-600 text-white text-sm rounded-lg hover:bg-purple-700 transition-colors duration-200">
+                                            <i class="bi bi-eye mr-1"></i>
+                                            View Patient
+                                        </a>
+                                    </div>
+                                </div>
+
+                                <div class="ml-13">
+                                    <p class="text-lg font-medium text-gray-900 dark:text-white mb-1">{{ prescription.medication_name }}</p>
+                                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">{{ prescription.dosage }} - {{ prescription.frequency }} for {{ prescription.duration }}</p>
+                                    
+                                    {% if prescription.indication %}
+                                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">Indication:</p>
+                                    <p class="text-gray-700 dark:text-gray-300 text-sm">
+                                        {{ prescription.indication[:150] }}{% if prescription.indication|length > 150 %}...{% endif %}
+                                    </p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
                 </div>
                 {% else %}
                 <!-- No Results -->
