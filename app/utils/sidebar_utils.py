@@ -5,7 +5,7 @@ from app import db
 from app.utils.timezone_utils import get_user_timezone, get_current_time
 from app.models.user import User
 from app.models.appointment import Appointment, AppointmentStatus
-from app.models.medical_record import MedicalRecord, Consultation
+from app.models.medical_record import Consultation, Prescription, ConsultationStatus
 from app.models.queue import PatientQueue, QueueStatus
 from app.models.message import InternalMessage
 
@@ -43,16 +43,11 @@ def get_sidebar_stats():
             )
         ).count()
 
-        # Pending consultations (appointments that need follow-up)
-        stats["pending_consultations"] = Appointment.query.filter(
+        # Pending consultations (draft consultations by this doctor)
+        stats["pending_consultations"] = Consultation.query.filter(
             and_(
-                Appointment.doctor_id == current_user.id,
-                Appointment.status == AppointmentStatus.COMPLETED,
-                ~Appointment.id.in_(
-                    db.session.query(Consultation.appointment_id).filter(
-                        Consultation.appointment_id.isnot(None)
-                    )
-                ),
+                Consultation.doctor_id == current_user.id,
+                Consultation.status == ConsultationStatus.DRAFT,
             )
         ).count()
 
@@ -70,10 +65,10 @@ def get_sidebar_stats():
 
         # Recent prescriptions by this doctor (last 7 days)
         seven_days_ago = current_time_local - timedelta(days=7)
-        stats["recent_prescriptions"] = Consultation.query.filter(
+        stats["recent_prescriptions"] = Prescription.query.filter(
             and_(
-                Consultation.doctor_id == current_user.id,
-                Consultation.created_at >= seven_days_ago.replace(tzinfo=None),
+                Prescription.doctor_id == current_user.id,
+                Prescription.created_at >= seven_days_ago.replace(tzinfo=None),
             )
         ).count()
 
@@ -91,16 +86,9 @@ def get_sidebar_stats():
             )
         ).count()
 
-        # All pending consultations
-        stats["pending_consultations"] = Appointment.query.filter(
-            and_(
-                Appointment.status == AppointmentStatus.COMPLETED,
-                ~Appointment.id.in_(
-                    db.session.query(Consultation.appointment_id).filter(
-                        Consultation.appointment_id.isnot(None)
-                    )
-                ),
-            )
+        # All pending consultations (draft status)
+        stats["pending_consultations"] = Consultation.query.filter(
+            Consultation.status == ConsultationStatus.DRAFT
         ).count()
 
         # Total queue waiting
@@ -110,8 +98,8 @@ def get_sidebar_stats():
 
         # Recent prescriptions system-wide (last 7 days)
         seven_days_ago = current_time_local - timedelta(days=7)
-        stats["recent_prescriptions"] = Consultation.query.filter(
-            Consultation.created_at >= seven_days_ago.replace(tzinfo=None)
+        stats["recent_prescriptions"] = Prescription.query.filter(
+            Prescription.created_at >= seven_days_ago.replace(tzinfo=None)
         ).count()
 
     # Unread messages (common for both roles)
