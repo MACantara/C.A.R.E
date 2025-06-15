@@ -289,6 +289,11 @@
         // Load dashboard stats
         loadDashboardStats();
         setInterval(loadDashboardStats, 30000);
+
+        // Request initial unread count for message badges
+        if (window.requestGlobalUnreadCount) {
+            setTimeout(window.requestGlobalUnreadCount, 1000);
+        }
     });
 
     function updateTimeDisplays() {
