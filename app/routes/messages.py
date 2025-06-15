@@ -12,9 +12,11 @@ from flask_login import login_required, current_user
 from flask_socketio import emit, join_room, leave_room
 from datetime import datetime
 import pytz
-from app import db, socketio, get_user_timezone, localize_datetime, get_current_time
+from app import db, socketio
+from app.utils.timezone_utils import get_user_timezone, localize_datetime, get_current_time
 from app.models.user import User
 from app.models.message import InternalMessage, MessageType, MessagePriority
+from app.utils.sidebar_utils import get_sidebar_stats
 from sqlalchemy import and_, or_
 
 messages_bp = Blueprint("messages", __name__, url_prefix="/messages")
@@ -55,6 +57,13 @@ def inbox():
         flash("Access denied. This area is for healthcare professionals only.", "error")
         return redirect(url_for("main.home"))
 
+    # Get user's timezone
+    user_timezone = get_user_timezone()
+    current_time_local = get_current_time(user_timezone)
+    
+    # Get sidebar statistics
+    stats = get_sidebar_stats()
+
     # Get received messages
     received_messages = (
         InternalMessage.query.filter(
@@ -93,6 +102,12 @@ def inbox():
         received_messages=received_messages,
         sent_messages=sent_messages,
         unread_count=unread_count,
+        stats=stats,
+        user_timezone=user_timezone,
+        user_timezone_name=str(user_timezone),
+        current_time=current_time_local,
+        current_time_local=current_time_local,  # Add this for sidebar compatibility
+        localize_datetime=localize_datetime,  # Add this for timezone functions
     )
 
 
