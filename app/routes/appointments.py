@@ -1,6 +1,3 @@
-# TODO: When processing an appointment request by a doctor, the consultation form and prescription form should
-# appear when the doctor starts a scheduled appointment.
-
 from flask import (
     Blueprint,
     render_template,
