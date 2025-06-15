@@ -107,6 +107,9 @@ def login():
 
             # Now check password only if email is verified
             if user.check_password(password):
+                # Record successful login attempt
+                record_login_attempt(username_or_email, success=True)
+                
                 # Login the user
                 login_user(user, remember=remember_me)
 
