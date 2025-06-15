@@ -70,7 +70,158 @@
     <script type="module" src="{{ url_for('static', filename='js/components/toast.js') }}"></script>
     <script type="module" src="{{ url_for('static', filename='js/utils/timezone.js') }}"></script>
 
-    {% block extra_js %}{% endblock %}
+    {% block extra_js %}
+    <!-- Global Socket.IO and Message Count Updates -->
+    {% if current_user.is_authenticated and current_user.role in ['doctor', 'staff'] %}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <script>
+    // Global message count management for non-messaging pages
+    (function() {
+        let globalSocket = null;
+
+        // Initialize global Socket.IO connection for message updates
+        function initializeGlobalSocket() {
+            if (globalSocket) return; // Already initialized
+
+            globalSocket = io();
+
+            globalSocket.on('connect', () => {
+                console.log('Global Socket.IO connected for message updates');
+                globalSocket.emit('join_user_room');
+                globalSocket.emit('request_unread_count');
+            });
+
+            // Handle unread count updates
+            globalSocket.on('unread_count_update', (data) => {
+                updateAllMessageBadges(data.count || 0);
+            });
+
+            // Handle new messages for count updates
+            globalSocket.on('new_message', (data) => {
+                // Only update count if we're not on the messaging page
+                if (!window.messageSystem) {
+                    globalSocket.emit('request_unread_count');
+                    
+                    // Show toast notification for new messages
+                    showMessageToast(data);
+                }
+            });
+
+            globalSocket.on('disconnect', () => {
+                console.log('Global Socket.IO disconnected');
+            });
+
+            // Make socket available globally
+            window.socket = globalSocket;
+        }
+
+        // Update all message badge locations
+        function updateAllMessageBadges(count) {
+            const badges = [
+                'message-badge',           // navbar
+                'unread-messages-count',   // sidebar full
+                'collapsed-unread-count',  // sidebar collapsed
+                'mobile-message-badge'     // mobile navbar
+            ];
+            
+            badges.forEach(badgeId => {
+                const badge = document.getElementById(badgeId);
+                if (badge) {
+                    if (count > 0) {
+                        // Different count limits for different badge sizes
+                        let displayCount;
+                        if (badgeId === 'collapsed-unread-count') {
+                            displayCount = count > 9 ? '9+' : count;
+                        } else {
+                            displayCount = count > 99 ? '99+' : count;
+                        }
+                        
+                        badge.textContent = displayCount;
+                        badge.classList.remove('hidden');
+                    } else {
+                        badge.classList.add('hidden');
+                    }
+                }
+            });
+        }
+
+        // Show toast notification for new messages
+        function showMessageToast(data) {
+            // Only show if user is not on the messaging page
+            if (window.location.pathname.startsWith('/messages')) return;
+
+            const toast = document.createElement('div');
+            toast.className = 'fixed top-4 right-4 z-50 bg-blue-600 text-white p-4 rounded-lg shadow-lg max-w-sm opacity-0 transform translate-x-full transition-all duration-300';
+            toast.innerHTML = `
+                <div class="flex items-start">
+                    <div class="flex-shrink-0">
+                        <i class="bi bi-chat-dots text-lg"></i>
+                    </div>
+                    <div class="ml-3 flex-1">
+                        <p class="text-sm font-medium">${data.notification.title}</p>
+                        <p class="text-xs opacity-90">${data.notification.body}</p>
+                    </div>
+                    <button onclick="this.parentElement.parentElement.remove()" class="ml-2 text-white hover:text-gray-200">
+                        <i class="bi bi-x text-lg"></i>
+                    </button>
+                </div>
+            `;
+
+            document.body.appendChild(toast);
+
+            // Animate in
+            setTimeout(() => {
+                toast.classList.remove('opacity-0', 'translate-x-full');
+            }, 100);
+
+            // Auto-remove after 5 seconds
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-x-full');
+                setTimeout(() => toast.remove(), 300);
+            }, 5000);
+
+            // Click to go to messages
+            toast.addEventListener('click', () => {
+                window.location.href = '/messages/';
+            });
+        }
+
+        // Fallback REST API method for browsers without Socket.IO
+        function fetchUnreadCountFallback() {
+            fetch('/messages/api/unread_count')
+                .then(response => response.json())
+                .then(data => updateAllMessageBadges(data.count || 0))
+                .catch(error => console.error('Error fetching unread count:', error));
+        }
+
+        // Initialize when DOM is ready
+        document.addEventListener('DOMContentLoaded', () => {
+            // Don't initialize if we're on the messaging page (it has its own system)
+            if (!document.querySelector('[data-current-user-id]')) {
+                initializeGlobalSocket();
+
+                // Fallback polling for unread count updates
+                setInterval(() => {
+                    if (!globalSocket || !globalSocket.connected) {
+                        fetchUnreadCountFallback();
+                    }
+                }, 30000); // Every 30 seconds
+            }
+        });
+
+        // Expose functions globally
+        window.updateGlobalMessageCount = updateAllMessageBadges;
+        window.requestGlobalUnreadCount = () => {
+            if (globalSocket) {
+                globalSocket.emit('request_unread_count');
+            } else {
+                fetchUnreadCountFallback();
+            }
+        };
+    })();
+    </script>
+    {% endif %}
+    {% endblock %}
 </body>
 
 </html>
