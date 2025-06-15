@@ -18,6 +18,9 @@ from app.services.analytics_service import AnalyticsService
 from app.utils.sidebar_utils import get_sidebar_stats
 from functools import wraps
 import json
+import io
+from openpyxl import Workbook
+from openpyxl.styles import Font, PatternFill, Alignment
 
 reports_bp = Blueprint("reports", __name__, url_prefix="/reports")
 
@@ -428,26 +431,134 @@ def export_report(report_type):
         else:
             end_date = date.today()
 
-        # Generate report data
-        report_data = AnalyticsService.export_report_data(
-            report_type, start_date, end_date, format_type, doctor_id
-        )
-
-        # Create response
-        if format_type == "csv":
-            response = make_response(report_data)
-            response.headers["Content-Type"] = "text/csv"
-            response.headers["Content-Disposition"] = (
-                f"attachment; filename={report_type}_report_{start_date}_{end_date}.csv"
+        # Generate report data based on format
+        if format_type == "excel":
+            # Create Excel workbook
+            wb = Workbook()
+            
+            # Create appointments sheet
+            ws1 = wb.active
+            ws1.title = "Appointments"
+            
+            # Add appointment data
+            appointment_metrics = AnalyticsService.generate_appointment_metrics(
+                start_date, end_date, doctor_id
             )
+            
+            # Headers with styling
+            headers = ["Metric", "Value"]
+            for col, header in enumerate(headers, 1):
+                cell = ws1.cell(row=1, column=col, value=header)
+                cell.font = Font(bold=True)
+                cell.fill = PatternFill(start_color="366092", end_color="366092", fill_type="solid")
+                cell.font = Font(bold=True, color="FFFFFF")
+                cell.alignment = Alignment(horizontal="center")
+            
+            # Add appointment metrics
+            metrics_data = [
+                ("Total Appointments", appointment_metrics.get('total_appointments', 0)),
+                ("Completed Appointments", appointment_metrics.get('completed_appointments', 0)),
+                ("Cancelled Appointments", appointment_metrics.get('cancelled_appointments', 0)),
+                ("Completion Rate (%)", appointment_metrics.get('completion_rate', 0)),
+                ("Cancellation Rate (%)", appointment_metrics.get('cancellation_rate', 0)),
+                ("Unique Patients", appointment_metrics.get('unique_patients', 0)),
+            ]
+            
+            for row, (metric, value) in enumerate(metrics_data, 2):
+                ws1.cell(row=row, column=1, value=metric)
+                ws1.cell(row=row, column=2, value=value)
+            
+            # Create prescriptions sheet
+            ws2 = wb.create_sheet("Prescriptions")
+            prescription_trends = AnalyticsService.generate_prescription_trends(
+                start_date, end_date, doctor_id, limit=50
+            )
+            
+            # Headers for prescriptions
+            headers = ["Medication", "Total Prescriptions", "Unique Patients"]
+            for col, header in enumerate(headers, 1):
+                cell = ws2.cell(row=1, column=col, value=header)
+                cell.font = Font(bold=True)
+                cell.fill = PatternFill(start_color="366092", end_color="366092", fill_type="solid")
+                cell.font = Font(bold=True, color="FFFFFF")
+                cell.alignment = Alignment(horizontal="center")
+            
+            # Add prescription data
+            for row, med in enumerate(prescription_trends, 2):
+                ws2.cell(row=row, column=1, value=med.get('medication', ''))
+                ws2.cell(row=row, column=2, value=med.get('total_prescriptions', 0))
+                ws2.cell(row=row, column=3, value=med.get('unique_patients', 0))
+            
+            # Create doctor performance sheet
+            ws3 = wb.create_sheet("Doctor Performance")
+            doctor_performance = AnalyticsService.generate_doctor_performance(
+                start_date, end_date, doctor_id
+            )
+            
+            # Headers for doctor performance
+            headers = ["Doctor Name", "Total Appointments", "Completed", "Completion Rate (%)", "Unique Patients"]
+            for col, header in enumerate(headers, 1):
+                cell = ws3.cell(row=1, column=col, value=header)
+                cell.font = Font(bold=True)
+                cell.fill = PatternFill(start_color="366092", end_color="366092", fill_type="solid")
+                cell.font = Font(bold=True, color="FFFFFF")
+                cell.alignment = Alignment(horizontal="center")
+            
+            # Add doctor performance data
+            for row, doc in enumerate(doctor_performance, 2):
+                ws3.cell(row=row, column=1, value=doc.get('doctor_name', ''))
+                ws3.cell(row=row, column=2, value=doc.get('total_appointments', 0))
+                ws3.cell(row=row, column=3, value=doc.get('completed_appointments', 0))
+                ws3.cell(row=row, column=4, value=doc.get('completion_rate', 0))
+                ws3.cell(row=row, column=5, value=doc.get('unique_patients', 0))
+            
+            # Auto-adjust column widths
+            for ws in [ws1, ws2, ws3]:
+                for column in ws.columns:
+                    max_length = 0
+                    column_letter = column[0].column_letter
+                    for cell in column:
+                        try:
+                            if len(str(cell.value)) > max_length:
+                                max_length = len(str(cell.value))
+                        except:
+                            pass
+                    adjusted_width = min(max_length + 2, 50)
+                    ws.column_dimensions[column_letter].width = adjusted_width
+            
+            # Save to BytesIO
+            output = io.BytesIO()
+            wb.save(output)
+            output.seek(0)
+            
+            response = make_response(output.getvalue())
+            response.headers["Content-Type"] = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            response.headers["Content-Disposition"] = (
+                f"attachment; filename={report_type}_report_{start_date}_{end_date}.xlsx"
+            )
+            return response
+            
         else:
-            response = make_response(report_data)
-            response.headers["Content-Type"] = "application/json"
-            response.headers["Content-Disposition"] = (
-                f"attachment; filename={report_type}_report_{start_date}_{end_date}.json"
+            # Generate report data for other formats
+            report_data = AnalyticsService.export_report_data(
+                report_type, start_date, end_date, format_type, doctor_id
             )
 
-        return response
+            # Create response
+            if format_type == "csv":
+                response = make_response(report_data)
+                response.headers["Content-Type"] = "text/csv"
+                response.headers["Content-Disposition"] = (
+                    f"attachment; filename={report_type}_report_{start_date}_{end_date}.csv"
+                )
+            else:
+                response = make_response(report_data)
+                response.headers["Content-Type"] = "application/json"
+                response.headers["Content-Disposition"] = (
+                    f"attachment; filename={report_type}_report_{start_date}_{end_date}.json"
+                )
+
+            return response
 
     except Exception as e:
         current_app.logger.error(f"Error exporting report: {e}")
