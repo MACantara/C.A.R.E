@@ -13,6 +13,15 @@
             </div>
             <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Appointment Management</h1>
         </div>
+        
+        <!-- Back to Dashboard Button -->
+        <div class="flex items-center space-x-3">
+            <a href="{{ url_for('admin.dashboard') }}"
+               class="inline-flex items-center px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-500/25">
+                <i class="bi bi-arrow-left mr-2"></i>
+                Back to Admin Dashboard
+            </a>
+        </div>
     </div>
 
     <!-- Filters -->
@@ -181,7 +190,7 @@
             <div class="flex justify-center">
                 <nav class="flex items-center space-x-1">
                     {% if appointments.has_prev %}
-                    <a href="{{ url_for('appointments.admin_view', page=appointments.prev_num, doctor=doctor_filter, status=status_filter, date=date_filter) }}"
+                    <a href="{{ url_for('admin.appointments', page=appointments.prev_num, doctor=doctor_filter, status=status_filter, date=date_filter) }}"
                         class="px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700">
                         Previous
                     </a>
@@ -191,7 +200,7 @@
                     %}
                     {% if page %}
                     {% if page != appointments.page %}
-                    <a href="{{ url_for('appointments.admin_view', page=page, doctor=doctor_filter, status=status_filter, date=date_filter) }}"
+                    <a href="{{ url_for('admin.appointments', page=page, doctor=doctor_filter, status=status_filter, date=date_filter) }}"
                         class="px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700">
                         {{ page }}
                     </a>
@@ -207,7 +216,7 @@
                     {% endfor %}
 
                     {% if appointments.has_next %}
-                    <a href="{{ url_for('appointments.admin_view', page=appointments.next_num, doctor=doctor_filter, status=status_filter, date=date_filter) }}"
+                    <a href="{{ url_for('admin.appointments', page=appointments.next_num, doctor=doctor_filter, status=status_filter, date=date_filter) }}"
                         class="px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700">
                         Next
                     </a>
