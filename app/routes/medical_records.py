@@ -497,3 +497,63 @@ def discontinue_prescription(prescription_id):
     return redirect(
         url_for("medical_records.patient_records", patient_id=prescription.patient_id)
     )
+
+
+@medical_records_bp.route("/consultation/<int:consultation_id>")
+@healthcare_professional_required
+def consultation_details(consultation_id):
+    """View detailed consultation information."""
+    # Get user's timezone
+    user_timezone = get_user_timezone()
+    current_time_local = get_current_time(user_timezone)
+
+    # Get sidebar statistics
+    stats = get_sidebar_stats()
+
+    consultation = Consultation.query.get_or_404(consultation_id)
+
+    # Get vital signs for this consultation
+    vital_signs = VitalSigns.query.filter_by(consultation_id=consultation_id).first()
+
+    # Get related prescriptions
+    related_prescriptions = Prescription.query.filter_by(
+        consultation_id=consultation_id
+    ).order_by(desc(Prescription.prescribed_date)).all()
+
+    return render_template(
+        "medical_dashboard/medical_records/consultation_detail.html",
+        consultation=consultation,
+        vital_signs=vital_signs,
+        related_prescriptions=related_prescriptions,
+        user_timezone=user_timezone,
+        current_time_local=current_time_local,
+        localize_datetime=localize_datetime,
+        stats=stats,
+    )
+
+
+@medical_records_bp.route("/prescription/<int:prescription_id>")
+@healthcare_professional_required
+def prescription_details(prescription_id):
+    """View detailed prescription information."""
+    # Get user's timezone
+    user_timezone = get_user_timezone()
+    current_time_local = get_current_time(user_timezone)
+
+    # Get sidebar statistics
+    stats = get_sidebar_stats()
+
+    prescription = Prescription.query.get_or_404(prescription_id)
+
+    # Get related consultation if exists
+    consultation = prescription.consultation if prescription.consultation_id else None
+
+    return render_template(
+        "medical_dashboard/medical_records/prescription_detail.html",
+        prescription=prescription,
+        consultation=consultation,
+        user_timezone=user_timezone,
+        current_time_local=current_time_local,
+        localize_datetime=localize_datetime,
+        stats=stats,
+    )
