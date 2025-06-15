@@ -47,3 +47,6 @@ pytz
 # WebSocket support for real-time messaging
 flask-socketio
 python-socketio[client]
+
+# Excel file support
+openpyxl
