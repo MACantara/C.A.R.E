@@ -58,15 +58,6 @@ class MedicalRecord(db.Model):
     treatment_plan = db.Column(db.Text, nullable=True)
     notes = db.Column(db.Text, nullable=True)
 
-    # Vital signs
-    temperature = db.Column(db.Float, nullable=True)  # Celsius
-    blood_pressure_systolic = db.Column(db.Integer, nullable=True)
-    blood_pressure_diastolic = db.Column(db.Integer, nullable=True)
-    heart_rate = db.Column(db.Integer, nullable=True)  # BPM
-    respiratory_rate = db.Column(db.Integer, nullable=True)  # per minute
-    weight = db.Column(db.Float, nullable=True)  # kg
-    height = db.Column(db.Float, nullable=True)  # cm
-
     # Metadata
     record_date = db.Column(
         db.DateTime, default=datetime.utcnow, nullable=False, index=True
@@ -84,26 +75,6 @@ class MedicalRecord(db.Model):
         "User", foreign_keys=[doctor_id], backref="created_records"
     )
     appointment = db.relationship("Appointment", backref="medical_records")
-
-    @property
-    def bmi(self):
-        """Calculate BMI if height and weight are available."""
-        if self.height and self.weight and self.height > 0:
-            height_m = self.height / 100  # Convert cm to meters
-            return round(self.weight / (height_m**2), 1)
-        return None
-
-    @property
-    def blood_pressure(self):
-        """Get formatted blood pressure reading."""
-        if self.blood_pressure_systolic and self.blood_pressure_diastolic:
-            return f"{self.blood_pressure_systolic}/{self.blood_pressure_diastolic}"
-        return None
-
-    def __repr__(self):
-        return (
-            f"<MedicalRecord {self.id}: {self.title} for {self.patient.display_name}>"
-        )
 
 
 # Add composite index for efficient queries
