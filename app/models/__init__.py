@@ -4,7 +4,6 @@ from .login_attempt import LoginAttempt
 from .email_verification import EmailVerification
 from .appointment import Appointment, AppointmentReminder
 from .medical_record import (
-    MedicalRecord,
     Consultation,
     Prescription,
     Allergy,
@@ -19,7 +18,6 @@ __all__ = [
     "EmailVerification",
     "Appointment",
     "AppointmentReminder",
-    "MedicalRecord",
     "Consultation",
     "Prescription",
     "Allergy",
