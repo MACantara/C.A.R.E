@@ -540,26 +540,7 @@ def export_report(report_type):
             f"attachment; filename={report_type}_report_{start_date}_{end_date}.xlsx"
         )
         return response
-
-    except Exception as e:
-        current_app.logger.error(f"Error exporting report: {e}")
-        flash("Error exporting report. Please try again.", "error")
-        return redirect(url_for("reports.dashboard"))
-            if format_type == "csv":
-                response = make_response(report_data)
-                response.headers["Content-Type"] = "text/csv"
-                response.headers["Content-Disposition"] = (
-                    f"attachment; filename={report_type}_report_{start_date}_{end_date}.csv"
-                )
-            else:
-                response = make_response(report_data)
-                response.headers["Content-Type"] = "application/json"
-                response.headers["Content-Disposition"] = (
-                    f"attachment; filename={report_type}_report_{start_date}_{end_date}.json"
-                )
-
-            return response
-
+    
     except Exception as e:
         current_app.logger.error(f"Error exporting report: {e}")
         flash("Error exporting report. Please try again.", "error")
