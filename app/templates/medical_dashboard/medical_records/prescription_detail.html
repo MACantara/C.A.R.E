@@ -1,0 +1,225 @@
+{% extends "base.html" %}
+
+{% block title %}Prescription Details - C.A.R.E. System{% endblock %}
+
+{% block include_navbar %}
+<!-- Navbar excluded for full-screen medical dashboard interface -->
+{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 dark:bg-gray-900 flex" 
+     data-user-timezone="{{ user_timezone }}"
+     data-current-time="{{ current_time_local.isoformat() }}">
+    
+    <!-- Include Sidebar -->
+    {% include 'medical_dashboard/components/sidebar.html' %}
+
+    <!-- Main Content Area -->
+    <div class="flex-1 flex flex-col min-h-screen max-h-screen">
+        <!-- Header -->
+        <div class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex-shrink-0">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                    <div class="h-12 w-12 flex items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/30 mr-4">
+                        <i class="bi bi-capsule text-blue-600 dark:text-blue-400 text-xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Prescription Details</h1>
+                        <p class="text-gray-600 dark:text-gray-400">{{ prescription.medication_name }} for {{ prescription.patient.display_name }}</p>
+                    </div>
+                </div>
+
+                <div class="flex space-x-3">
+                    <a href="{{ url_for('medical_records.patient_records', patient_id=prescription.patient_id) }}"
+                        class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200">
+                        <i class="bi bi-person mr-2"></i>Patient Records
+                    </a>
+                    <a href="{{ url_for('medical_records.index') }}"
+                        class="inline-flex items-center px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors duration-200">
+                        <i class="bi bi-arrow-left mr-2"></i>Back to Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Content -->
+        <div class="flex-1 p-6 overflow-y-auto max-h-screen">
+            <div class="space-y-6">
+                <!-- Prescription Overview -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-100 dark:border-gray-700 opacity-0 animate-fade-in-up" style="animation-delay: 0.1s;">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-xl font-bold text-gray-900 dark:text-white">Prescription Overview</h2>
+                        <span class="px-3 py-1 text-sm font-medium rounded-full
+                            {% if prescription.status.value == 'active' %}bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400
+                            {% elif prescription.status.value == 'discontinued' %}bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400
+                            {% elif prescription.status.value == 'completed' %}bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400
+                            {% else %}bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400{% endif %}">
+                            {{ prescription.status.value.title() }}
+                        </span>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div>
+                            <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Patient</p>
+                            <p class="text-lg font-semibold text-gray-900 dark:text-white">{{ prescription.patient.display_name }}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Prescribed by</p>
+                            <p class="text-lg font-semibold text-gray-900 dark:text-white">{{ prescription.doctor.display_name }}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Prescribed Date</p>
+                            <p class="text-lg font-semibold text-gray-900 dark:text-white">{{ prescription.prescribed_date.strftime('%B %d, %Y') }}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Duration</p>
+                            <p class="text-lg font-semibold text-gray-900 dark:text-white">{{ prescription.duration }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Medication Details -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-100 dark:border-gray-700 opacity-0 animate-fade-in-up" style="animation-delay: 0.2s;">
+                    <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-6">Medication Details</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="space-y-4">
+                            <div>
+                                <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Medication Name</p>
+                                <p class="text-lg font-semibold text-gray-900 dark:text-white">{{ prescription.medication_name }}</p>
+                            </div>
+                            {% if prescription.generic_name %}
+                            <div>
+                                <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Generic Name</p>
+                                <p class="text-lg font-semibold text-gray-900 dark:text-white">{{ prescription.generic_name }}</p>
+                            </div>
+                            {% endif %}
+                            <div>
+                                <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Dosage</p>
+                                <p class="text-lg font-semibold text-gray-900 dark:text-white">{{ prescription.dosage }}</p>
+                            </div>
+                        </div>
+                        <div class="space-y-4">
+                            <div>
+                                <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Frequency</p>
+                                <p class="text-lg font-semibold text-gray-900 dark:text-white">{{ prescription.frequency }}</p>
+                            </div>
+                            {% if prescription.quantity %}
+                            <div>
+                                <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Quantity</p>
+                                <p class="text-lg font-semibold text-gray-900 dark:text-white">{{ prescription.quantity }}</p>
+                            </div>
+                            {% endif %}
+                            {% if prescription.indication %}
+                            <div>
+                                <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Indication</p>
+                                <p class="text-lg font-semibold text-gray-900 dark:text-white">{{ prescription.indication }}</p>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Treatment Period -->
+                {% if prescription.start_date or prescription.end_date %}
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-100 dark:border-gray-700 opacity-0 animate-fade-in-up" style="animation-delay: 0.3s;">
+                    <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-6">Treatment Period</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {% if prescription.start_date %}
+                        <div>
+                            <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Start Date</p>
+                            <p class="text-lg font-semibold text-gray-900 dark:text-white">{{ prescription.start_date.strftime('%B %d, %Y') }}</p>
+                        </div>
+                        {% endif %}
+                        {% if prescription.end_date %}
+                        <div>
+                            <p class="text-sm font-medium text-gray-600 dark:text-gray-400">End Date</p>
+                            <p class="text-lg font-semibold text-gray-900 dark:text-white">{{ prescription.end_date.strftime('%B %d, %Y') }}</p>
+                            {% if prescription.is_expired %}
+                            <span class="inline-flex items-center px-2 py-1 text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 rounded-full mt-1">
+                                <i class="bi bi-exclamation-triangle mr-1"></i>Expired
+                            </span>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Instructions & Warnings -->
+                {% if prescription.instructions or prescription.warnings %}
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-100 dark:border-gray-700 opacity-0 animate-fade-in-up" style="animation-delay: 0.4s;">
+                    <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-6">Instructions & Warnings</h2>
+                    <div class="space-y-6">
+                        {% if prescription.instructions %}
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Instructions</h3>
+                            <div class="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                                <p class="text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-line">{{ prescription.instructions }}</p>
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% if prescription.warnings %}
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Warnings</h3>
+                            <div class="p-4 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
+                                <div class="flex">
+                                    <i class="bi bi-exclamation-triangle-fill text-red-600 dark:text-red-400 mr-3 mt-1"></i>
+                                    <p class="text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-line">{{ prescription.warnings }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Related Consultation -->
+                {% if consultation %}
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-100 dark:border-gray-700 opacity-0 animate-fade-in-up" style="animation-delay: 0.5s;">
+                    <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-6">Related Consultation</h2>
+                    <div class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                        <div>
+                            <h3 class="font-medium text-gray-900 dark:text-white">{{ consultation.consultation_date.strftime('%B %d, %Y at %I:%M %p') }}</h3>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">{{ consultation.chief_complaint[:100] }}{% if consultation.chief_complaint|length > 100 %}...{% endif %}</p>
+                            <span class="inline-flex items-center px-2 py-1 text-xs font-medium rounded-full mt-2
+                                {% if consultation.status.value == 'completed' %}bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400
+                                {% elif consultation.status.value == 'draft' %}bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400
+                                {% else %}bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400{% endif %}">
+                                {{ consultation.status.value.title() }}
+                            </span>
+                        </div>
+                        <a href="{{ url_for('medical_records.consultation_details', consultation_id=consultation.id) }}"
+                            class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200">
+                            <i class="bi bi-file-medical mr-2"></i>View Consultation
+                        </a>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Actions -->
+                {% if prescription.is_active and (current_user.id == prescription.doctor_id or current_user.role == 'admin') %}
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-100 dark:border-gray-700 opacity-0 animate-fade-in-up" style="animation-delay: 0.6s;">
+                    <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-6">Actions</h2>
+                    <form method="POST" action="{{ url_for('medical_records.discontinue_prescription', prescription_id=prescription.id) }}" 
+                          onsubmit="return confirm('Are you sure you want to discontinue this prescription?')" class="inline">
+                        <div class="mb-4">
+                            <label for="reason" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Reason for discontinuation</label>
+                            <textarea name="reason" id="reason" rows="3" 
+                                      class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                                      placeholder="Optional reason for discontinuing this prescription..."></textarea>
+                        </div>
+                        <button type="submit" 
+                                class="inline-flex items-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors duration-200">
+                            <i class="bi bi-x-circle mr-2"></i>Discontinue Prescription
+                        </button>
+                    </form>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block include_footer %}
+<!-- Footer excluded for full-screen medical dashboard interface -->
+{% endblock %}

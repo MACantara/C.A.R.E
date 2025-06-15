@@ -1,0 +1,296 @@
+{% extends "base.html" %}
+
+{% block title %}Consultation Details - C.A.R.E. System{% endblock %}
+
+{% block include_navbar %}
+<!-- Navbar excluded for full-screen medical dashboard interface -->
+{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 dark:bg-gray-900 flex" 
+     data-user-timezone="{{ user_timezone }}"
+     data-current-time="{{ current_time_local.isoformat() }}">
+    
+    <!-- Include Sidebar -->
+    {% include 'medical_dashboard/components/sidebar.html' %}
+
+    <!-- Main Content Area -->
+    <div class="flex-1 flex flex-col min-h-screen max-h-screen">
+        <!-- Header -->
+        <div class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex-shrink-0">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center">
+                    <div class="h-12 w-12 flex items-center justify-center rounded-full bg-green-100 dark:bg-green-900/30 mr-4">
+                        <i class="bi bi-file-medical text-green-600 dark:text-green-400 text-xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Consultation Details</h1>
+                        <p class="text-gray-600 dark:text-gray-400">{{ consultation.patient.display_name }} - {{ consultation.consultation_date.strftime('%B %d, %Y at %I:%M %p') }}</p>
+                    </div>
+                </div>
+
+                <div class="flex space-x-3">
+                    <a href="{{ url_for('medical_records.patient_records', patient_id=consultation.patient_id) }}"
+                        class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200">
+                        <i class="bi bi-person mr-2"></i>Patient Records
+                    </a>
+                    <a href="{{ url_for('medical_records.index') }}"
+                        class="inline-flex items-center px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors duration-200">
+                        <i class="bi bi-arrow-left mr-2"></i>Back to Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Content -->
+        <div class="flex-1 p-6 overflow-y-auto max-h-screen">
+            <div class="space-y-6">
+                <!-- Consultation Overview -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-100 dark:border-gray-700 opacity-0 animate-fade-in-up" style="animation-delay: 0.1s;">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-xl font-bold text-gray-900 dark:text-white">Consultation Overview</h2>
+                        <span class="px-3 py-1 text-sm font-medium rounded-full
+                            {% if consultation.status.value == 'completed' %}bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400
+                            {% elif consultation.status.value == 'draft' %}bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400
+                            {% else %}bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400{% endif %}">
+                            {{ consultation.status.value.title() }}
+                        </span>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div>
+                            <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Patient</p>
+                            <p class="text-lg font-semibold text-gray-900 dark:text-white">{{ consultation.patient.display_name }}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Doctor</p>
+                            <p class="text-lg font-semibold text-gray-900 dark:text-white">{{ consultation.doctor.display_name }}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Date & Time</p>
+                            <p class="text-lg font-semibold text-gray-900 dark:text-white">{{ consultation.consultation_date.strftime('%B %d, %Y') }}</p>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">{{ consultation.consultation_date.strftime('%I:%M %p') }}</p>
+                        </div>
+                        {% if consultation.appointment %}
+                        <div>
+                            <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Appointment</p>
+                            <p class="text-lg font-semibold text-gray-900 dark:text-white">Linked</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Chief Complaint -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-100 dark:border-gray-700 opacity-0 animate-fade-in-up" style="animation-delay: 0.2s;">
+                    <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-4">Chief Complaint</h2>
+                    <p class="text-gray-700 dark:text-gray-300 leading-relaxed">{{ consultation.chief_complaint }}</p>
+                </div>
+
+                <!-- Medical History -->
+                {% if consultation.history_present_illness or consultation.past_medical_history or consultation.family_history or consultation.social_history %}
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-100 dark:border-gray-700 opacity-0 animate-fade-in-up" style="animation-delay: 0.3s;">
+                    <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-6">Medical History</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {% if consultation.history_present_illness %}
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">History of Present Illness</h3>
+                            <p class="text-gray-700 dark:text-gray-300 leading-relaxed">{{ consultation.history_present_illness }}</p>
+                        </div>
+                        {% endif %}
+                        {% if consultation.past_medical_history %}
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Past Medical History</h3>
+                            <p class="text-gray-700 dark:text-gray-300 leading-relaxed">{{ consultation.past_medical_history }}</p>
+                        </div>
+                        {% endif %}
+                        {% if consultation.family_history %}
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Family History</h3>
+                            <p class="text-gray-700 dark:text-gray-300 leading-relaxed">{{ consultation.family_history }}</p>
+                        </div>
+                        {% endif %}
+                        {% if consultation.social_history %}
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Social History</h3>
+                            <p class="text-gray-700 dark:text-gray-300 leading-relaxed">{{ consultation.social_history }}</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Vital Signs -->
+                {% if vital_signs %}
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-100 dark:border-gray-700 opacity-0 animate-fade-in-up" style="animation-delay: 0.4s;">
+                    <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-6">Vital Signs</h2>
+                    <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                        {% if vital_signs.temperature %}
+                        <div class="text-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                            <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Temperature</p>
+                            <p class="text-lg font-bold text-gray-900 dark:text-white">{{ vital_signs.temperature }}°C</p>
+                        </div>
+                        {% endif %}
+                        {% if vital_signs.blood_pressure %}
+                        <div class="text-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                            <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Blood Pressure</p>
+                            <p class="text-lg font-bold text-gray-900 dark:text-white">{{ vital_signs.blood_pressure }}</p>
+                        </div>
+                        {% endif %}
+                        {% if vital_signs.heart_rate %}
+                        <div class="text-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                            <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Heart Rate</p>
+                            <p class="text-lg font-bold text-gray-900 dark:text-white">{{ vital_signs.heart_rate }} BPM</p>
+                        </div>
+                        {% endif %}
+                        {% if vital_signs.respiratory_rate %}
+                        <div class="text-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                            <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Respiratory Rate</p>
+                            <p class="text-lg font-bold text-gray-900 dark:text-white">{{ vital_signs.respiratory_rate }}/min</p>
+                        </div>
+                        {% endif %}
+                        {% if vital_signs.oxygen_saturation %}
+                        <div class="text-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                            <p class="text-sm font-medium text-gray-600 dark:text-gray-400">O2 Saturation</p>
+                            <p class="text-lg font-bold text-gray-900 dark:text-white">{{ vital_signs.oxygen_saturation }}%</p>
+                        </div>
+                        {% endif %}
+                        {% if vital_signs.pain_scale is not none %}
+                        <div class="text-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                            <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Pain Scale</p>
+                            <p class="text-lg font-bold text-gray-900 dark:text-white">{{ vital_signs.pain_scale }}/10</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% if vital_signs.weight or vital_signs.height %}
+                    <div class="mt-4 grid grid-cols-2 md:grid-cols-3 gap-4">
+                        {% if vital_signs.weight %}
+                        <div class="text-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                            <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Weight</p>
+                            <p class="text-lg font-bold text-gray-900 dark:text-white">{{ vital_signs.weight }} kg</p>
+                        </div>
+                        {% endif %}
+                        {% if vital_signs.height %}
+                        <div class="text-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                            <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Height</p>
+                            <p class="text-lg font-bold text-gray-900 dark:text-white">{{ vital_signs.height }} cm</p>
+                        </div>
+                        {% endif %}
+                        {% if vital_signs.bmi %}
+                        <div class="text-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                            <p class="text-sm font-medium text-gray-600 dark:text-gray-400">BMI</p>
+                            <p class="text-lg font-bold text-gray-900 dark:text-white">{{ vital_signs.bmi }}</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+                {% endif %}
+
+                <!-- Physical Examination -->
+                {% if consultation.general_appearance or consultation.physical_examination %}
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-100 dark:border-gray-700 opacity-0 animate-fade-in-up" style="animation-delay: 0.5s;">
+                    <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-6">Physical Examination</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {% if consultation.general_appearance %}
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">General Appearance</h3>
+                            <p class="text-gray-700 dark:text-gray-300 leading-relaxed">{{ consultation.general_appearance }}</p>
+                        </div>
+                        {% endif %}
+                        {% if consultation.physical_examination %}
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Physical Examination Findings</h3>
+                            <p class="text-gray-700 dark:text-gray-300 leading-relaxed">{{ consultation.physical_examination }}</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Assessment & Plan -->
+                {% if consultation.assessment or consultation.differential_diagnosis or consultation.treatment_plan %}
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-100 dark:border-gray-700 opacity-0 animate-fade-in-up" style="animation-delay: 0.6s;">
+                    <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-6">Assessment & Plan</h2>
+                    <div class="space-y-6">
+                        {% if consultation.assessment %}
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Clinical Assessment</h3>
+                            <p class="text-gray-700 dark:text-gray-300 leading-relaxed">{{ consultation.assessment }}</p>
+                        </div>
+                        {% endif %}
+                        {% if consultation.differential_diagnosis %}
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Differential Diagnosis</h3>
+                            <p class="text-gray-700 dark:text-gray-300 leading-relaxed">{{ consultation.differential_diagnosis }}</p>
+                        </div>
+                        {% endif %}
+                        {% if consultation.treatment_plan %}
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Treatment Plan</h3>
+                            <p class="text-gray-700 dark:text-gray-300 leading-relaxed">{{ consultation.treatment_plan }}</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Follow-up -->
+                {% if consultation.follow_up_instructions or consultation.next_appointment_recommended %}
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-100 dark:border-gray-700 opacity-0 animate-fade-in-up" style="animation-delay: 0.7s;">
+                    <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-6">Follow-up Instructions</h2>
+                    {% if consultation.follow_up_instructions %}
+                    <div class="mb-4">
+                        <p class="text-gray-700 dark:text-gray-300 leading-relaxed">{{ consultation.follow_up_instructions }}</p>
+                    </div>
+                    {% endif %}
+                    {% if consultation.next_appointment_recommended %}
+                    <div class="flex items-center p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                        <i class="bi bi-calendar-check text-blue-600 dark:text-blue-400 mr-3"></i>
+                        <div>
+                            <p class="font-medium text-blue-900 dark:text-blue-100">Follow-up appointment recommended</p>
+                            {% if consultation.next_appointment_timeframe %}
+                            <p class="text-sm text-blue-700 dark:text-blue-300">Timeframe: {{ consultation.next_appointment_timeframe }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endif %}
+
+                <!-- Related Prescriptions -->
+                {% if related_prescriptions %}
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-100 dark:border-gray-700 opacity-0 animate-fade-in-up" style="animation-delay: 0.8s;">
+                    <h2 class="text-xl font-bold text-gray-900 dark:text-white mb-6">Related Prescriptions</h2>
+                    <div class="space-y-3">
+                        {% for prescription in related_prescriptions %}
+                        <div class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                            <div>
+                                <h3 class="font-medium text-gray-900 dark:text-white">{{ prescription.medication_name }}</h3>
+                                <p class="text-sm text-gray-600 dark:text-gray-400">{{ prescription.dosage }} - {{ prescription.frequency }}</p>
+                                <p class="text-xs text-gray-500 dark:text-gray-500">Prescribed: {{ prescription.prescribed_date.strftime('%B %d, %Y') }}</p>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <span class="px-2 py-1 text-xs font-medium rounded-full
+                                    {% if prescription.status.value == 'active' %}bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400
+                                    {% elif prescription.status.value == 'discontinued' %}bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400
+                                    {% else %}bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400{% endif %}">
+                                    {{ prescription.status.value.title() }}
+                                </span>
+                                <a href="{{ url_for('medical_records.prescription_details', prescription_id=prescription.id) }}"
+                                    class="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300">
+                                    <i class="bi bi-arrow-right"></i>
+                                </a>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block include_footer %}
+<!-- Footer excluded for full-screen medical dashboard interface -->
+{% endblock %}
