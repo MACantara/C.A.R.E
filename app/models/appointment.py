@@ -63,7 +63,6 @@ class Appointment(db.Model):
     )
 
     # Notification tracking
-    reminder_sent = db.Column(db.Boolean, default=False, nullable=False)
     confirmation_sent = db.Column(db.Boolean, default=False, nullable=False)
 
     def __init__(self, **kwargs):
@@ -232,6 +231,7 @@ class Appointment(db.Model):
         return query.first() is not None
 
     def __repr__(self):
+        return f"<Appointment {self.id}: {self.patient.display_name} with {self.doctor.display_name} on {self.appointment_date}>"
         return f"<Appointment {self.id}: {self.patient.display_name} with {self.doctor.display_name} on {self.appointment_date}>"
 
 
