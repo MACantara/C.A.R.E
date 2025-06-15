@@ -69,8 +69,6 @@
     <script type="module" src="{{ url_for('static', filename='js/main.js') }}"></script>
     <script type="module" src="{{ url_for('static', filename='js/components/toast.js') }}"></script>
     <script type="module" src="{{ url_for('static', filename='js/utils/timezone.js') }}"></script>
-
-    {% block extra_js %}
     <!-- Global Socket.IO and Message Count Updates -->
     {% if current_user.is_authenticated and current_user.role in ['doctor', 'staff'] %}
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
@@ -221,7 +219,7 @@
     })();
     </script>
     {% endif %}
-    {% endblock %}
+    {% block extra_js %}{% endblock %}
 </body>
 
 </html>
