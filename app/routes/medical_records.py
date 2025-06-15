@@ -13,12 +13,10 @@ from datetime import datetime, date
 from app import db
 from app.utils.timezone_utils import get_user_timezone, localize_datetime, get_current_time
 from app.models.medical_record import (
-    MedicalRecord,
     Consultation,
     Prescription,
     Allergy,
     VitalSigns,
-    RecordType,
     ConsultationStatus,
     PrescriptionStatus,
 )
@@ -83,26 +81,26 @@ def index():
     # Get sidebar statistics using the shared function
     stats = get_sidebar_stats()
 
-    # Get recent records
-    recent_records = (
-        MedicalRecord.query.order_by(desc(MedicalRecord.created_at)).limit(10).all()
-    )
-
     # Get recent consultations
     recent_consultations = (
-        Consultation.query.order_by(desc(Consultation.consultation_date)).limit(5).all()
+        Consultation.query.order_by(desc(Consultation.consultation_date)).limit(10).all()
+    )
+
+    # Get recent prescriptions
+    recent_prescriptions = (
+        Prescription.query.order_by(desc(Prescription.prescribed_date)).limit(5).all()
     )
 
     # Get statistics
     total_patients = User.query.filter_by(role="patient", active=True).count()
-    total_records = MedicalRecord.query.count()
+    total_consultations = Consultation.query.count()
     today_consultations = Consultation.query.filter(
         func.date(Consultation.consultation_date) == date.today()
     ).count()
 
-    stats = {
+    dashboard_stats = {
         "total_patients": total_patients,
-        "total_records": total_records,
+        "total_consultations": total_consultations,
         "today_consultations": today_consultations,
         "pending_consultations": Consultation.query.filter_by(
             status=ConsultationStatus.DRAFT
@@ -111,9 +109,9 @@ def index():
 
     return render_template(
         "medical_dashboard/medical_records/dashboard.html",
-        recent_records=recent_records,
         recent_consultations=recent_consultations,
-        stats=stats,
+        recent_prescriptions=recent_prescriptions,
+        stats=dashboard_stats,
         user_timezone=user_timezone,
         current_time_local=current_time_local,
         localize_datetime=localize_datetime,
@@ -175,13 +173,6 @@ def patient_records(patient_id):
 
     patient = User.query.filter_by(id=patient_id, role="patient").first_or_404()
 
-    # Get all medical records
-    records = (
-        MedicalRecord.query.filter_by(patient_id=patient_id)
-        .order_by(desc(MedicalRecord.record_date))
-        .all()
-    )
-
     # Get consultations
     consultations = (
         Consultation.query.filter_by(patient_id=patient_id)
@@ -210,7 +201,6 @@ def patient_records(patient_id):
     return render_template(
         "medical_dashboard/medical_records/patient_detail.html",
         patient=patient,
-        records=records,
         consultations=consultations,
         prescriptions=prescriptions,
         allergies=allergies,
@@ -220,6 +210,7 @@ def patient_records(patient_id):
         localize_datetime=localize_datetime,
         stats=stats,
     )
+
 
 @medical_records_bp.route("/prescription/new")
 @doctor_required
@@ -331,7 +322,7 @@ def create_prescription():
 @medical_records_bp.route("/search")
 @healthcare_professional_required
 def search_records():
-    """Search medical records."""
+    """Search medical records across consultations and prescriptions."""
     # Get user's timezone
     user_timezone = get_user_timezone()
     current_time_local = get_current_time(user_timezone)
@@ -340,39 +331,29 @@ def search_records():
     stats = get_sidebar_stats()
 
     query = request.args.get("q", "").strip()
-    record_type = request.args.get("type", "")
+    search_type = request.args.get("type", "")
     patient_name = request.args.get("patient", "").strip()
     date_from = request.args.get("date_from", "")
     date_to = request.args.get("date_to", "")
 
-    results = []
+    results = {"consultations": [], "prescriptions": []}
 
     if query or patient_name or date_from or date_to:
-        # Build search query
-        search_query = MedicalRecord.query
+        # Search consultations
+        consultation_query = Consultation.query
 
         if query:
-            search_query = search_query.filter(
+            consultation_query = consultation_query.filter(
                 or_(
-                    MedicalRecord.title.contains(query),
-                    MedicalRecord.description.contains(query),
-                    MedicalRecord.diagnosis.contains(query),
-                    MedicalRecord.chief_complaint.contains(query),
+                    Consultation.chief_complaint.contains(query),
+                    Consultation.assessment.contains(query),
+                    Consultation.treatment_plan.contains(query),
                 )
             )
 
-        if record_type:
-            try:
-                search_query = search_query.filter(
-                    MedicalRecord.record_type == RecordType(record_type)
-                )
-            except ValueError:
-                pass
-
         if patient_name:
-            # Join with user table to search patient names
-            search_query = search_query.join(
-                User, MedicalRecord.patient_id == User.id
+            consultation_query = consultation_query.join(
+                User, Consultation.patient_id == User.id
             ).filter(
                 or_(
                     User.first_name.contains(patient_name),
@@ -384,8 +365,8 @@ def search_records():
         if date_from:
             try:
                 date_from_obj = datetime.strptime(date_from, "%Y-%m-%d").date()
-                search_query = search_query.filter(
-                    MedicalRecord.record_date >= date_from_obj
+                consultation_query = consultation_query.filter(
+                    Consultation.consultation_date >= date_from_obj
                 )
             except ValueError:
                 pass
@@ -393,19 +374,48 @@ def search_records():
         if date_to:
             try:
                 date_to_obj = datetime.strptime(date_to, "%Y-%m-%d").date()
-                search_query = search_query.filter(
-                    MedicalRecord.record_date <= date_to_obj
+                consultation_query = consultation_query.filter(
+                    Consultation.consultation_date <= date_to_obj
                 )
             except ValueError:
                 pass
 
-        results = search_query.order_by(desc(MedicalRecord.record_date)).limit(50).all()
+        results["consultations"] = consultation_query.order_by(
+            desc(Consultation.consultation_date)
+        ).limit(25).all()
+
+        # Search prescriptions if not type-specific or if type is prescription
+        if not search_type or search_type == "prescription":
+            prescription_query = Prescription.query
+
+            if query:
+                prescription_query = prescription_query.filter(
+                    or_(
+                        Prescription.medication_name.contains(query),
+                        Prescription.indication.contains(query),
+                    )
+                )
+
+            if patient_name:
+                prescription_query = prescription_query.join(
+                    User, Prescription.patient_id == User.id
+                ).filter(
+                    or_(
+                        User.first_name.contains(patient_name),
+                        User.last_name.contains(patient_name),
+                        User.username.contains(patient_name),
+                    )
+                )
+
+            results["prescriptions"] = prescription_query.order_by(
+                desc(Prescription.prescribed_date)
+            ).limit(25).all()
 
     return render_template(
         "medical_dashboard/medical_records/search.html",
         results=results,
         query=query,
-        record_type=record_type,
+        search_type=search_type,
         patient_name=patient_name,
         date_from=date_from,
         date_to=date_to,
