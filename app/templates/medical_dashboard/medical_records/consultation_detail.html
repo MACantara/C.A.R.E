@@ -70,12 +70,6 @@
                             <p class="text-lg font-semibold text-gray-900 dark:text-white">{{ consultation.consultation_date.strftime('%B %d, %Y') }}</p>
                             <p class="text-sm text-gray-600 dark:text-gray-400">{{ consultation.consultation_date.strftime('%I:%M %p') }}</p>
                         </div>
-                        {% if consultation.appointment %}
-                        <div>
-                            <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Appointment</p>
-                            <p class="text-lg font-semibold text-gray-900 dark:text-white">Linked</p>
-                        </div>
-                        {% endif %}
                     </div>
                 </div>
 
@@ -288,6 +282,12 @@
             </div>
         </div>
     </div>
+</div>
+{% endblock %}
+
+{% block include_footer %}
+<!-- Footer excluded for full-screen medical dashboard interface -->
+{% endblock %}
 </div>
 {% endblock %}
 
