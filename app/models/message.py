@@ -91,22 +91,3 @@ class InternalMessage(db.Model):
             "created_at": self.created_at.isoformat(),
             "read_at": self.read_at.isoformat() if self.read_at else None,
         }
-
-
-class MessageThread(db.Model):
-    """Group related messages into threads."""
-
-    __tablename__ = "message_threads"
-
-    id = Column(Integer, primary_key=True)
-    subject = Column(String(200), nullable=False)
-    created_by_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    last_message_at = Column(DateTime, default=datetime.utcnow)
-    is_active = Column(Boolean, default=True, nullable=False)
-
-    # Relationships
-    created_by = relationship("User", backref="created_threads")
-
-    def __repr__(self):
-        return f"<MessageThread {self.subject}>"
