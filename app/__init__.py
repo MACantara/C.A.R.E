@@ -68,7 +68,6 @@ def create_app(config_name=None):
         from app.models import Contact, User, PasswordResetToken
         from app.models.appointment import Appointment, AppointmentReminder
         from app.models.medical_record import (
-            MedicalRecord,
             Consultation,
             Prescription,
             Allergy,
