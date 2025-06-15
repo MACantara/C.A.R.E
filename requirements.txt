@@ -50,3 +50,6 @@ python-socketio[client]
 
 # Excel file support
 openpyxl
+
+# Sample data generation
+Faker
