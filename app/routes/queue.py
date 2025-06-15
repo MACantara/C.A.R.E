@@ -15,7 +15,7 @@ from app.utils.timezone_utils import get_user_timezone, localize_datetime, get_c
 from app.models.user import User
 from app.models.appointment import Appointment
 from app.models.queue import PatientQueue, QueueStatus
-from app.models.message import InternalMessage, MessageType, MessagePriority
+from app.models.message import InternalMessage
 from app.utils.sidebar_utils import get_sidebar_stats
 from sqlalchemy import and_, or_
 
@@ -299,8 +299,8 @@ def _send_delay_notification(queue_entry, delay_reason, user_timezone=None):
                 recipient_id=staff.id,
                 subject=f"Queue Delay - {patient.first_name} {patient.last_name}",
                 content=f"Appointment delayed at {current_time_local.strftime('%H:%M')}. Reason: {delay_reason}. Queue #: {queue_entry.queue_number}",
-                message_type=MessageType.QUEUE_UPDATE,
-                priority=MessagePriority.HIGH,
+                message_type="queue_update",
+                priority="high",
                 related_appointment_id=queue_entry.appointment_id,
                 related_patient_id=patient.id,
             )

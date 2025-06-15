@@ -15,7 +15,7 @@ import pytz
 from app import db, socketio
 from app.utils.timezone_utils import get_user_timezone, localize_datetime, get_current_time
 from app.models.user import User
-from app.models.message import InternalMessage, MessageType, MessagePriority
+from app.models.message import InternalMessage
 from app.utils.sidebar_utils import get_sidebar_stats
 from sqlalchemy import and_, or_
 
@@ -409,8 +409,8 @@ def api_send_message():
             recipient_id=int(recipient_id),
             subject=subject or "Chat Message",
             content=content,
-            message_type=MessageType(message_type),
-            priority=MessagePriority(priority),
+            message_type=message_type,
+            priority=priority,
         )
 
         db.session.add(message)

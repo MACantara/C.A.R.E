@@ -8,25 +8,8 @@ from sqlalchemy import (
     Boolean,
     ForeignKey,
     Text,
-    Enum,
 )
 from sqlalchemy.orm import relationship
-import enum
-
-
-class MessagePriority(enum.Enum):
-    LOW = "low"
-    NORMAL = "normal"
-    HIGH = "high"
-    URGENT = "urgent"
-
-
-class MessageType(enum.Enum):
-    GENERAL = "general"
-    QUEUE_UPDATE = "queue_update"
-    APPOINTMENT = "appointment"
-    PATIENT_INFO = "patient_info"
-    SYSTEM = "system"
 
 
 class InternalMessage(db.Model):
@@ -39,12 +22,8 @@ class InternalMessage(db.Model):
     recipient_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     subject = Column(String(200), nullable=False)
     content = Column(Text, nullable=False)
-    message_type = Column(
-        Enum(MessageType), default=MessageType.GENERAL, nullable=False
-    )
-    priority = Column(
-        Enum(MessagePriority), default=MessagePriority.NORMAL, nullable=False
-    )
+    message_type = Column(String(50), default="general", nullable=False)
+    priority = Column(String(20), default="normal", nullable=False)
     is_read = Column(Boolean, default=False, nullable=False)
     is_deleted_by_sender = Column(Boolean, default=False, nullable=False)
     is_deleted_by_recipient = Column(Boolean, default=False, nullable=False)
@@ -83,8 +62,8 @@ class InternalMessage(db.Model):
             "recipient_name": f"{self.recipient.first_name} {self.recipient.last_name}",
             "subject": self.subject,
             "content": self.content,
-            "message_type": self.message_type.value,
-            "priority": self.priority.value,
+            "message_type": self.message_type,
+            "priority": self.priority,
             "is_read": self.is_read,
             "related_appointment_id": self.related_appointment_id,
             "related_patient_id": self.related_patient_id,
