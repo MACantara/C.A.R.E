@@ -50,12 +50,6 @@ class MedicalRecord(db.Model):
     record_type = db.Column(db.Enum(RecordType), nullable=False, index=True)
     title = db.Column(db.String(200), nullable=False)
     description = db.Column(db.Text, nullable=True)
-
-    # Clinical information
-    chief_complaint = db.Column(db.Text, nullable=True)
-    symptoms = db.Column(db.Text, nullable=True)
-    diagnosis = db.Column(db.Text, nullable=True)
-    treatment_plan = db.Column(db.Text, nullable=True)
     notes = db.Column(db.Text, nullable=True)
 
     # Metadata
