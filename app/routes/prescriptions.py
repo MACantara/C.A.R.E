@@ -130,6 +130,17 @@ def create_prescription():
         db.session.add(prescription)
         db.session.commit()
 
+        # Mark the appointment as completed if this prescription came from a consultation
+        if consultation_id:
+            consultation = Consultation.query.get(consultation_id)
+            if consultation and consultation.appointment_id:
+                appointment = consultation.appointment
+                if appointment and appointment.status.value != 'completed':
+                    from app.models.appointment import AppointmentStatus
+                    appointment.status = AppointmentStatus.COMPLETED
+                    appointment.completed_at = get_current_time().replace(tzinfo=None)
+                    db.session.commit()
+
         patient = User.query.get(patient_id)
         
         # Provide different success messages based on context
