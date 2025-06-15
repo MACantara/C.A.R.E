@@ -47,6 +47,26 @@
             </div>
         </div>
 
+        <!-- Breadcrumb Navigation -->
+        <div class="bg-gray-50 dark:bg-gray-900 px-6 py-3 border-b border-gray-200 dark:border-gray-700">
+            <nav class="flex" aria-label="Breadcrumb">
+                <ol class="inline-flex items-center space-x-1 md:space-x-3">
+                    <li class="inline-flex items-center">
+                        <a href="{{ url_for('medical_records.index') }}" class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600 dark:text-gray-400 dark:hover:text-white">
+                            <i class="bi bi-house-door mr-2"></i>
+                            Medical Records Dashboard
+                        </a>
+                    </li>
+                    <li aria-current="page">
+                        <div class="flex items-center">
+                            <i class="bi bi-chevron-right text-gray-400 mx-1"></i>
+                            <span class="ml-1 text-sm font-medium text-gray-500 md:ml-2 dark:text-gray-400">My Schedule</span>
+                        </div>
+                    </li>
+                </ol>
+            </nav>
+        </div>
+
         <!-- Content -->
         <div class="flex-1 p-6 overflow-y-auto max-h-screen">
             <!-- Schedule Statistics -->
