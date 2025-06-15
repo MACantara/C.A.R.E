@@ -47,3 +47,85 @@ Usage:
     </a>
   {% endif %}
 {% endif %}
+
+<script>
+// Messages Icon Unified JavaScript (only for messaging pages)
+(function() {
+    // Only execute if user is authenticated and is doctor/staff
+    {% if current_user.is_authenticated and current_user.role in ['doctor', 'staff'] %}
+    
+    // Only initialize this script on the messaging page
+    if (document.querySelector('[data-current-user-id]')) {
+        // This is the messaging page - use the full messaging system
+        
+        // Update unread message count function
+        function updateMessageCount() {
+            // Try Socket.IO first (for real-time updates)
+            if (window.socket && typeof window.socket.emit === 'function') {
+                window.socket.emit('request_unread_count');
+            } else {
+                // Fallback to REST API
+                fetch('/messages/api/unread_count')
+                    .then(response => response.json())
+                    .then(data => {
+                        updateBadgeDisplay(data.count || 0);
+                    })
+                    .catch(error => console.error('Error fetching message count:', error));
+            }
+        }
+
+        // Update badge display for all message icons
+        function updateBadgeDisplay(count) {
+            const badges = [
+                'message-badge',           // navbar
+                'unread-messages-count',   // sidebar full
+                'collapsed-unread-count',  // sidebar collapsed
+                'mobile-message-badge'     // mobile
+            ];
+            
+            badges.forEach(badgeId => {
+                const badge = document.getElementById(badgeId);
+                if (badge) {
+                    if (count > 0) {
+                        // Different count limits for different badge sizes
+                        let displayCount;
+                        if (badgeId === 'collapsed-unread-count') {
+                            displayCount = count > 9 ? '9+' : count;
+                        } else {
+                            displayCount = count > 99 ? '99+' : count;
+                        }
+                        
+                        badge.textContent = displayCount;
+                        badge.classList.remove('hidden');
+                    } else {
+                        badge.classList.add('hidden');
+                    }
+                }
+            });
+        }
+
+        // Listen for Socket.IO unread count updates
+        if (window.socket) {
+            window.socket.on('unread_count_update', function(data) {
+                updateBadgeDisplay(data.count || 0);
+            });
+        }
+
+        // Initialize and set up periodic updates
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initial update after short delay to ensure Socket.IO is ready
+            setTimeout(updateMessageCount, 1000);
+            
+            // Periodic updates every 15 seconds
+            setInterval(updateMessageCount, 15000);
+        });
+
+        // Make functions available globally for manual updates
+        window.updateMessageCount = updateMessageCount;
+        window.updateMessageBadgeDisplay = updateBadgeDisplay;
+    }
+    // For non-messaging pages, the global Socket.IO handler in base.html will handle updates
+
+    {% endif %}
+})();
+</script>
