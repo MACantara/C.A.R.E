@@ -252,32 +252,13 @@
 </nav>
 
 <script>
-    // Update unread message count
-    function updateMessageCount() {
-        {% if current_user.is_authenticated and current_user.role in ['doctor', 'staff'] %}
-        fetch('/messages/api/unread_count')
-            .then(response => response.json())
-            .then(data => {
-                const badges = ['message-badge', 'dropdown-message-badge', 'mobile-message-badge'];
-                badges.forEach(badgeId => {
-                    const badge = document.getElementById(badgeId);
-                    if (badge) {
-                        if (data.count > 0) {
-                            badge.textContent = data.count > 99 ? '99+' : data.count;
-                            badge.classList.remove('hidden');
-                        } else {
-                            badge.classList.add('hidden');
-                        }
-                    }
-                });
-            })
-            .catch(error => console.error('Error fetching message count:', error));
-        {% endif %}
-    }
-
-    // Update message count on page load and every 15 seconds
+    // Navbar-specific functionality - message count updates now handled by base.html global handler
     document.addEventListener('DOMContentLoaded', function () {
-        updateMessageCount();
-        setInterval(updateMessageCount, 15000); // Reduced from 30 seconds
+        // Request initial message count update from global handler
+        {% if current_user.is_authenticated and current_user.role in ['doctor', 'staff'] %}
+        if (window.requestGlobalUnreadCount) {
+            setTimeout(window.requestGlobalUnreadCount, 500);
+        }
+        {% endif %}
     });
 </script>
