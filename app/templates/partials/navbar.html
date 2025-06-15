@@ -77,15 +77,9 @@
                 </div>
 
                 <!-- Messages (icon only) -->
-                {% if current_user.is_authenticated and current_user.role in ['doctor', 'staff'] %}
-                <a href="{{ url_for('messages.inbox') }}"
-                    class="relative text-gray-600 dark:text-gray-300 hover:text-cyan-600 dark:hover:text-cyan-400 transition-all duration-300 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center"
-                    title="Messages">
-                    <i class="bi bi-envelope text-xl"></i>
-                    <span id="message-badge"
-                        class="hidden absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center"></span>
-                </a>
-                {% endif %}
+                {% set icon_style = 'navbar' %}
+                {% set icon_id = 'message-badge' %}
+                {% include 'partials/messages-icon.html' %}
 
                 <!-- Authentication Links -->
                 {% if current_user.is_authenticated %}
@@ -189,12 +183,9 @@
                 class="block px-3 py-2 text-teal-600 dark:text-teal-400 hover:text-teal-700 dark:hover:text-teal-300 hover:bg-teal-50/50 dark:hover:bg-teal-900/20 transition-all duration-300 rounded-lg font-medium">
                 <i class="bi bi-hospital mr-2"></i>Medical Dashboard
             </a>
-            <a href="{{ url_for('messages.inbox') }}"
-                class="block px-3 py-2 text-cyan-600 dark:text-cyan-400 hover:text-cyan-700 dark:hover:text-cyan-300 hover:bg-cyan-50/50 dark:hover:bg-cyan-900/20 transition-all duration-300 rounded-lg font-medium">
-                <i class="bi bi-envelope mr-2"></i>Messages
-                <span id="mobile-message-badge"
-                    class="hidden ml-2 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center"></span>
-            </a>
+            {% set icon_style = 'mobile' %}
+            {% set icon_id = 'mobile-message-badge' %}
+            {% include 'partials/messages-icon.html' %}
             {% endif %}
 
             <!-- Company Section - Available to all users -->
