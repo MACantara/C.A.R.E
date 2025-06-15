@@ -1,0 +1,49 @@
+<!-- Messages Icon Partial Template -->
+<!-- 
+Usage: 
+% set icon_style = 'navbar' or 'sidebar' or 'collapsed' or 'mobile' %
+% set icon_id = 'unique-id' %
+% include 'partials/messages-icon.html' %
+-->
+
+{% if current_user.is_authenticated and current_user.role in ['doctor', 'staff'] %}
+  {% if icon_style == 'navbar' %}
+    <!-- Navbar Style -->
+    <a href="{{ url_for('messages.inbox') }}"
+        class="relative text-gray-600 dark:text-gray-300 hover:text-cyan-600 dark:hover:text-cyan-400 transition-all duration-300 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center"
+        title="Messages">
+        <i class="bi bi-envelope text-xl"></i>
+        <span id="{{ icon_id | default('message-badge') }}"
+            class="hidden absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center"></span>
+    </a>
+  
+  {% elif icon_style == 'sidebar' %}
+    <!-- Sidebar Full Style -->
+    <a href="{{ url_for('messages.inbox') }}"
+        class="group flex items-center px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-200">
+        <i class="bi bi-chat-dots mr-3 text-gray-400 group-hover:text-blue-500"></i>
+        Messages
+        <span id="{{ icon_id | default('unread-messages-count') }}"
+            class="ml-auto bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 text-xs px-2 py-1 rounded-full hidden">0</span>
+    </a>
+  
+  {% elif icon_style == 'collapsed' %}
+    <!-- Sidebar Collapsed Style -->
+    <a href="{{ url_for('messages.inbox') }}"
+        class="flex justify-center p-3 text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-all duration-200 relative"
+        title="Messages">
+        <i class="bi bi-chat-dots text-lg"></i>
+        <span id="{{ icon_id | default('collapsed-unread-count') }}"
+            class="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center hidden">0</span>
+    </a>
+  
+  {% elif icon_style == 'mobile' %}
+    <!-- Mobile Style -->
+    <a href="{{ url_for('messages.inbox') }}"
+        class="block px-3 py-2 text-cyan-600 dark:text-cyan-400 hover:text-cyan-700 dark:hover:text-cyan-300 hover:bg-cyan-50/50 dark:hover:bg-cyan-900/20 transition-all duration-300 rounded-lg font-medium">
+        <i class="bi bi-envelope mr-2"></i>Messages
+        <span id="{{ icon_id | default('mobile-message-badge') }}"
+            class="hidden ml-2 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center"></span>
+    </a>
+  {% endif %}
+{% endif %}
