@@ -66,7 +66,7 @@ def create_app(config_name=None):
     # Import models to ensure they are registered with SQLAlchemy
     if not app.config.get("DISABLE_DATABASE", False):
         from app.models import Contact, User, PasswordResetToken
-        from app.models.appointment import Appointment, AppointmentReminder
+        from app.models.appointment import Appointment
         from app.models.medical_record import (
             Consultation,
             Prescription,

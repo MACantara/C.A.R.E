@@ -232,30 +232,3 @@ class Appointment(db.Model):
 
     def __repr__(self):
         return f"<Appointment {self.id}: {self.patient.display_name} with {self.doctor.display_name} on {self.appointment_date}>"
-        return f"<Appointment {self.id}: {self.patient.display_name} with {self.doctor.display_name} on {self.appointment_date}>"
-
-
-class AppointmentReminder(db.Model):
-    __tablename__ = "appointment_reminders"
-
-    id = db.Column(db.Integer, primary_key=True)
-    appointment_id = db.Column(
-        db.Integer, db.ForeignKey("appointments.id"), nullable=False
-    )
-
-    # Reminder details
-    reminder_type = db.Column(db.String(50), nullable=False)  # email, sms
-    reminder_time = db.Column(db.DateTime, nullable=False)  # when to send reminder
-    sent_at = db.Column(db.DateTime, nullable=True)
-    status = db.Column(
-        db.String(20), default="pending", nullable=False
-    )  # pending, sent, failed
-
-    # Timestamps
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
-
-    # Relationship
-    appointment = db.relationship("Appointment", backref="reminders")
-
-    def __repr__(self):
-        return f"<AppointmentReminder {self.id}: {self.reminder_type} for appointment {self.appointment_id}>"
