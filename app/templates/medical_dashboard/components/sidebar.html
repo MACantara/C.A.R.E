@@ -315,75 +315,6 @@
         }
     }
 
-    // Update unread message count
-    function updateUnreadCount() {
-        if (window.socket && typeof window.socket.emit === 'function') {
-            window.socket.emit('request_unread_count');
-        }
-    }
-
-    // Listen for unread count updates
-    if (window.socket) {
-        window.socket.on('unread_count_update', function(data) {
-            const count = data.count || 0;
-            
-            // Use the correct IDs from the messages-icon partial
-            const unreadBadge = document.getElementById('unread-messages-count');
-            const collapsedBadge = document.getElementById('collapsed-unread-count');
-            
-            if (unreadBadge) {
-                if (count > 0) {
-                    unreadBadge.textContent = count > 99 ? '99+' : count;
-                    unreadBadge.classList.remove('hidden');
-                } else {
-                    unreadBadge.classList.add('hidden');
-                }
-            }
-            
-            if (collapsedBadge) {
-                if (count > 0) {
-                    collapsedBadge.textContent = count > 9 ? '9+' : count;
-                    collapsedBadge.classList.remove('hidden');
-                } else {
-                    collapsedBadge.classList.add('hidden');
-                }
-            }
-        });
-    } else {
-        // Fallback to REST API if Socket.IO is not available
-        function updateUnreadCountFallback() {
-            fetch('/messages/api/unread_count')
-                .then(response => response.json())
-                .then(data => {
-                    const count = data.count || 0;
-                    const unreadBadge = document.getElementById('unread-messages-count');
-                    const collapsedBadge = document.getElementById('collapsed-unread-count');
-                    
-                    if (unreadBadge) {
-                        if (count > 0) {
-                            unreadBadge.textContent = count > 99 ? '99+' : count;
-                            unreadBadge.classList.remove('hidden');
-                        } else {
-                            unreadBadge.classList.add('hidden');
-                        }
-                    }
-                    
-                    if (collapsedBadge) {
-                        if (count > 0) {
-                            collapsedBadge.textContent = count > 9 ? '9+' : count;
-                            collapsedBadge.classList.remove('hidden');
-                        } else {
-                            collapsedBadge.classList.add('hidden');
-                        }
-                    }
-                })
-                .catch(error => console.error('Error fetching message count:', error));
-        }
-        
-        // Use REST API fallback
-        setTimeout(updateUnreadCountFallback, 1000);
-        setInterval(updateUnreadCountFallback, 30000);
-    }
 
     // Simple initialization - no fade effects
     document.addEventListener('DOMContentLoaded', function () {
@@ -412,11 +343,5 @@
         if (queueCount && queueWaiting > 0) {
             queueCount.classList.remove('hidden');
         }
-
-        // Request initial unread count
-        setTimeout(updateUnreadCount, 1000);
-        
-        // Update unread count periodically
-        setInterval(updateUnreadCount, 30000); // Every 30 seconds
     });
 </script>
