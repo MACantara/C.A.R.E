@@ -259,95 +259,169 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        // Appointment Timeline Chart
-        const timelineCtx = document.getElementById('appointmentTimelineChart').getContext('2d');
-        fetch(`{{ url_for('reports.api_chart_data', chart_type='appointments_timeline') }}?days=7`)
-            .then(response => response.json())
-            .then(data => {
-                new Chart(timelineCtx, {
-                    type: 'line',
-                    data: {
-                        labels: data.map(d => new Date(d.date).toLocaleDateString()),
-                        datasets: [{
-                            label: 'Total Appointments',
-                            data: data.map(d => d.appointments),
-                            borderColor: 'rgb(59, 130, 246)',
-                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                            tension: 0.4
-                        }, {
-                            label: 'Completed',
-                            data: data.map(d => d.completed),
-                            borderColor: 'rgb(34, 197, 94)',
-                            backgroundColor: 'rgba(34, 197, 94, 0.1)',
-                            tension: 0.4
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                labels: {
-                                    color: document.documentElement.classList.contains('dark') ? '#e5e7eb' : '#374151'
-                                }
-                            }
+        let appointmentTimelineChart;
+        let appointmentStatusChart;
+
+        // Function to get current theme colors
+        function getThemeColors() {
+            const isDark = document.documentElement.classList.contains('dark');
+            return {
+                textColor: isDark ? '#e5e7eb' : '#374151',
+                gridColor: isDark ? '#374151' : '#e5e7eb',
+                tickColor: isDark ? '#9ca3af' : '#6b7280'
+            };
+        }
+
+        // Function to update chart colors
+        function updateChartColors() {
+            const colors = getThemeColors();
+            
+            if (appointmentTimelineChart) {
+                // Update timeline chart colors
+                appointmentTimelineChart.options.plugins.legend.labels.color = colors.textColor;
+                appointmentTimelineChart.options.scales.y.ticks.color = colors.tickColor;
+                appointmentTimelineChart.options.scales.y.grid.color = colors.gridColor;
+                appointmentTimelineChart.options.scales.x.ticks.color = colors.tickColor;
+                appointmentTimelineChart.options.scales.x.grid.color = colors.gridColor;
+                appointmentTimelineChart.update('none'); // Update without animation for smooth transition
+            }
+
+            if (appointmentStatusChart) {
+                // Update status chart colors
+                appointmentStatusChart.options.plugins.legend.labels.color = colors.textColor;
+                appointmentStatusChart.update('none'); // Update without animation for smooth transition
+            }
+        }
+
+        // Create Appointment Timeline Chart
+        function createTimelineChart() {
+            const timelineCtx = document.getElementById('appointmentTimelineChart').getContext('2d');
+            const colors = getThemeColors();
+            
+            fetch(`{{ url_for('reports.api_chart_data', chart_type='appointments_timeline') }}?days=7`)
+                .then(response => response.json())
+                .then(data => {
+                    appointmentTimelineChart = new Chart(timelineCtx, {
+                        type: 'line',
+                        data: {
+                            labels: data.map(d => new Date(d.date).toLocaleDateString()),
+                            datasets: [{
+                                label: 'Total Appointments',
+                                data: data.map(d => d.appointments),
+                                borderColor: 'rgb(59, 130, 246)',
+                                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                                tension: 0.4
+                            }, {
+                                label: 'Completed',
+                                data: data.map(d => d.completed),
+                                borderColor: 'rgb(34, 197, 94)',
+                                backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                                tension: 0.4
+                            }]
                         },
-                        scales: {
-                            y: {
-                                beginAtZero: true,
-                                ticks: {
-                                    color: document.documentElement.classList.contains('dark') ? '#9ca3af' : '#6b7280'
-                                },
-                                grid: {
-                                    color: document.documentElement.classList.contains('dark') ? '#374151' : '#e5e7eb'
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    labels: {
+                                        color: colors.textColor
+                                    }
                                 }
                             },
-                            x: {
-                                ticks: {
-                                    color: document.documentElement.classList.contains('dark') ? '#9ca3af' : '#6b7280'
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    ticks: {
+                                        color: colors.tickColor
+                                    },
+                                    grid: {
+                                        color: colors.gridColor
+                                    }
                                 },
-                                grid: {
-                                    color: document.documentElement.classList.contains('dark') ? '#374151' : '#e5e7eb'
+                                x: {
+                                    ticks: {
+                                        color: colors.tickColor
+                                    },
+                                    grid: {
+                                        color: colors.gridColor
+                                    }
                                 }
                             }
                         }
-                    }
+                    });
                 });
-            });
+        }
 
-        // Appointment Status Chart
-        const statusCtx = document.getElementById('appointmentStatusChart').getContext('2d');
-        fetch(`{{ url_for('reports.api_chart_data', chart_type='appointment_status') }}`)
-            .then(response => response.json())
-            .then(data => {
-                new Chart(statusCtx, {
-                    type: 'doughnut',
-                    data: {
-                        labels: data.map(d => d.status),
-                        datasets: [{
-                            data: data.map(d => d.count),
-                            backgroundColor: [
-                                'rgb(34, 197, 94)',  // Completed - green
-                                'rgb(59, 130, 246)',  // Scheduled - blue
-                                'rgb(251, 191, 36)',  // Confirmed - yellow
-                                'rgb(239, 68, 68)'    // Cancelled - red
-                            ]
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: {
-                            legend: {
-                                position: 'bottom',
-                                labels: {
-                                    color: document.documentElement.classList.contains('dark') ? '#e5e7eb' : '#374151'
+        // Create Appointment Status Chart
+        function createStatusChart() {
+            const statusCtx = document.getElementById('appointmentStatusChart').getContext('2d');
+            const colors = getThemeColors();
+            
+            fetch(`{{ url_for('reports.api_chart_data', chart_type='appointment_status') }}`)
+                .then(response => response.json())
+                .then(data => {
+                    appointmentStatusChart = new Chart(statusCtx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: data.map(d => d.status),
+                            datasets: [{
+                                data: data.map(d => d.count),
+                                backgroundColor: [
+                                    'rgb(34, 197, 94)',  // Completed - green
+                                    'rgb(59, 130, 246)',  // Scheduled - blue
+                                    'rgb(251, 191, 36)',  // Confirmed - yellow
+                                    'rgb(239, 68, 68)'    // Cancelled - red
+                                ]
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    position: 'bottom',
+                                    labels: {
+                                        color: colors.textColor
+                                    }
                                 }
                             }
                         }
-                    }
+                    });
                 });
+        }
+
+        // Initialize charts
+        createTimelineChart();
+        createStatusChart();
+
+        // Watch for theme changes
+        const observer = new MutationObserver(function(mutations) {
+            mutations.forEach(function(mutation) {
+                if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+                    // Theme changed, update chart colors
+                    setTimeout(updateChartColors, 10); // Small delay to ensure theme transition is complete
+                }
             });
+        });
+
+        // Start observing the document element for class changes
+        observer.observe(document.documentElement, {
+            attributes: true,
+            attributeFilter: ['class']
+        });
+
+        // Also listen for manual theme toggle events if your app dispatches them
+        document.addEventListener('themeChanged', updateChartColors);
+        
+        // Listen for system theme changes
+        if (window.matchMedia) {
+            const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+            mediaQuery.addEventListener('change', function() {
+                // Only update if auto theme is being used
+                setTimeout(updateChartColors, 10);
+            });
+        }
     });
 </script>
 {% endblock %}
