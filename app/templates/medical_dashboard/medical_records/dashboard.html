@@ -122,8 +122,9 @@
                                     {% else %}bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400{% endif %}">
                                 {{ consultation.status.value.title() }}
                                 </span>
-                                <a href="{{ url_for('medical_records.patient_records', patient_id=consultation.patient_id) }}"
-                                    class="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300">
+                                <a href="{{ url_for('medical_records.consultation_details', consultation_id=consultation.id) }}"
+                                    class="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
+                                    title="View consultation details">
                                     <i class="bi bi-arrow-right"></i>
                                 </a>
                             </div>
@@ -151,21 +152,33 @@
                     {% if recent_prescriptions %}
                     <div class="space-y-4">
                         {% for prescription in recent_prescriptions %}
-                        <div class="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                            <div class="flex items-center justify-between mb-2">
-                                <h3 class="font-medium text-gray-900 dark:text-white">{{ prescription.patient.display_name }}</h3>
+                        <div class="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors duration-200">
+                            <div class="flex items-center space-x-4">
+                                <div class="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                                    <i class="bi bi-capsule text-blue-600 dark:text-blue-400"></i>
+                                </div>
+                                <div>
+                                    <h3 class="font-medium text-gray-900 dark:text-white">{{ prescription.patient.display_name }}</h3>
+                                    <p class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ prescription.medication_name }}</p>
+                                    <p class="text-xs text-gray-600 dark:text-gray-400">{{ prescription.dosage }} - {{ prescription.frequency }}</p>
+                                    <p class="text-xs text-gray-500 dark:text-gray-500">
+                                        Prescribed: {{ prescription.prescribed_date.strftime('%B %d, %Y') }}
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="flex items-center space-x-2">
                                 <span class="px-2 py-1 text-xs font-medium rounded-full
                                     {% if prescription.status.value == 'active' %}bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400
                                     {% elif prescription.status.value == 'discontinued' %}bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400
                                     {% else %}bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400{% endif %}">
                                     {{ prescription.status.value.title() }}
                                 </span>
+                                <a href="{{ url_for('medical_records.prescription_details', prescription_id=prescription.id) }}"
+                                    class="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
+                                    title="View prescription details">
+                                    <i class="bi bi-arrow-right"></i>
+                                </a>
                             </div>
-                            <p class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ prescription.medication_name }}</p>
-                            <p class="text-xs text-gray-600 dark:text-gray-400">{{ prescription.dosage }} - {{ prescription.frequency }}</p>
-                            <p class="text-xs text-gray-500 dark:text-gray-500">
-                                Prescribed: {{ prescription.prescribed_date.strftime('%B %d, %Y') }}
-                            </p>
                         </div>
                         {% endfor %}
                     </div>
