@@ -423,12 +423,23 @@ document.addEventListener('DOMContentLoaded', function() {
         const sampleData = {
             chief_complaint: apiData.chief_complaint,
             history_present_illness: apiData.history_present_illness,
+            past_medical_history: apiData.past_medical_history,
+            family_history: apiData.family_history,
+            social_history: apiData.social_history,
+            general_appearance: apiData.general_appearance,
+            physical_examination: apiData.physical_examination,
             assessment: apiData.assessment,
+            differential_diagnosis: apiData.differential_diagnosis,
             treatment_plan: apiData.treatment_plan,
+            follow_up_instructions: apiData.follow_up_instructions,
             temperature: apiData.vitals?.temperature?.toString() || '',
             blood_pressure_systolic: apiData.vitals?.bp_systolic?.toString() || '',
             blood_pressure_diastolic: apiData.vitals?.bp_diastolic?.toString() || '',
             heart_rate: apiData.vitals?.heart_rate?.toString() || '',
+            respiratory_rate: apiData.vitals?.respiratory_rate?.toString() || '',
+            weight: apiData.vitals?.weight?.toString() || '',
+            height: apiData.vitals?.height?.toString() || '',
+            oxygen_saturation: apiData.vitals?.oxygen_saturation?.toString() || '',
             pain_scale: apiData.vitals?.pain_scale?.toString() || ''
         };
         
