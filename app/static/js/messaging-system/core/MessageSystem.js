@@ -270,6 +270,25 @@ export class MessageSystem {
     }
 
     /**
+     * Handle typing indicators
+     */
+    handleTypingIndicator(data) {
+        if (this.currentChatUserId === data.user_id) {
+            this.uiManager.showTypingIndicator(data.user_name, data.typing);
+        }
+    }
+
+    /**
+     * Handle message delivery confirmation
+     */
+    handleMessageDelivered(data) {
+        this.messageStatusManager.updateMessageStatus(
+            data.message_id,
+            "delivered"
+        );
+    }
+
+    /**
      * Handle message read confirmation
      */
     handleMessageRead(data) {
