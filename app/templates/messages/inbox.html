@@ -41,7 +41,7 @@
                     </div>
 
                     <!-- New Chat Button -->
-                    <button onclick="openComposeModal()"
+                    <button onclick="showNewChatSelection()"
                         class="inline-flex items-center px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors">
                         <i class="bi bi-plus mr-2"></i>New Chat
                     </button>
@@ -239,6 +239,13 @@
     // Refresh timestamps when new messages arrive
     document.addEventListener('messageReceived', enhanceMessageTimestamps);
     document.addEventListener('messagesLoaded', enhanceMessageTimestamps);
+
+    // Add global function for showing new chat selection
+    window.showNewChatSelection = function() {
+        if (window.messageSystem) {
+            window.messageSystem.showNewChatSelection();
+        }
+    };
 
     // Add global function for starting new conversation
     window.startNewConversation = function() {
