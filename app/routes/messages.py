@@ -496,6 +496,34 @@ def api_mark_conversation_read(user_id):
     )
 
 
+@messages_bp.route("/api/users")
+@login_required
+def api_users():
+    """Get all users available for messaging."""
+    if current_user.role not in ["doctor", "staff"]:
+        return jsonify({"error": "Unauthorized"}), 403
+
+    # Get all users except current user
+    users = User.query.filter(
+        and_(
+            User.id != current_user.id,
+            User.role.in_(["doctor", "staff"])  # Only medical staff can message
+        )
+    ).order_by(User.first_name, User.last_name).all()
+
+    users_list = []
+    for user in users:
+        users_list.append({
+            "id": user.id,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+            "role": user.role,
+            "full_name": f"{user.first_name} {user.last_name}",
+        })
+
+    return jsonify({"users": users_list})
+
+
 # WebSocket Events
 @socketio.on("connect")
 def on_connect():
