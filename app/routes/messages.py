@@ -111,20 +111,6 @@ def inbox():
     )
 
 
-@messages_bp.route("/compose")
-@login_required
-def compose():
-    """Redirect to inbox for compose functionality."""
-    return redirect(url_for("messages.inbox"))
-
-
-@messages_bp.route("/read/<int:message_id>")
-@login_required
-def read_message(message_id):
-    """Redirect to inbox for reading messages."""
-    return redirect(url_for("messages.inbox"))
-
-
 @messages_bp.route("/send", methods=["POST"])
 @login_required
 def send_message():
