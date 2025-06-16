@@ -149,10 +149,10 @@
                 <a href="{{ url_for('profile.profile') }}"
                     class="flex items-center px-2 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-all duration-200">
                     <div class="w-6 h-6 rounded-full bg-gradient-to-r from-blue-500 to-teal-600 flex items-center justify-center text-white text-xs font-bold mr-3">
-                        {{ current_user.username[0].upper() }}
+                        {{ current_user.first_name[0].upper() }}
                     </div>
                     <div class="flex-1 min-w-0">
-                        <p class="font-medium truncate">{{ current_user.username }}</p>
+                        <p class="font-medium truncate">{{ current_user.first_name }} {{ current_user.last_name }}</p>
                         <p class="text-xs text-gray-500 dark:text-gray-400">{{ current_user.role.title() }}</p>
                     </div>
                 </a>
