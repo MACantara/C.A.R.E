@@ -2,7 +2,6 @@ import { SocketManager } from "./SocketManager.js";
 import { ConversationManager } from "./ConversationManager.js";
 import { MessageRenderer } from "../ui/MessageRenderer.js";
 import { UIManager } from "../ui/UIManager.js";
-import { ComposeModal } from "../ui/ComposeModal.js";
 import { SearchManager } from "../utils/SearchManager.js";
 import { TimeFormatter } from "../utils/TimeFormatter.js";
 import { MessageStatusManager } from "../utils/MessageStatusManager.js";
@@ -21,7 +20,6 @@ export class MessageSystem {
         this.conversationManager = new ConversationManager(this);
         this.messageRenderer = new MessageRenderer(this);
         this.uiManager = new UIManager(this);
-        this.composeModal = new ComposeModal(this);
         this.searchManager = new SearchManager(this);
         this.timeFormatter = new TimeFormatter();
         this.messageStatusManager = new MessageStatusManager(this);
@@ -36,7 +34,7 @@ export class MessageSystem {
         this.getCurrentUserId();
         this.socketManager.initialize();
         this.conversationManager.loadConversations();
-        this.conversationManager.loadUsers();
+        this.loadUsersForSelection();
         this.uiManager.setupMessageInput();
         this.searchManager.setupSearch();
         this.setupEventListeners();
@@ -53,14 +51,64 @@ export class MessageSystem {
     }
 
     /**
+     * Load users for recipient selection
+     */
+    async loadUsersForSelection() {
+        try {
+            const response = await fetch("/messages/api/users");
+            const data = await response.json();
+            
+            if (data.users) {
+                this.populateWelcomeRecipientSelect(data.users);
+            }
+        } catch (error) {
+            console.error("Error loading users:", error);
+        }
+    }
+
+    /**
+     * Populate the welcome screen recipient select
+     */
+    populateWelcomeRecipientSelect(users) {
+        const select = document.getElementById("welcomeRecipientSelect");
+        const button = document.getElementById("startConversationBtn");
+        
+        if (!select || !button) return;
+
+        // Clear existing options except the first one
+        select.innerHTML = '<option value="">Select recipient...</option>';
+
+        users.forEach(user => {
+            const option = document.createElement("option");
+            option.value = user.id;
+            option.textContent = `${user.full_name} (${user.role})`;
+            select.appendChild(option);
+        });
+
+        // Enable/disable button based on selection
+        select.addEventListener("change", () => {
+            button.disabled = !select.value;
+        });
+    }
+
+    /**
      * Setup global event listeners
      */
     setupEventListeners() {
         // Make functions globally available for HTML onclick handlers
-        window.openComposeModal = () => this.composeModal.open();
-        window.closeComposeModal = () => this.composeModal.close();
-        window.sendNewMessage = () => this.composeModal.sendNewMessage();
         window.sendMessage = () => this.sendMessage();
+        window.startNewConversation = () => this.startNewConversation();
+    }
+
+    /**
+     * Start a new conversation from welcome screen
+     */
+    startNewConversation() {
+        const select = document.getElementById("welcomeRecipientSelect");
+        const userId = parseInt(select.value);
+        if (userId) {
+            this.openChat(userId);
+        }
     }
 
     /**
