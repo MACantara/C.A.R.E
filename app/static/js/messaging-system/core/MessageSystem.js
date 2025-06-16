@@ -98,6 +98,43 @@ export class MessageSystem {
         // Make functions globally available for HTML onclick handlers
         window.sendMessage = () => this.sendMessage();
         window.startNewConversation = () => this.startNewConversation();
+        window.showNewChatSelection = () => this.showNewChatSelection();
+    }
+
+    /**
+     * Show new chat selection area
+     */
+    showNewChatSelection() {
+        // Hide chat view and show welcome screen
+        const chatView = document.getElementById("chatView");
+        const chatWelcome = document.getElementById("chatWelcome");
+        
+        if (chatView) {
+            chatView.classList.add("hidden");
+        }
+        if (chatWelcome) {
+            chatWelcome.classList.remove("hidden");
+        }
+        
+        // Clear any active chat selection in sidebar
+        const chatItems = document.querySelectorAll("[data-chat-user-id]");
+        chatItems.forEach(item => {
+            item.classList.remove("bg-blue-50", "dark:bg-blue-900/30", "border-blue-200", "dark:border-blue-700");
+            item.classList.add("border-transparent");
+        });
+        
+        // Focus on the recipient select dropdown
+        const select = document.getElementById("welcomeRecipientSelect");
+        if (select) {
+            // Scroll to the selection area and focus
+            select.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            setTimeout(() => {
+                select.focus();
+            }, 300); // Small delay to allow smooth scroll to complete
+        }
+        
+        // Clear any current chat selection
+        this.currentChatUserId = null;
     }
 
     /**
