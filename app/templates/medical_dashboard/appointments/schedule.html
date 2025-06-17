@@ -147,6 +147,15 @@
                                 </div>
                                 <div>
                                     <h4 class="text-lg font-semibold text-gray-900 dark:text-white">{{ appointment.patient.display_name }}</h4>
+                                    {% if current_user.role == 'staff' %}
+                                    <p class="text-sm font-medium text-indigo-600 dark:text-indigo-400 mb-1">
+                                        <i class="bi bi-person-badge mr-1"></i>
+                                        {{ appointment.doctor.display_name }}
+                                        {% if appointment.doctor.title %}
+                                        ({{ appointment.doctor.title }})
+                                        {% endif %}
+                                    </p>
+                                    {% endif %}
                                     <p class="text-sm text-gray-600 dark:text-gray-400">
                                         {% if filter_type != 'today' %}
                                         <span class="font-medium">{{ localize_datetime(appointment.appointment_date, user_tz).strftime('%B %d') }} • </span>
@@ -245,6 +254,14 @@
                                 </div>
                                 <div>
                                     <h4 class="font-semibold text-gray-900 dark:text-white">{{ appointment.patient.display_name }}</h4>
+                                    {% if current_user.role == 'staff' %}
+                                    <p class="text-xs text-indigo-600 dark:text-indigo-400 mb-1">
+                                        {{ appointment.doctor.display_name }}
+                                        {% if appointment.doctor.title %}
+                                        ({{ appointment.doctor.title }})
+                                        {% endif %}
+                                    </p>
+                                    {% endif %}
                                     <p class="text-sm text-gray-600 dark:text-gray-400">
                                         {{ localize_datetime(appointment.appointment_date, user_tz).strftime('%B %d, %Y at %I:%M %p') }}
                                     </p>
