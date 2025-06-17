@@ -6,7 +6,6 @@ from app.utils.timezone_utils import get_user_timezone, get_current_time
 from app.models.user import User
 from app.models.appointment import Appointment, AppointmentStatus
 from app.models.medical_record import Consultation, Prescription, ConsultationStatus
-from app.models.queue import PatientQueue, QueueStatus
 from app.models.message import InternalMessage
 
 
@@ -22,7 +21,6 @@ def get_sidebar_stats():
         "total_patients": 0,
         "todays_appointments": 0,
         "pending_consultations": 0,
-        "queue_waiting": 0,
         "unread_messages": 0,
         "recent_prescriptions": 0,
     }
@@ -51,18 +49,6 @@ def get_sidebar_stats():
             )
         ).count()
 
-        # Queue waiting for this doctor
-        stats["queue_waiting"] = (
-            PatientQueue.query.join(Appointment)
-            .filter(
-                and_(
-                    Appointment.doctor_id == current_user.id,
-                    PatientQueue.status == QueueStatus.WAITING,
-                )
-            )
-            .count()
-        )
-
         # Recent prescriptions by this doctor (last 7 days)
         seven_days_ago = current_time_local - timedelta(days=7)
         stats["recent_prescriptions"] = Prescription.query.filter(
@@ -89,11 +75,6 @@ def get_sidebar_stats():
         # All pending consultations (draft status)
         stats["pending_consultations"] = Consultation.query.filter(
             Consultation.status == ConsultationStatus.DRAFT
-        ).count()
-
-        # Total queue waiting
-        stats["queue_waiting"] = PatientQueue.query.filter(
-            PatientQueue.status == QueueStatus.WAITING
         ).count()
 
         # Recent prescriptions system-wide (last 7 days)
