@@ -26,7 +26,7 @@ reports_bp = Blueprint("reports", __name__, url_prefix="/reports")
 
 
 def admin_or_doctor_required(f):
-    """Decorator to require admin or doctor access for reports."""
+    """Decorator to require admin, doctor, or staff access for reports."""
 
     @wraps(f)
     @login_required
@@ -37,9 +37,9 @@ def admin_or_doctor_required(f):
             )
             return redirect(url_for("main.home"))
 
-        if current_user.role not in ["doctor", "admin"]:
+        if current_user.role not in ["doctor", "admin", "staff"]:
             flash(
-                "Access denied. Doctor or admin privileges required for reports.",
+                "Access denied. Doctor, admin, or staff privileges required for reports.",
                 "error",
             )
             return redirect(url_for("main.home"))
