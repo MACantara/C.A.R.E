@@ -23,7 +23,7 @@ def send_appointment_confirmation(appointment):
         <div style="background-color: #f8f9fa; padding: 20px; border-radius: 5px; margin: 20px 0;">
             <h3>Appointment Details:</h3>
             <ul>
-                <li><strong>Doctor:</strong> Dr. {appointment.doctor.display_name}</li>
+                <li><strong>Doctor:</strong> {appointment.doctor.display_name}</li>
                 <li><strong>Date:</strong> {appointment.appointment_date.strftime('%B %d, %Y')}</li>
                 <li><strong>Time:</strong> {appointment.appointment_date.strftime('%I:%M %p')}</li>
                 <li><strong>Duration:</strong> {appointment.duration_minutes} minutes</li>
@@ -85,7 +85,7 @@ def send_appointment_cancellation(appointment, reason=None):
         <div style="background-color: #fff3cd; padding: 20px; border-radius: 5px; margin: 20px 0; border-left: 4px solid #ffc107;">
             <h3>Cancelled Appointment Details:</h3>
             <ul>
-                <li><strong>Doctor:</strong> Dr. {appointment.doctor.display_name}</li>
+                <li><strong>Doctor:</strong> {appointment.doctor.display_name}</li>
                 <li><strong>Date:</strong> {appointment.appointment_date.strftime('%B %d, %Y')}</li>
                 <li><strong>Time:</strong> {appointment.appointment_date.strftime('%I:%M %p')}</li>
             </ul>

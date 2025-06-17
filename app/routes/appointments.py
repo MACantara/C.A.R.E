@@ -152,7 +152,7 @@ def book_appointment_post():
         # Localize appointment time for display
         localized_time = localize_datetime(appointment_datetime)
         flash(
-            f"Appointment booked successfully with Dr. {doctor.display_name} on {localized_time.strftime('%B %d, %Y at %I:%M %p %Z')}.",
+            f"Appointment booked successfully with {doctor.display_name} on {localized_time.strftime('%B %d, %Y at %I:%M %p %Z')}.",
             "success",
         )
         return redirect(url_for("appointments.patient_appointments"))

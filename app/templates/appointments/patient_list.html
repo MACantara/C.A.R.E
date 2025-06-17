@@ -75,7 +75,7 @@
                             <div class="flex items-center mb-2">
                                 <i class="bi bi-person-badge text-gray-500 dark:text-gray-400 mr-2"></i>
                                 <span class="font-semibold text-gray-900 dark:text-white">
-                                    Dr. {{ appointment.doctor.display_name }}
+                                    {{ appointment.doctor.display_name }}
                                 </span>
                             </div>
                             {% if appointment.doctor.specialization %}
