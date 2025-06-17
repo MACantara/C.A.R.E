@@ -275,9 +275,10 @@ def doctor_schedule():
                     .all()
                 )
         else:
+            # For "all" filter, get all appointments without date restriction
             appointments = (
                 Appointment.query.order_by(Appointment.appointment_date.desc())
-                .limit(50)
+                .limit(100)  # Limit to prevent performance issues
                 .all()
             )
         doctors = User.query.filter_by(role="doctor", active=True).all()
@@ -304,10 +305,11 @@ def doctor_schedule():
                     .all()
                 )
         else:
+            # For "all" filter, get all appointments for this doctor without date restriction
             appointments = (
                 Appointment.query.filter(Appointment.doctor_id == doctor.id)
                 .order_by(Appointment.appointment_date.desc())
-                .limit(50)
+                .limit(100)  # Limit to prevent performance issues
                 .all()
             )
         doctors = [doctor]
