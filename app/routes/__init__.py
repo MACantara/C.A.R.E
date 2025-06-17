@@ -13,7 +13,6 @@ from .medical_records import medical_records_bp
 from .consultations import consultations_bp
 from .prescriptions import prescriptions_bp
 from .reports import reports_bp
-from .queue import queue_bp
 from .messages import messages_bp
 from .medical_dashboard import medical_dashboard_bp
 
@@ -34,6 +33,5 @@ def register_blueprints(app):
     app.register_blueprint(consultations_bp)
     app.register_blueprint(prescriptions_bp)
     app.register_blueprint(reports_bp)
-    app.register_blueprint(queue_bp)
     app.register_blueprint(messages_bp)
     app.register_blueprint(medical_dashboard_bp)
