@@ -6,6 +6,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}C.A.R.E. - Clinical Appointment & Record Entry{% endblock %}</title>
 
+    <!-- Security and Cache Control Meta Tags -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <meta http-equiv="X-Frame-Options" content="DENY">
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+
     <!-- Critical theme initialization to prevent FOUC -->
     <script src="{{ url_for('static', filename='js/utils/theme/theme-initializator.js') }}"></script>
 
@@ -19,7 +26,52 @@
 </head>
 
 <body
-    class="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 min-h-screen flex flex-col transition-colors duration-300">
+    class="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 min-h-screen flex flex-col transition-colors duration-300"
+    {% if current_user.is_authenticated %}data-user-authenticated="true"{% endif %}>
+    
+    <!-- Authentication Check Script (Critical - Load First) -->
+    <script type="text/javascript">
+        // Immediate authentication check to prevent flash of authenticated content
+        (function() {
+            // Check if user was logged out
+            if (sessionStorage.getItem('user_logged_out') === 'true') {
+                sessionStorage.removeItem('user_logged_out');
+                window.location.replace('/auth/login');
+                return;
+            }
+            
+            // Check if we're on an authenticated page
+            var isAuthenticatedPage = window.location.pathname.match(/^\/(dashboard|medical_dashboard|appointments|consultations|messages|reports|admin|patients|prescriptions)/);
+            var hasAuthData = document.body.hasAttribute('data-user-authenticated') || {{ 'true' if current_user.is_authenticated else 'false' }};
+            
+            if (isAuthenticatedPage && !hasAuthData) {
+                window.location.replace('/auth/login');
+                return;
+            }
+            
+            // Prevent caching of authenticated pages
+            if (isAuthenticatedPage) {
+                // Handle browser back/forward navigation
+                window.addEventListener('pageshow', function(event) {
+                    if (event.persisted) {
+                        // Page was loaded from browser cache, force reload
+                        window.location.reload();
+                    }
+                });
+                
+                // Disable back button for authenticated pages after logout
+                history.pushState(null, null, window.location.href);
+                window.addEventListener('popstate', function() {
+                    if (sessionStorage.getItem('user_logged_out') === 'true') {
+                        window.location.replace('/auth/login');
+                    } else {
+                        history.pushState(null, null, window.location.href);
+                    }
+                });
+            }
+        })();
+    </script>
+
     <!-- Include Navigation (conditional) -->
     {% block include_navbar %}
     {% include 'partials/navbar.html' %}
@@ -69,6 +121,82 @@
     <script type="module" src="{{ url_for('static', filename='js/main.js') }}"></script>
     <script type="module" src="{{ url_for('static', filename='js/components/toast.js') }}"></script>
     <script type="module" src="{{ url_for('static', filename='js/utils/timezone.js') }}"></script>
+    
+    <!-- Authentication Management Script -->
+    <script type="text/javascript">
+        // Global authentication management
+        window.authManager = {
+            // Mark user as logged out
+            logout: function() {
+                sessionStorage.setItem('user_logged_out', 'true');
+                
+                // Clear all cached data
+                if ('caches' in window) {
+                    caches.keys().then(function(names) {
+                        names.forEach(function(name) {
+                            caches.delete(name);
+                        });
+                    });
+                }
+                
+                // Clear browser storage
+                localStorage.clear();
+                
+                // Force immediate redirect
+                window.location.replace('/auth/login');
+            },
+            
+            // Check if user is authenticated
+            isAuthenticated: function() {
+                return {{ 'true' if current_user.is_authenticated else 'false' }};
+            },
+            
+            // Verify session is still valid
+            verifySession: function() {
+                if (!this.isAuthenticated() && this.isAuthenticatedPage()) {
+                    this.logout();
+                }
+            },
+            
+            // Check if current page requires authentication
+            isAuthenticatedPage: function() {
+                return window.location.pathname.match(/^\/(dashboard|medical_dashboard|appointments|consultations|messages|reports|admin|patients|prescriptions)/);
+            }
+        };
+        
+        // Auto-verify session every 30 seconds on authenticated pages
+        if (window.authManager.isAuthenticatedPage()) {
+            setInterval(function() {
+                // Check if session is still valid by making a lightweight request
+                fetch('/auth/check-session', {
+                    method: 'GET',
+                    credentials: 'same-origin'
+                }).then(function(response) {
+                    if (response.status === 401) {
+                        window.authManager.logout();
+                    }
+                }).catch(function() {
+                    // If request fails, assume session is invalid
+                    window.authManager.logout();
+                });
+            }, 30000); // Check every 30 seconds
+        }
+        
+        // Override browser back button for authenticated pages
+        if (window.authManager.isAuthenticatedPage()) {
+            window.addEventListener('beforeunload', function(event) {
+                // Clear any cached data when leaving authenticated pages
+                if ('caches' in window) {
+                    caches.keys().then(function(names) {
+                        names.forEach(function(name) {
+                            caches.delete(name);
+                        });
+                    });
+                }
+            });
+        }
+    </script>
+
     <!-- Global Socket.IO and Message Count Updates -->
     {% if current_user.is_authenticated and current_user.role in ['doctor', 'staff'] %}
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>

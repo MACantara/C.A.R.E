@@ -7,6 +7,8 @@ from flask import (
     flash,
     session,
     current_app,
+    jsonify,
+    make_response,
 )
 from flask_login import login_user, logout_user, current_user, login_required
 from app import db
@@ -339,9 +341,54 @@ def signup():
     return render_template("auth/signup.html")
 
 
-@auth_bp.route("/logout")
+@auth_bp.route("/check-session")
+def check_session():
+    """Check if user session is still valid."""
+    if current_user.is_authenticated:
+        return jsonify({"status": "authenticated", "user_id": current_user.id}), 200
+    else:
+        return jsonify({"status": "unauthenticated"}), 401
+
+
+@auth_bp.route("/logout", methods=["POST", "GET"])
 @login_required
 def logout():
+    """Log out the current user."""
+    user_email = current_user.email
     logout_user()
+    
+    # Clear session data
+    session.clear()
+    
     flash("You have been logged out successfully.", "success")
-    return redirect(url_for("main.home"))
+    
+    # Create response with cache control headers
+    response = make_response(redirect(url_for("auth.login")))
+    
+    # Add no-cache headers to prevent caching
+    response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate, private'
+    response.headers['Pragma'] = 'no-cache'
+    response.headers['Expires'] = '0'
+    
+    # Add logout script to response
+    logout_script = """
+    <script>
+        sessionStorage.setItem('user_logged_out', 'true');
+        if ('caches' in window) {
+            caches.keys().then(function(names) {
+                names.forEach(function(name) {
+                    caches.delete(name);
+                });
+            });
+        }
+        localStorage.clear();
+        history.pushState(null, null, window.location.href);
+        window.onpopstate = function() {
+            history.pushState(null, null, window.location.href);
+        };
+    </script>
+    """
+    
+    current_app.logger.info(f"User {user_email} logged out successfully")
+    
+    return response
