@@ -81,14 +81,6 @@
                         <i class="bi bi-calendar-event mr-3 text-gray-400 group-hover:text-green-500"></i>
                         View Schedule
                     </a>
-                    <a href="{{ url_for('queue.dashboard') }}"
-                        class="group flex items-center px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-lg hover:bg-orange-50 dark:hover:bg-orange-900/20 hover:text-orange-600 dark:hover:text-orange-400 transition-all duration-200">
-                        <i class="bi bi-people mr-3 text-gray-400 group-hover:text-orange-500"></i>
-                        Queue Management
-                        <span id="queue-count"
-                            class="ml-auto bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 text-xs px-2 py-1 rounded-full hidden">{{
-                            stats.queue_waiting }}</span>
-                    </a>
                 </nav>
             </div>
 
@@ -403,13 +395,6 @@
         // Update time every minute
         updateSidebarTime();
         setInterval(updateSidebarTime, 60000);
-
-        // Update queue count if available
-        const queueCount = document.getElementById('queue-count');
-        const queueWaiting = {{ stats.queue_waiting if stats and stats.queue_waiting else 0 }};
-        if (queueCount && queueWaiting > 0) {
-            queueCount.classList.remove('hidden');
-        }
 
         // Request initial unread count
         setTimeout(updateUnreadCount, 1000);
