@@ -472,7 +472,7 @@ def confirm_appointment(appointment_id):
 @appointments_bp.route("/<int:appointment_id>/update-status", methods=["POST"])
 @login_required
 def update_appointment_status(appointment_id):
-    """Update appointment status - doctors and staff only."""
+    """Update appointment status - doctors and staff only, but only doctors can start consultations."""
     if current_user.role not in ["doctor", "staff"]:
         flash("Access denied.", "error")
         return redirect(url_for("appointments.index"))
@@ -484,6 +484,16 @@ def update_appointment_status(appointment_id):
         status.value for status in AppointmentStatus
     ]:
         flash("Invalid status.", "error")
+        return redirect(url_for("appointments.doctor_schedule"))
+
+    # Only doctors can start consultations or mark appointments as in-progress
+    if current_user.role == "staff" and new_status == AppointmentStatus.IN_PROGRESS.value:
+        flash("Only doctors can start consultations.", "error")
+        return redirect(url_for("appointments.doctor_schedule"))
+
+    # Only doctors can complete appointments (as this typically involves consultation notes)
+    if current_user.role == "staff" and new_status == AppointmentStatus.COMPLETED.value:
+        flash("Only doctors can complete appointments.", "error")
         return redirect(url_for("appointments.doctor_schedule"))
 
     try:
