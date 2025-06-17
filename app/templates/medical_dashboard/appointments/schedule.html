@@ -112,6 +112,14 @@
             <!-- Main Schedule Section -->
             <div class="bg-white dark:bg-gray-800 shadow-lg overflow-hidden opacity-0 animate-fade-in-up"
                 style="animation-delay: 0.4s;">
+                <!-- Top Pagination for all filters -->
+                {% if pagination and pagination.pages > 1 %}
+                {% set current_doctor_id = request.args.get('doctor_id') %}
+                {% set current_per_page = request.args.get('per_page', '20') %}
+                {% set position = 'top' %}
+                {% include 'partials/shared/pagination.html' %}
+                {% endif %}
+
                 <div class="px-6 py-4 bg-indigo-50 dark:bg-indigo-900/20 border-b border-indigo-200 dark:border-indigo-800">
                     <h3 class="text-lg font-semibold text-indigo-800 dark:text-indigo-200">
                         {% if filter_type == 'today' %}
@@ -127,14 +135,6 @@
                         {% endif %}
                     </h3>
                 </div>
-
-                <!-- Top Pagination for all filters -->
-                {% if pagination and pagination.pages > 1 %}
-                {% set current_doctor_id = request.args.get('doctor_id') %}
-                {% set current_per_page = request.args.get('per_page', '20') %}
-                {% set position = 'top' %}
-                {% include 'partials/shared/pagination.html' %}
-                {% endif %}
 
                 <div class="divide-y divide-gray-200 dark:divide-gray-700">
                     {% if filtered_appointments %}
