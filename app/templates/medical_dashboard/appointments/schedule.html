@@ -128,6 +128,14 @@
                     </h3>
                 </div>
 
+                <!-- Top Pagination for "all" filter -->
+                {% if pagination and filter_type == 'all' %}
+                {% set current_doctor_id = request.args.get('doctor_id') %}
+                {% set current_per_page = request.args.get('per_page', '20') %}
+                {% set position = 'top' %}
+                {% include 'partials/shared/pagination.html' %}
+                {% endif %}
+
                 <div class="divide-y divide-gray-200 dark:divide-gray-700">
                     {% if filtered_appointments %}
                     {% for appointment in filtered_appointments %}
@@ -209,10 +217,11 @@
                 </div>
             </div>
 
-            <!-- Pagination for "all" filter -->
+            <!-- Bottom Pagination for "all" filter -->
             {% if pagination and filter_type == 'all' %}
             {% set current_doctor_id = request.args.get('doctor_id') %}
             {% set current_per_page = request.args.get('per_page', '20') %}
+            {% set position = 'bottom' %}
             {% include 'partials/shared/pagination.html' %}
             {% endif %}
 
