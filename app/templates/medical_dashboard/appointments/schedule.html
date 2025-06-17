@@ -151,8 +151,8 @@
                                     <p class="text-sm font-medium text-indigo-600 dark:text-indigo-400 mb-1">
                                         <i class="bi bi-person-badge mr-1"></i>
                                         {{ appointment.doctor.display_name }}
-                                        {% if appointment.doctor.title %}
-                                        ({{ appointment.doctor.title }})
+                                        {% if appointment.doctor.specialization %}
+                                        ({{ appointment.doctor.specialization }})
                                         {% endif %}
                                     </p>
                                     {% endif %}
@@ -257,8 +257,8 @@
                                     {% if current_user.role == 'staff' %}
                                     <p class="text-xs text-indigo-600 dark:text-indigo-400 mb-1">
                                         {{ appointment.doctor.display_name }}
-                                        {% if appointment.doctor.title %}
-                                        ({{ appointment.doctor.title }})
+                                        {% if appointment.doctor.specialization %}
+                                        ({{ appointment.doctor.specialization }})
                                         {% endif %}
                                     </p>
                                     {% endif %}
