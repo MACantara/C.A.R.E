@@ -7,7 +7,6 @@ from app.utils.timezone_utils import get_user_timezone, localize_datetime, get_c
 from app.models.user import User
 from app.models.appointment import Appointment, AppointmentStatus
 from app.models.medical_record import Consultation, Prescription, VitalSigns, Allergy
-from app.models.queue import PatientQueue, QueueStatus
 from app.models.message import InternalMessage
 from app.utils.sidebar_utils import get_sidebar_stats
 from sqlalchemy import desc, func, and_, or_
