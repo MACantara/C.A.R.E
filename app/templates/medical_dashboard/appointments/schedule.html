@@ -70,7 +70,7 @@
         <!-- Content -->
         <div class="flex-1 p-6 overflow-y-auto max-h-screen">
             <!-- Schedule Statistics -->
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8 opacity-0 animate-fade-in-up"
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 opacity-0 animate-fade-in-up"
                 style="animation-delay: 0.2s;">
                 <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-100 dark:border-gray-700">
                     <div class="flex items-center">
@@ -92,22 +92,6 @@
                         <div>
                             <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Completed Today</p>
                             <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ completed_today_count }}</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-100 dark:border-gray-700">
-                    <div class="flex items-center">
-                        <div class="w-12 h-12 bg-yellow-100 dark:bg-yellow-900/30 rounded-lg flex items-center justify-center mr-4">
-                            <i class="bi bi-clock text-yellow-600 dark:text-yellow-400 text-xl"></i>
-                        </div>
-                        <div>
-                            <p class="text-sm font-medium text-gray-600 dark:text-gray-400">
-                                {% if filter_type == 'today' %}Upcoming{% else %}Filtered{% endif %}
-                            </p>
-                            <p class="text-2xl font-bold text-gray-900 dark:text-white">
-                                {% if filter_type == 'today' %}{{ upcoming_count }}{% else %}{{ filtered_appointments|length }}{% endif %}
-                            </p>
                         </div>
                     </div>
                 </div>
