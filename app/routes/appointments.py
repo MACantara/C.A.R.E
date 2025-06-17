@@ -262,11 +262,11 @@ def doctor_schedule():
     # Build base query
     if not doctor:
         # Staff viewing general schedule
-        base_query = Appointment.query
+        base_query = Appointment.query.options(db.joinedload(Appointment.doctor), db.joinedload(Appointment.patient))
         doctors = User.query.filter_by(role="doctor", active=True).all()
     else:
         # Specific doctor's schedule
-        base_query = Appointment.query.filter(Appointment.doctor_id == doctor.id)
+        base_query = Appointment.query.filter(Appointment.doctor_id == doctor.id).options(db.joinedload(Appointment.doctor), db.joinedload(Appointment.patient))
         doctors = [doctor]
 
     # Apply date filtering and pagination for all filters
@@ -311,12 +311,12 @@ def doctor_schedule():
                 Appointment.doctor_id == doctor.id,
                 Appointment.appointment_date > datetime.combine(today, datetime.max.time()),
                 Appointment.status.in_([AppointmentStatus.SCHEDULED, AppointmentStatus.CONFIRMED])
-            ).order_by(Appointment.appointment_date).limit(5)
+            ).options(db.joinedload(Appointment.doctor), db.joinedload(Appointment.patient)).order_by(Appointment.appointment_date).limit(5)
         else:
             upcoming_query = Appointment.query.filter(
                 Appointment.appointment_date > datetime.combine(today, datetime.max.time()),
                 Appointment.status.in_([AppointmentStatus.SCHEDULED, AppointmentStatus.CONFIRMED])
-            ).order_by(Appointment.appointment_date).limit(5)
+            ).options(db.joinedload(Appointment.doctor), db.joinedload(Appointment.patient)).order_by(Appointment.appointment_date).limit(5)
         upcoming_appointments = upcoming_query.all()
     else:
         # For other filters, show all filtered appointments in main section
