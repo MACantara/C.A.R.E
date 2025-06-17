@@ -18,6 +18,7 @@ socketio = SocketIO()
 
 # Import timezone utilities
 from app.utils.timezone_utils import get_user_timezone, localize_datetime, get_current_time
+from app.utils.cache_utils import add_cache_headers, is_authenticated_route
 
 def create_app(config_name=None):
     app = Flask(__name__)
@@ -290,5 +291,24 @@ def create_app(config_name=None):
         get_current_time=get_current_time,
         get_user_timezone=get_user_timezone,
     )
+
+    @app.after_request
+    def after_request(response):
+        """Add security headers to all responses."""
+        # Add CORS headers
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+        response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
+        
+        # Add security headers
+        response.headers['X-Content-Type-Options'] = 'nosniff'
+        response.headers['X-Frame-Options'] = 'DENY'
+        response.headers['X-XSS-Protection'] = '1; mode=block'
+        
+        # Add cache control for authenticated routes
+        if is_authenticated_route():
+            response = add_cache_headers(response, 'no-cache')
+        
+        return response
 
     return app
