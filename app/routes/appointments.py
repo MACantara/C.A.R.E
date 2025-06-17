@@ -259,65 +259,38 @@ def doctor_schedule():
     else:
         doctor = current_user if current_user.role == "doctor" else None
 
+    # Build base query
     if not doctor:
         # Staff viewing general schedule
-        if start_date and end_date:
-            if start_date == end_date:
-                appointments = (
-                    Appointment.query.filter(
-                        db.func.date(Appointment.appointment_date) == start_date
-                    )
-                    .order_by(Appointment.appointment_date)
-                    .all()
-                )
-            else:
-                appointments = (
-                    Appointment.query.filter(
-                        Appointment.appointment_date >= datetime.combine(start_date, datetime.min.time()),
-                        Appointment.appointment_date <= datetime.combine(end_date, datetime.max.time())
-                    )
-                    .order_by(Appointment.appointment_date)
-                    .all()
-                )
-        else:
-            # For "all" filter, use pagination
-            appointments_pagination = (
-                Appointment.query.order_by(Appointment.appointment_date.desc())
-                .paginate(page=page, per_page=per_page, error_out=False)
-            )
-            appointments = appointments_pagination.items
+        base_query = Appointment.query
         doctors = User.query.filter_by(role="doctor", active=True).all()
     else:
         # Specific doctor's schedule
-        if start_date and end_date:
-            if start_date == end_date:
-                appointments = (
-                    Appointment.query.filter(
-                        Appointment.doctor_id == doctor.id,
-                        db.func.date(Appointment.appointment_date) == start_date,
-                    )
-                    .order_by(Appointment.appointment_date)
-                    .all()
-                )
-            else:
-                appointments = (
-                    Appointment.query.filter(
-                        Appointment.doctor_id == doctor.id,
-                        Appointment.appointment_date >= datetime.combine(start_date, datetime.min.time()),
-                        Appointment.appointment_date <= datetime.combine(end_date, datetime.max.time())
-                    )
-                    .order_by(Appointment.appointment_date)
-                    .all()
-                )
-        else:
-            # For "all" filter, use pagination for specific doctor
-            appointments_pagination = (
-                Appointment.query.filter(Appointment.doctor_id == doctor.id)
-                .order_by(Appointment.appointment_date.desc())
-                .paginate(page=page, per_page=per_page, error_out=False)
-            )
-            appointments = appointments_pagination.items
+        base_query = Appointment.query.filter(Appointment.doctor_id == doctor.id)
         doctors = [doctor]
+
+    # Apply date filtering and pagination for all filters
+    if start_date and end_date:
+        if start_date == end_date:
+            # Single day filter
+            filtered_query = base_query.filter(
+                db.func.date(Appointment.appointment_date) == start_date
+            ).order_by(Appointment.appointment_date)
+        else:
+            # Multi-day filter (week/month)
+            filtered_query = base_query.filter(
+                Appointment.appointment_date >= datetime.combine(start_date, datetime.min.time()),
+                Appointment.appointment_date <= datetime.combine(end_date, datetime.max.time())
+            ).order_by(Appointment.appointment_date)
+    else:
+        # "all" filter
+        filtered_query = base_query.order_by(Appointment.appointment_date.desc())
+
+    # Apply pagination to all filters
+    appointments_pagination = filtered_query.paginate(
+        page=page, per_page=per_page, error_out=False
+    )
+    appointments = appointments_pagination.items
 
     # Get all doctors for staff dropdown
     all_doctors = (
@@ -333,37 +306,32 @@ def doctor_schedule():
         # For today filter, show today's appointments in main section
         filtered_appointments = [apt for apt in appointments if apt.appointment_date.date() == today]
         # Show upcoming appointments (next 5 after today) in separate section
-        upcoming_appointments = [
-            apt for apt in appointments 
-            if apt.appointment_date.date() > today and apt.status in [AppointmentStatus.SCHEDULED, AppointmentStatus.CONFIRMED]
-        ][:5]
-        pagination = None  # No pagination for filtered views
+        if doctor:
+            upcoming_query = Appointment.query.filter(
+                Appointment.doctor_id == doctor.id,
+                Appointment.appointment_date > datetime.combine(today, datetime.max.time()),
+                Appointment.status.in_([AppointmentStatus.SCHEDULED, AppointmentStatus.CONFIRMED])
+            ).order_by(Appointment.appointment_date).limit(5)
+        else:
+            upcoming_query = Appointment.query.filter(
+                Appointment.appointment_date > datetime.combine(today, datetime.max.time()),
+                Appointment.status.in_([AppointmentStatus.SCHEDULED, AppointmentStatus.CONFIRMED])
+            ).order_by(Appointment.appointment_date).limit(5)
+        upcoming_appointments = upcoming_query.all()
     else:
         # For other filters, show all filtered appointments in main section
         filtered_appointments = appointments
         # Don't show separate upcoming section for filtered views
         upcoming_appointments = []
-        # Set pagination object for "all" filter
-        pagination = appointments_pagination if filter_type == "all" else None
     
-    # Calculate stats for cards - for "all" filter, get stats from all appointments, not just current page
-    if filter_type == "all":
-        # Get all appointments for stats calculation (without pagination)
-        if doctor:
-            all_appointments_for_stats = Appointment.query.filter(Appointment.doctor_id == doctor.id).all()
-        else:
-            all_appointments_for_stats = Appointment.query.all()
+    # Calculate stats for cards - get stats from all appointments (without pagination limits)
+    if doctor:
+        all_appointments_for_stats = Appointment.query.filter(Appointment.doctor_id == doctor.id).all()
     else:
-        all_appointments_for_stats = appointments
+        all_appointments_for_stats = Appointment.query.all()
     
     todays_appointments_count = len([apt for apt in all_appointments_for_stats if apt.appointment_date.date() == today])
     completed_today_count = len([apt for apt in all_appointments_for_stats if apt.appointment_date.date() == today and apt.status == AppointmentStatus.COMPLETED])
-    
-    # For upcoming count, only count if showing today
-    if filter_type == "today":
-        upcoming_count = len([apt for apt in all_appointments_for_stats if apt.appointment_date.date() > today and apt.status in [AppointmentStatus.SCHEDULED, AppointmentStatus.CONFIRMED]])
-    else:
-        upcoming_count = 0
     
     # Get weekly appointments for stats
     week_start = today
@@ -380,10 +348,9 @@ def doctor_schedule():
         "medical_dashboard/appointments/schedule.html",
         filtered_appointments=filtered_appointments,  # Main appointments to display
         upcoming_appointments=upcoming_appointments,  # Only shown for "today" filter
-        pagination=pagination,  # Pagination object for "all" filter
+        pagination=appointments_pagination,  # Pagination object for all filters
         todays_appointments_count=todays_appointments_count,
         completed_today_count=completed_today_count,
-        upcoming_count=upcoming_count,
         weekly_appointments_count=weekly_appointments_count,
         filter_type=filter_type,
         doctor=doctor,

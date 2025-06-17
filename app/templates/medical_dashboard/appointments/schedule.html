@@ -128,8 +128,8 @@
                     </h3>
                 </div>
 
-                <!-- Top Pagination for "all" filter -->
-                {% if pagination and filter_type == 'all' %}
+                <!-- Top Pagination for all filters -->
+                {% if pagination and pagination.pages > 1 %}
                 {% set current_doctor_id = request.args.get('doctor_id') %}
                 {% set current_per_page = request.args.get('per_page', '20') %}
                 {% set position = 'top' %}
@@ -217,8 +217,8 @@
                 </div>
             </div>
 
-            <!-- Bottom Pagination for "all" filter -->
-            {% if pagination and filter_type == 'all' %}
+            <!-- Bottom Pagination for all filters -->
+            {% if pagination and pagination.pages > 1 %}
             {% set current_doctor_id = request.args.get('doctor_id') %}
             {% set current_per_page = request.args.get('per_page', '20') %}
             {% set position = 'bottom' %}
