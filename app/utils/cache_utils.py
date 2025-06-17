@@ -87,7 +87,8 @@ def is_authenticated_route():
         '/admin',
         '/patients',
         '/prescriptions',
-        '/profile'
+        '/profile',
+        '/medical-records',
     ]
     
     current_path = request.path
