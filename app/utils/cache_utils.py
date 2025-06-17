@@ -79,14 +79,15 @@ def is_authenticated_route():
     # List of route patterns that require authentication
     protected_patterns = [
         '/dashboard',
-        '/medical_dashboard',
+        '/medical',
         '/appointments',
         '/consultations',
         '/messages',
         '/reports',
         '/admin',
         '/patients',
-        '/prescriptions'
+        '/prescriptions',
+        '/profile'
     ]
     
     current_path = request.path
