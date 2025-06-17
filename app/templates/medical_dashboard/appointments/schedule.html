@@ -172,24 +172,26 @@
                                     {{ appointment.status.value.replace('_', ' ').title() }}
                                 </span>
 
-                                {% if appointment.status.value in ['scheduled', 'confirmed'] %}
-                                <div class="flex space-x-2">
-                                    <button onclick="startAppointment({{ appointment.id }})"
-                                        class="px-3 py-1 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors duration-200">
-                                        Start
-                                    </button>
-                                </div>
-                                {% elif appointment.status.value == 'in_progress' %}
-                                <div class="flex space-x-2">
-                                    <a href="{{ url_for('consultations.new_consultation', appointment_id=appointment.id) }}"
-                                        class="px-3 py-1 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 transition-colors duration-200">
-                                        Continue
-                                    </a>
-                                    <button onclick="completeAppointment({{ appointment.id }})"
-                                        class="px-3 py-1 bg-gray-600 text-white text-sm rounded-lg hover:bg-gray-700 transition-colors duration-200">
-                                        Complete
-                                    </button>
-                                </div>
+                                {% if current_user.role == 'doctor' %}
+                                    {% if appointment.status.value in ['scheduled', 'confirmed'] %}
+                                    <div class="flex space-x-2">
+                                        <button onclick="startAppointment({{ appointment.id }})"
+                                            class="px-3 py-1 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors duration-200">
+                                            Start
+                                        </button>
+                                    </div>
+                                    {% elif appointment.status.value == 'in_progress' %}
+                                    <div class="flex space-x-2">
+                                        <a href="{{ url_for('consultations.new_consultation', appointment_id=appointment.id) }}"
+                                            class="px-3 py-1 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 transition-colors duration-200">
+                                            Continue
+                                        </a>
+                                        <button onclick="completeAppointment({{ appointment.id }})"
+                                            class="px-3 py-1 bg-gray-600 text-white text-sm rounded-lg hover:bg-gray-700 transition-colors duration-200">
+                                            Complete
+                                        </button>
+                                    </div>
+                                    {% endif %}
                                 {% endif %}
                             </div>
                         </div>
