@@ -224,6 +224,8 @@ def doctor_schedule():
 
     # Get filter from query params
     filter_type = request.args.get("filter", "today")
+    page = request.args.get("page", 1, type=int)
+    per_page = 20  # Number of appointments per page for "all" filter
     current_time = get_current_time()
     user_tz = get_user_timezone()  # This returns a timezone object, not a string
     
@@ -275,12 +277,12 @@ def doctor_schedule():
                     .all()
                 )
         else:
-            # For "all" filter, get all appointments without date restriction
-            appointments = (
+            # For "all" filter, use pagination
+            appointments_pagination = (
                 Appointment.query.order_by(Appointment.appointment_date.desc())
-                .limit(100)  # Limit to prevent performance issues
-                .all()
+                .paginate(page=page, per_page=per_page, error_out=False)
             )
+            appointments = appointments_pagination.items
         doctors = User.query.filter_by(role="doctor", active=True).all()
     else:
         # Specific doctor's schedule
@@ -305,13 +307,13 @@ def doctor_schedule():
                     .all()
                 )
         else:
-            # For "all" filter, get all appointments for this doctor without date restriction
-            appointments = (
+            # For "all" filter, use pagination for specific doctor
+            appointments_pagination = (
                 Appointment.query.filter(Appointment.doctor_id == doctor.id)
                 .order_by(Appointment.appointment_date.desc())
-                .limit(100)  # Limit to prevent performance issues
-                .all()
+                .paginate(page=page, per_page=per_page, error_out=False)
             )
+            appointments = appointments_pagination.items
         doctors = [doctor]
 
     # Get all doctors for staff dropdown
@@ -332,19 +334,31 @@ def doctor_schedule():
             apt for apt in appointments 
             if apt.appointment_date.date() > today and apt.status in [AppointmentStatus.SCHEDULED, AppointmentStatus.CONFIRMED]
         ][:5]
+        pagination = None  # No pagination for filtered views
     else:
         # For other filters, show all filtered appointments in main section
         filtered_appointments = appointments
         # Don't show separate upcoming section for filtered views
         upcoming_appointments = []
+        # Set pagination object for "all" filter
+        pagination = appointments_pagination if filter_type == "all" else None
     
-    # Calculate stats for cards
-    todays_appointments_count = len([apt for apt in appointments if apt.appointment_date.date() == today])
-    completed_today_count = len([apt for apt in appointments if apt.appointment_date.date() == today and apt.status == AppointmentStatus.COMPLETED])
+    # Calculate stats for cards - for "all" filter, get stats from all appointments, not just current page
+    if filter_type == "all":
+        # Get all appointments for stats calculation (without pagination)
+        if doctor:
+            all_appointments_for_stats = Appointment.query.filter(Appointment.doctor_id == doctor.id).all()
+        else:
+            all_appointments_for_stats = Appointment.query.all()
+    else:
+        all_appointments_for_stats = appointments
+    
+    todays_appointments_count = len([apt for apt in all_appointments_for_stats if apt.appointment_date.date() == today])
+    completed_today_count = len([apt for apt in all_appointments_for_stats if apt.appointment_date.date() == today and apt.status == AppointmentStatus.COMPLETED])
     
     # For upcoming count, only count if showing today
     if filter_type == "today":
-        upcoming_count = len([apt for apt in appointments if apt.appointment_date.date() > today and apt.status in [AppointmentStatus.SCHEDULED, AppointmentStatus.CONFIRMED]])
+        upcoming_count = len([apt for apt in all_appointments_for_stats if apt.appointment_date.date() > today and apt.status in [AppointmentStatus.SCHEDULED, AppointmentStatus.CONFIRMED]])
     else:
         upcoming_count = 0
     
@@ -352,7 +366,7 @@ def doctor_schedule():
     week_start = today
     week_end = today + timedelta(days=7)
     weekly_appointments_count = len([
-        apt for apt in appointments
+        apt for apt in all_appointments_for_stats
         if week_start <= apt.appointment_date.date() <= week_end
     ])
 
@@ -363,6 +377,7 @@ def doctor_schedule():
         "medical_dashboard/appointments/schedule.html",
         filtered_appointments=filtered_appointments,  # Main appointments to display
         upcoming_appointments=upcoming_appointments,  # Only shown for "today" filter
+        pagination=pagination,  # Pagination object for "all" filter
         todays_appointments_count=todays_appointments_count,
         completed_today_count=completed_today_count,
         upcoming_count=upcoming_count,
