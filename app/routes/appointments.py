@@ -225,7 +225,10 @@ def doctor_schedule():
     # Get filter from query params
     filter_type = request.args.get("filter", "today")
     page = request.args.get("page", 1, type=int)
-    per_page = 20  # Number of appointments per page for "all" filter
+    per_page = request.args.get("per_page", 20, type=int)  # Allow customizable per_page
+    # Ensure per_page is within reasonable bounds
+    per_page = max(10, min(100, per_page))
+    
     current_time = get_current_time()
     user_tz = get_user_timezone()  # This returns a timezone object, not a string
     
