@@ -10,7 +10,6 @@ from app.models.medical_record import (
     ConsultationStatus, PrescriptionStatus
 )
 from app.models.message import InternalMessage
-from app.models.queue import PatientQueue, QueueStatus
 from app.utils.timezone_utils import get_user_timezone, get_current_time
 
 fake = Faker()
@@ -454,84 +453,85 @@ class SampleDataGenerator:
         db.session.commit()
         print("Messages generated successfully!")
 
-    def generate_queue_entries(self, num_queue_entries=25):
-        """Generate sample patient queue entries using timezone-aware datetime."""
-        print(f"Generating {num_queue_entries} queue entries...")
+    def generate_all_sample_data(self):
+        """Generate all sample data in the correct order."""
+        print("Starting comprehensive sample data generation...")
+        print("=" * 50)
         
-        # Get current timezone-aware time (handle case when outside request context)
         try:
-            user_timezone = get_user_timezone()
-            current_time_local = get_current_time(user_timezone)
-        except RuntimeError:
-            # Running outside of request context, use default timezone
-            import pytz
-            user_timezone = pytz.timezone("Asia/Manila")
-            current_time_local = datetime.now(user_timezone)
-        
-        today_local = current_time_local.date()
-        
-        # Get today's and recent appointments using timezone-aware filtering
-        yesterday_local = today_local - timedelta(days=1)
-        tomorrow_local = today_local + timedelta(days=1)
-        
-        recent_appointments = [
-            apt for apt in self.appointments
-            if apt.appointment_date.date() >= yesterday_local
-            and apt.appointment_date.date() <= tomorrow_local
-        ]
-        
-        if len(recent_appointments) < num_queue_entries:
-            num_queue_entries = len(recent_appointments)
-            print(f"Adjusted to {num_queue_entries} queue entries based on available appointments")
-        
-        if num_queue_entries == 0:
-            print("No recent appointments found for queue generation")
-            return
-        
-        selected_appointments = random.sample(recent_appointments, num_queue_entries)
-        
-        for i, appointment in enumerate(selected_appointments):
-            # Create timezone-aware queue creation time
-            # Queue entries are typically created 30-120 minutes before appointment
-            minutes_before = random.randint(30, 120)
-            queue_created_time = appointment.appointment_date - timedelta(minutes=minutes_before)
+            # Load existing users into our lists for relationship purposes
+            existing_patients = User.query.filter_by(role="patient").all()
+            existing_doctors = User.query.filter_by(role="doctor").all()
+            existing_staff = User.query.filter_by(role="staff").all()
             
-            queue_entry = PatientQueue(
-                appointment_id=appointment.id,
-                queue_number=i + 1,
-                status=random.choice(list(QueueStatus)),
-                estimated_wait_time=random.randint(15, 120),
-                created_at=queue_created_time
-            )
+            self.users["patients"].extend(existing_patients)
+            self.users["doctors"].extend(existing_doctors)
+            self.users["staff"].extend(existing_staff)
             
-            # Set timing based on status using timezone-aware calculations
-            if queue_entry.status in [QueueStatus.IN_PROGRESS, QueueStatus.COMPLETED]:
-                # Actual start time is some minutes after queue creation
-                start_delay = random.randint(10, 60)
-                queue_entry.actual_start_time = queue_created_time + timedelta(minutes=start_delay)
+            # Step 1: Generate users
+            self.generate_users()
             
-            if queue_entry.status == QueueStatus.COMPLETED:
-                # Consultation duration for completed entries
-                consultation_duration = random.randint(15, 45)
-                queue_entry.actual_end_time = queue_entry.actual_start_time + timedelta(minutes=consultation_duration)
+            # Step 2: Verify all emails
+            self.verify_all_emails()
             
-            if queue_entry.status == QueueStatus.DELAYED:
-                queue_entry.delay_reason = random.choice([
-                    "Doctor running late", "Emergency case priority",
-                    "Additional tests required", "Patient arrived late"
-                ])
+            # Refresh user lists after generation
+            self.users["patients"] = User.query.filter_by(role="patient").all()
+            self.users["doctors"] = User.query.filter_by(role="doctor").all()
+            self.users["staff"] = User.query.filter_by(role="staff").all()
             
-            # Set updated_at to a reasonable time after creation
-            if queue_entry.status != QueueStatus.WAITING:
-                # Status was updated some time after creation
-                update_delay = random.randint(5, 30)
-                queue_entry.updated_at = queue_created_time + timedelta(minutes=update_delay)
-            else:
-                queue_entry.updated_at = queue_created_time
+            # Step 3: Generate appointments
+            self.generate_appointments()
             
-            db.session.add(queue_entry)
-        
-        db.session.commit()
+            # Step 4: Generate consultations
+            self.generate_consultations()
+            
+            # Step 5: Generate prescriptions
+            self.generate_prescriptions()
+            
+            # Step 6: Generate allergies
+            self.generate_allergies()
+            
+            # Step 7: Generate vital signs
+            self.generate_vital_signs()
+            
+            # Step 8: Generate messages
+            self.generate_messages()
+            
+            print("=" * 50)
+            print("✅ All sample data generated successfully!")
+            print("\nGenerated data summary:")
+            print(f"• Users: {User.query.count()}")
+            print(f"• Email Verifications: {EmailVerification.query.count()}")
+            print(f"• Appointments: {Appointment.query.count()}")
+            print(f"• Consultations: {Consultation.query.count()}")
+            print(f"• Prescriptions: {Prescription.query.count()}")
+            print(f"• Allergies: {Allergy.query.count()}")
+            print(f"• Vital Signs: {VitalSigns.query.count()}")
+            print(f"• Messages: {InternalMessage.query.count()}")
+            
+            print("\nSample login credentials:")
+            print("• Admin: admin / admin123")
+            print("• Doctor: doctor_01 / doctor123")
+            print("• Staff: staff_01 / staff123")
+            print("• Patient: patient_001 / password123")
+            
+        except Exception as e:
+            print(f"❌ Error generating sample data: {e}")
+            db.session.rollback()
+            raise
+
+def generate_sample_data():
+    """Convenience function to generate all sample data."""
+    generator = SampleDataGenerator()
+    generator.generate_all_sample_data()
+
+if __name__ == "__main__":
+    # This allows running the script directly
+    from app import create_app
+    
+    app = create_app()
+    with app.app_context():
+        generate_sample_data()
         print("Queue entries generated successfully with timezone-aware timestamps!")
 
     def generate_all_sample_data(self):
