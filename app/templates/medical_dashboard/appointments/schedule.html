@@ -268,11 +268,7 @@ document.getElementById('dateFilter').addEventListener('change', function() {
     const currentUrl = new URL(window.location);
     
     // Update the filter parameter
-    if (selectedFilter === 'all') {
-        currentUrl.searchParams.delete('filter');
-    } else {
-        currentUrl.searchParams.set('filter', selectedFilter);
-    }
+    currentUrl.searchParams.set('filter', selectedFilter);
     
     // Redirect to the new URL
     window.location.href = currentUrl.toString();
