@@ -44,7 +44,7 @@
                         Select Doctor <span class="text-red-500">*</span>
                     </label>
                     <select id="doctor_id" name="doctor_id" required
-                        class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-300 bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
+                        class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-300 bg-white dark:bg-gray-800 text-gray-900 dark:text-white cursor-pointer">
                         <option value="">Choose a doctor...</option>
                         {% for doctor in doctors %}
                         <option value="{{ doctor.id }}" {{ 'selected' if doctor.id == appointment.doctor_id else '' }}>
@@ -67,7 +67,7 @@
                             min="{{ (datetime.utcnow() + timedelta(days=1)).strftime('%Y-%m-%d') }}"
                             max="{{ (datetime.utcnow() + timedelta(days=90)).strftime('%Y-%m-%d') }}"
                             value="{{ appointment.appointment_date.strftime('%Y-%m-%d') }}"
-                            class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-300 bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
+                            class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-300 bg-white dark:bg-gray-800 text-gray-900 dark:text-white cursor-pointer">
                     </div>
 
                     <div>
@@ -76,7 +76,7 @@
                             Available Time Slots <span class="text-red-500">*</span>
                         </label>
                         <select id="appointment_time" name="appointment_time" required
-                            class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-300 bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
+                            class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-300 bg-white dark:bg-gray-800 text-gray-900 dark:text-white cursor-pointer">
                             <option value="">Loading available slots...</option>
                         </select>
                         <div id="loading-slots" class="hidden mt-2 text-sm text-orange-600 dark:text-orange-400">
@@ -95,7 +95,7 @@
                             Appointment Type
                         </label>
                         <select id="appointment_type" name="appointment_type"
-                            class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-300 bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
+                            class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-300 bg-white dark:bg-gray-800 text-gray-900 dark:text-white cursor-pointer">
                             <option value="consultation" {{ 'selected' if appointment.appointment_type.value == 'consultation' else '' }}>General Consultation</option>
                             <option value="follow_up" {{ 'selected' if appointment.appointment_type.value == 'follow_up' else '' }}>Follow-up Visit</option>
                             <option value="routine_checkup" {{ 'selected' if appointment.appointment_type.value == 'routine_checkup' else '' }}>Routine Checkup</option>
@@ -108,7 +108,7 @@
                             Duration (minutes)
                         </label>
                         <select id="duration" name="duration"
-                            class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-300 bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
+                            class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-300 bg-white dark:bg-gray-800 text-gray-900 dark:text-white cursor-pointer">
                             <option value="30" {{ 'selected' if appointment.duration_minutes == 30 else '' }}>30 minutes</option>
                             <option value="45" {{ 'selected' if appointment.duration_minutes == 45 else '' }}>45 minutes</option>
                             <option value="60" {{ 'selected' if appointment.duration_minutes == 60 else '' }}>60 minutes</option>
@@ -124,7 +124,7 @@
                     </label>
                     <textarea id="chief_complaint" name="chief_complaint" rows="4" required
                         placeholder="Please describe the reason for your visit, symptoms, or concerns you'd like to discuss with the doctor..."
-                        class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-300 resize-vertical bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400">{{ appointment.chief_complaint }}</textarea>
+                        class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-300 resize-vertical bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 cursor-text">{{ appointment.chief_complaint }}</textarea>
                 </div>
 
                 <!-- Important Information -->
@@ -148,11 +148,11 @@
                 <div class="flex justify-end space-x-4 pt-6 opacity-0 animate-fade-in-up"
                     style="animation-delay: 0.8s;">
                     <a href="{{ url_for('appointments.patient_appointments') }}"
-                        class="px-6 py-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-medium rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200">
+                        class="px-6 py-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-medium rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200 cursor-pointer">
                         Cancel
                     </a>
                     <button type="submit" id="reschedule-btn"
-                        class="px-8 py-3 bg-gradient-to-r from-orange-600 to-red-600 text-white font-semibold rounded-lg hover:from-orange-700 hover:to-red-700 transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-orange-500/25 shadow-md hover:shadow-lg hover:scale-105 transform">
+                        class="px-8 py-3 bg-gradient-to-r from-orange-600 to-red-600 text-white font-semibold rounded-lg hover:from-orange-700 hover:to-red-700 transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-orange-500/25 shadow-md hover:shadow-lg hover:scale-105 transform cursor-pointer">
                         <i class="bi bi-pencil-square mr-2"></i>
                         Reschedule Appointment
                     </button>
