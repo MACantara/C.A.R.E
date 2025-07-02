@@ -145,7 +145,7 @@ class Appointment(db.Model):
         self.updated_at = datetime.utcnow()
 
     @staticmethod
-    def get_available_slots(doctor_id, date, duration_minutes=30):
+    def get_available_slots(doctor_id, date, duration_minutes=30, exclude_appointment_id=None):
         """Get available appointment slots for a doctor on a specific date."""
         from app.models.user import User
 
@@ -164,7 +164,7 @@ class Appointment(db.Model):
         end_time = datetime.combine(date, datetime.min.time().replace(hour=end_hour))
 
         # Get existing appointments for the doctor on this date
-        existing_appointments = Appointment.query.filter(
+        query = Appointment.query.filter(
             Appointment.doctor_id == doctor_id,
             Appointment.appointment_date >= start_time,
             Appointment.appointment_date < end_time + timedelta(days=1),
@@ -175,7 +175,13 @@ class Appointment(db.Model):
                     AppointmentStatus.IN_PROGRESS,
                 ]
             ),
-        ).all()
+        )
+        
+        # Exclude current appointment if rescheduling
+        if exclude_appointment_id:
+            query = query.filter(Appointment.id != exclude_appointment_id)
+        
+        existing_appointments = query.all()
 
         # Generate possible time slots
         available_slots = []

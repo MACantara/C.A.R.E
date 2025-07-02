@@ -123,11 +123,11 @@
                     {% endif %}
 
                     {% if appointment.status.value == 'scheduled' and not appointment.is_past %}
-                    <button
-                        class="px-4 py-2 bg-gray-600 text-white text-sm font-medium rounded-lg hover:bg-gray-700 transition-colors duration-200">
+                    <a href="{{ url_for('appointments.reschedule_appointment', appointment_id=appointment.id) }}"
+                        class="px-4 py-2 bg-orange-600 text-white text-sm font-medium rounded-lg hover:bg-orange-700 transition-colors duration-200">
                         <i class="bi bi-pencil mr-1"></i>
                         Reschedule
-                    </button>
+                    </a>
                     {% endif %}
                 </div>
             </div>

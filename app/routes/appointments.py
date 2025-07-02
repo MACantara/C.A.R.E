@@ -521,3 +521,139 @@ def update_appointment_status(appointment_id):
         flash("Error updating appointment status. Please try again.", "error")
 
     return redirect(url_for("appointments.doctor_schedule"))
+
+
+@appointments_bp.route("/<int:appointment_id>/reschedule")
+@login_required
+def reschedule_appointment(appointment_id):
+    """Reschedule appointment form - patients only."""
+    appointment = Appointment.query.get_or_404(appointment_id)
+    
+    # Check permissions
+    if current_user.role != "patient" or appointment.patient_id != current_user.id:
+        flash("You can only reschedule your own appointments.", "error")
+        return redirect(url_for("appointments.patient_appointments"))
+    
+    if not appointment.can_be_rescheduled:
+        flash("This appointment cannot be rescheduled.", "error")
+        return redirect(url_for("appointments.patient_appointments"))
+    
+    # Get all doctors
+    doctors = User.query.filter_by(role="doctor", active=True).all()
+    
+    return render_template("appointments/reschedule.html", 
+                         appointment=appointment, 
+                         doctors=doctors)
+
+
+@appointments_bp.route("/<int:appointment_id>/reschedule", methods=["POST"])
+@login_required
+def reschedule_appointment_post(appointment_id):
+    """Process appointment rescheduling."""
+    appointment = Appointment.query.get_or_404(appointment_id)
+    
+    # Check permissions
+    if current_user.role != "patient" or appointment.patient_id != current_user.id:
+        flash("You can only reschedule your own appointments.", "error")
+        return redirect(url_for("appointments.patient_appointments"))
+    
+    if not appointment.can_be_rescheduled:
+        flash("This appointment cannot be rescheduled.", "error")
+        return redirect(url_for("appointments.patient_appointments"))
+    
+    doctor_id = request.form.get("doctor_id")
+    appointment_date_str = request.form.get("appointment_date")
+    appointment_time_str = request.form.get("appointment_time")
+    appointment_type = request.form.get("appointment_type", appointment.appointment_type.value)
+    chief_complaint = request.form.get("chief_complaint", "").strip()
+    duration = int(request.form.get("duration", appointment.duration_minutes))
+
+    # Validation
+    errors = []
+
+    if not doctor_id:
+        errors.append("Please select a doctor.")
+
+    if not appointment_date_str or not appointment_time_str:
+        errors.append("Please select appointment date and time.")
+
+    if not chief_complaint:
+        errors.append("Please provide the reason for your visit.")
+
+    try:
+        # Parse datetime
+        appointment_datetime_str = f"{appointment_date_str} {appointment_time_str}"
+        new_appointment_datetime = datetime.strptime(
+            appointment_datetime_str, "%Y-%m-%d %H:%M"
+        )
+
+        # Check if appointment is in the future
+        current_time = get_current_time()
+        if new_appointment_datetime <= current_time.replace(tzinfo=None):
+            errors.append("Appointment must be scheduled for a future date and time.")
+
+        # Check if appointment is within business hours
+        if new_appointment_datetime.hour < 9 or new_appointment_datetime.hour >= 17:
+            errors.append("Appointments can only be scheduled between 9 AM and 5 PM.")
+
+    except ValueError:
+        errors.append("Invalid date or time format.")
+        new_appointment_datetime = None
+
+    # Verify doctor exists and is active
+    doctor = User.query.filter_by(id=doctor_id, role="doctor", active=True).first()
+    if not doctor:
+        errors.append("Selected doctor is not available.")
+
+    # Check for conflicts (exclude current appointment)
+    if doctor and new_appointment_datetime:
+        if Appointment.has_conflict(doctor_id, new_appointment_datetime, duration, appointment.id):
+            errors.append(
+                "Selected time slot is not available. Please choose another time."
+            )
+
+    if errors:
+        for error in errors:
+            flash(error, "error")
+        doctors = User.query.filter_by(role="doctor", active=True).all()
+        return render_template("appointments/reschedule.html", 
+                             appointment=appointment, 
+                             doctors=doctors)
+
+    try:
+        # Update appointment details
+        old_datetime = appointment.appointment_date
+        old_doctor = appointment.doctor
+        
+        appointment.doctor_id = doctor_id
+        appointment.appointment_date = new_appointment_datetime
+        appointment.duration_minutes = duration
+        appointment.appointment_type = AppointmentType(appointment_type)
+        appointment.chief_complaint = chief_complaint
+        appointment.updated_at = get_current_time().replace(tzinfo=None)
+        
+        # Reset confirmation if doctor changed
+        if old_doctor.id != int(doctor_id):
+            appointment.status = AppointmentStatus.SCHEDULED
+            appointment.confirmed_at = None
+
+        db.session.commit()
+
+        # Localize times for display
+        old_localized_time = localize_datetime(old_datetime)
+        new_localized_time = localize_datetime(new_appointment_datetime)
+        
+        flash(
+            f"Appointment rescheduled successfully! Changed from {old_localized_time.strftime('%B %d, %Y at %I:%M %p %Z')} to {new_localized_time.strftime('%B %d, %Y at %I:%M %p %Z')} with {doctor.display_name}.",
+            "success",
+        )
+        return redirect(url_for("appointments.patient_appointments"))
+
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Error rescheduling appointment: {e}")
+        flash("Error rescheduling appointment. Please try again.", "error")
+        doctors = User.query.filter_by(role="doctor", active=True).all()
+        return render_template("appointments/reschedule.html", 
+                             appointment=appointment, 
+                             doctors=doctors)

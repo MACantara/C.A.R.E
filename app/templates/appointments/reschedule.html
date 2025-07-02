@@ -1,0 +1,241 @@
+{% extends "base.html" %}
+
+{% block title %}Reschedule Appointment - C.A.R.E. System{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <div class="bg-white dark:bg-gray-800 shadow-xl rounded-lg overflow-hidden">
+        <div class="px-6 py-8">
+            <div class="flex items-center mb-8 opacity-0 animate-fade-in-up">
+                <div
+                    class="h-12 w-12 flex items-center justify-center rounded-full bg-orange-100 dark:bg-orange-900/30 mr-4">
+                    <i class="bi bi-pencil-square text-orange-600 dark:text-orange-400 text-xl"></i>
+                </div>
+                <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Reschedule Appointment</h1>
+            </div>
+
+            <!-- Current Appointment Info -->
+            <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl p-4 mb-6 opacity-0 animate-fade-in-up" style="animation-delay: 0.1s;">
+                <div class="flex items-start">
+                    <i class="bi bi-info-circle text-blue-600 dark:text-blue-400 text-lg mr-3 mt-0.5"></i>
+                    <div class="text-blue-800 dark:text-blue-200">
+                        <h4 class="font-semibold mb-2">Current Appointment Details:</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                            <div>
+                                <p><strong>Doctor:</strong> {{ appointment.doctor.display_name }}</p>
+                                <p><strong>Date:</strong> {{ appointment.appointment_date.strftime('%B %d, %Y') }}</p>
+                                <p><strong>Time:</strong> {{ appointment.appointment_date.strftime('%I:%M %p') }}</p>
+                            </div>
+                            <div>
+                                <p><strong>Type:</strong> {{ appointment.appointment_type.value.replace('_', ' ').title() }}</p>
+                                <p><strong>Duration:</strong> {{ appointment.duration_minutes }} minutes</p>
+                                <p><strong>Status:</strong> {{ appointment.status.value.replace('_', ' ').title() }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <form method="POST" class="space-y-6 opacity-0 animate-fade-in-left" style="animation-delay: 0.2s;"
+                id="rescheduleForm">
+                <!-- Doctor Selection -->
+                <div class="opacity-0 animate-fade-in-up" style="animation-delay: 0.3s;">
+                    <label for="doctor_id" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                        Select Doctor <span class="text-red-500">*</span>
+                    </label>
+                    <select id="doctor_id" name="doctor_id" required
+                        class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-300 bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
+                        <option value="">Choose a doctor...</option>
+                        {% for doctor in doctors %}
+                        <option value="{{ doctor.id }}" {{ 'selected' if doctor.id == appointment.doctor_id else '' }}>
+                            {{ doctor.display_name }}
+                            {% if doctor.specialization %} - {{ doctor.specialization }}{% endif %}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Date Selection -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 opacity-0 animate-fade-in-up"
+                    style="animation-delay: 0.4s;">
+                    <div>
+                        <label for="appointment_date"
+                            class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                            New Appointment Date <span class="text-red-500">*</span>
+                        </label>
+                        <input type="date" id="appointment_date" name="appointment_date" required
+                            min="{{ (datetime.utcnow() + timedelta(days=1)).strftime('%Y-%m-%d') }}"
+                            max="{{ (datetime.utcnow() + timedelta(days=90)).strftime('%Y-%m-%d') }}"
+                            value="{{ appointment.appointment_date.strftime('%Y-%m-%d') }}"
+                            class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-300 bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
+                    </div>
+
+                    <div>
+                        <label for="appointment_time"
+                            class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                            Available Time Slots <span class="text-red-500">*</span>
+                        </label>
+                        <select id="appointment_time" name="appointment_time" required
+                            class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-300 bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
+                            <option value="">Loading available slots...</option>
+                        </select>
+                        <div id="loading-slots" class="hidden mt-2 text-sm text-orange-600 dark:text-orange-400">
+                            <i class="bi bi-arrow-clockwise animate-spin mr-1"></i>
+                            Loading available slots...
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Appointment Type and Duration -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 opacity-0 animate-fade-in-up"
+                    style="animation-delay: 0.5s;">
+                    <div>
+                        <label for="appointment_type"
+                            class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                            Appointment Type
+                        </label>
+                        <select id="appointment_type" name="appointment_type"
+                            class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-300 bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
+                            <option value="consultation" {{ 'selected' if appointment.appointment_type.value == 'consultation' else '' }}>General Consultation</option>
+                            <option value="follow_up" {{ 'selected' if appointment.appointment_type.value == 'follow_up' else '' }}>Follow-up Visit</option>
+                            <option value="routine_checkup" {{ 'selected' if appointment.appointment_type.value == 'routine_checkup' else '' }}>Routine Checkup</option>
+                            <option value="vaccination" {{ 'selected' if appointment.appointment_type.value == 'vaccination' else '' }}>Vaccination</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label for="duration" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                            Duration (minutes)
+                        </label>
+                        <select id="duration" name="duration"
+                            class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-300 bg-white dark:bg-gray-800 text-gray-900 dark:text-white">
+                            <option value="30" {{ 'selected' if appointment.duration_minutes == 30 else '' }}>30 minutes</option>
+                            <option value="45" {{ 'selected' if appointment.duration_minutes == 45 else '' }}>45 minutes</option>
+                            <option value="60" {{ 'selected' if appointment.duration_minutes == 60 else '' }}>60 minutes</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Chief Complaint -->
+                <div class="opacity-0 animate-fade-in-up" style="animation-delay: 0.6s;">
+                    <label for="chief_complaint"
+                        class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                        Reason for Visit <span class="text-red-500">*</span>
+                    </label>
+                    <textarea id="chief_complaint" name="chief_complaint" rows="4" required
+                        placeholder="Please describe the reason for your visit, symptoms, or concerns you'd like to discuss with the doctor..."
+                        class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-300 resize-vertical bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400">{{ appointment.chief_complaint }}</textarea>
+                </div>
+
+                <!-- Important Information -->
+                <div class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-xl p-4 opacity-0 animate-fade-in-up"
+                    style="animation-delay: 0.7s;">
+                    <div class="flex items-start">
+                        <i class="bi bi-exclamation-triangle text-yellow-600 dark:text-yellow-400 text-lg mr-3 mt-0.5"></i>
+                        <div class="text-yellow-800 dark:text-yellow-200 text-sm">
+                            <h4 class="font-semibold mb-2">Rescheduling Information:</h4>
+                            <ul class="space-y-1">
+                                <li>• Your original appointment will be cancelled and replaced with the new one</li>
+                                <li>• If you change doctors, the appointment will need to be confirmed again</li>
+                                <li>• You will receive an email confirmation for the new appointment time</li>
+                                <li>• Please arrive 10 minutes before your new appointment time</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="flex justify-end space-x-4 pt-6 opacity-0 animate-fade-in-up"
+                    style="animation-delay: 0.8s;">
+                    <a href="{{ url_for('appointments.patient_appointments') }}"
+                        class="px-6 py-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-medium rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200">
+                        Cancel
+                    </a>
+                    <button type="submit" id="reschedule-btn"
+                        class="px-8 py-3 bg-gradient-to-r from-orange-600 to-red-600 text-white font-semibold rounded-lg hover:from-orange-700 hover:to-red-700 transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-orange-500/25 shadow-md hover:shadow-lg hover:scale-105 transform">
+                        <i class="bi bi-pencil-square mr-2"></i>
+                        Reschedule Appointment
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const doctorSelect = document.getElementById('doctor_id');
+        const dateInput = document.getElementById('appointment_date');
+        const timeSelect = document.getElementById('appointment_time');
+        const durationSelect = document.getElementById('duration');
+        const loadingIndicator = document.getElementById('loading-slots');
+        const appointmentId = {{ appointment.id }};
+
+        function loadAvailableSlots() {
+            const doctorId = doctorSelect.value;
+            const date = dateInput.value;
+            const duration = durationSelect.value;
+
+            if (!doctorId || !date) {
+                timeSelect.disabled = true;
+                timeSelect.innerHTML = '<option value="">Select date and doctor first</option>';
+                return;
+            }
+
+            loadingIndicator.classList.remove('hidden');
+            timeSelect.disabled = true;
+            timeSelect.innerHTML = '<option value="">Loading...</option>';
+
+            fetch(`{{ url_for('appointments.get_available_slots') }}?doctor_id=${doctorId}&date=${date}&duration=${duration}&exclude_appointment_id=${appointmentId}`)
+                .then(response => response.json())
+                .then(data => {
+                    loadingIndicator.classList.add('hidden');
+
+                    if (data.error) {
+                        timeSelect.innerHTML = '<option value="">Error loading slots</option>';
+                        return;
+                    }
+
+                    timeSelect.innerHTML = '';
+
+                    if (data.slots.length === 0) {
+                        timeSelect.innerHTML = '<option value="">No available slots</option>';
+                    } else {
+                        timeSelect.innerHTML = '<option value="">Select a time...</option>';
+                        data.slots.forEach(slot => {
+                            const option = document.createElement('option');
+                            option.value = slot;
+
+                            // Convert 24-hour to 12-hour format
+                            const [hours, minutes] = slot.split(':');
+                            const hour12 = hours % 12 || 12;
+                            const ampm = hours < 12 ? 'AM' : 'PM';
+                            option.textContent = `${hour12}:${minutes} ${ampm}`;
+
+                            timeSelect.appendChild(option);
+                        });
+                        timeSelect.disabled = false;
+                    }
+                })
+                .catch(error => {
+                    loadingIndicator.classList.add('hidden');
+                    timeSelect.innerHTML = '<option value="">Error loading slots</option>';
+                    console.error('Error loading slots:', error);
+                });
+        }
+
+        // Load initial slots based on current appointment
+        loadAvailableSlots();
+
+        // Event listeners
+        doctorSelect.addEventListener('change', loadAvailableSlots);
+        dateInput.addEventListener('change', loadAvailableSlots);
+        durationSelect.addEventListener('change', loadAvailableSlots);
+
+        // Set minimum date to tomorrow
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        dateInput.min = tomorrow.toISOString().split('T')[0];
+    });
+</script>
+{% endblock %}
